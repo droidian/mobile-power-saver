@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="mps">
+  <schema id="org.adishatz.Mps" path="/org/adishatz/Mps/">
+
+    <key name="screen-off-power-saving" type="b">
+      <default>true</default>
+      <summary>Enable power saving when screen is off</summary>
+      <description>When screen is turned off, try to save as much power as possible.</description>
+    </key>
+
+  </schema>
+</schemalist>

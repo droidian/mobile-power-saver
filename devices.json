@@ -1,0 +1,7 @@
+[
+    {
+        "path": "/sys/class/power_supply/dc/input_suspend"
+        "suspend": 1,
+        "resume": 0
+    }
+]

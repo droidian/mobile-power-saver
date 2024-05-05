@@ -1,0 +1,9 @@
+[Unit]
+Description=Mobile Power Saver
+
+[Service]
+Type=exec
+ExecStart=@BIN_DIR@/mobile-power-saver
+
+[Install]
+WantedBy=default.target

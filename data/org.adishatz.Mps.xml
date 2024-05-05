@@ -1,0 +1,21 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+
+<node>
+  <!--
+      org.adishatz.Mps:
+      @short_description: Mps daemon
+  -->
+  <interface name='org.adishatz.Mps'>
+     <!--
+        Set:
+
+        Set setting to value
+      -->
+      <method name='Set'>
+        <arg direction='in' name='setting' type='s'/>
+        <arg direction='in' name='value' type='v'/>
+      </method>
+
+   </interface>
+</node>

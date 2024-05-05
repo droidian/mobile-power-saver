@@ -1,0 +1,19 @@
+Source: mobile-power-saver
+Section: utils
+Priority: optional
+Maintainer: Cédric Bellegarde <cedric.bellegarde@adishatz.org>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+Standards-Version: 4.6.2
+Homepage: https://gitlab.gnome.org/gnumdk/mobile-power-saver
+#Vcs-Browser: https://gitlab.gnome.org/gnumdk/mobile-power-saver
+#Vcs-Git: https://gitlab.gnome.org/gnumdk/mobile-power-saver.git
+
+Package: mobile-power-saver
+Architecture: any
+Depends:
+ dbus,
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: Mobile Power Saver enable hard power saving when screen is off.

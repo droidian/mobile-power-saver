@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.adishatz.Mps
+Exec=@SBIN_DIR@/mobile-power-saver
+User=root
