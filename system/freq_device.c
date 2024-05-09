@@ -186,6 +186,9 @@ freq_device_set_governor (FreqDevice  *self, const gchar* governor) {
     if (self->priv->current_governor != NULL)
         g_free (self->priv->current_governor);
 
-    self->priv->current_governor = g_strdup (governor);
-    set_governor (self, governor);
+    if (governor == NULL)
+        self->priv->current_governor = g_strdup (self->priv->default_governor);
+    else
+        self->priv->current_governor = g_strdup (governor);
+    set_governor (self, self->priv->current_governor);
 }

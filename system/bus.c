@@ -67,6 +67,16 @@ get_power_profile_from_string (const gchar *name)
 }
 
 
+static const gchar *
+get_governor_from_power_profile (const gchar *name) {
+    if (g_strcmp0 (name, "power-saver") == 0)
+        return "powersave";
+    if (g_strcmp0 (name, "performance") == 0)
+        return "performance";
+    return NULL;
+}
+
+
 static GVariant *
 get_profiles_variant (void)
 {
@@ -196,7 +206,7 @@ handle_set_property (GDBusConnection  *connection,
             self,
             signals[POWER_SAVING_MODE_CHANGED],
             0,
-            power_profile
+            get_governor_from_power_profile (power_profile)
         );
         return TRUE;
     } else {
