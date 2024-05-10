@@ -209,6 +209,11 @@ kernel_settings_set_powersave (KernelSettings  *kernel_settings, gboolean  power
         write_to_file (
             "/proc/sys/vm/laptop_mode", "5"
         );
+
+        /* Disable LPM predictions */
+        write_to_file (
+            "/sys/module/lpm_levels/parameters/lpm_prediction", "N"
+        );
     } else {
         /* https://lwn.net/Articles/706374/ */
         write_to_file (
@@ -246,6 +251,11 @@ kernel_settings_set_powersave (KernelSettings  *kernel_settings, gboolean  power
         /* Disable laptop mode */
         write_to_file (
             "/proc/sys/vm/laptop_mode", "0"
+        );
+
+        /* Enable LPM predictions */
+        write_to_file (
+            "/sys/module/lpm_levels/parameters/lpm_prediction", "Y"
         );
     }
 }
