@@ -44,7 +44,6 @@ struct _SettingsClass {
 GType           settings_get_type                      (void) G_GNUC_CONST;
 Settings       *settings_get_default                   (void);
 GObject*        settings_new                           (void);
-gboolean        settings_get_screen_off_power_saving   (Settings *settings);
 G_END_DECLS
 
 #endif

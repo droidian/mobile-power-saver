@@ -8,5 +8,11 @@
       <description>When screen is turned off, try to save as much power as possible.</description>
     </key>
 
+    <key name="screen-off-suspend-processes" type="as">
+      <default>[]</default>
+      <summary>Suspend this processes when screen is off</summary>
+      <description>When screen is turned off, processes in list are suspended.</description>
+    </key>
+
   </schema>
 </schemalist>

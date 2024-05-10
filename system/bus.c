@@ -18,6 +18,7 @@ enum
 {
     POWER_SAVING_MODE_CHANGED,
     SCREEN_OFF_POWER_SAVING_CHANGED,
+    SCREEN_OFF_SUSPEND_PROCESSES_CHANGED,
     LAST_SIGNAL
 };
 
@@ -146,6 +147,13 @@ handle_method_call (GDBusConnection *connection,
                 signals[SCREEN_OFF_POWER_SAVING_CHANGED],
                 0,
                 g_variant_get_boolean (value)
+            );
+        } else if (g_strcmp0 (setting, "screen-off-suspend-processes") == 0) {
+            g_signal_emit(
+                self,
+                signals[SCREEN_OFF_SUSPEND_PROCESSES_CHANGED],
+                0,
+                g_steal_pointer (&value)
             );
         }
 
@@ -405,6 +413,17 @@ bus_class_init (BusClass *klass)
         G_TYPE_NONE,
         1,
         G_TYPE_BOOLEAN
+    );
+
+    signals[SCREEN_OFF_SUSPEND_PROCESSES_CHANGED] = g_signal_new (
+        "screen-off-suspend-processes-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_VARIANT
     );
 }
 

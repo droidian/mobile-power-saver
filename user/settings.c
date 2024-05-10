@@ -23,9 +23,9 @@ G_DEFINE_TYPE_WITH_CODE (
 
 
 static void
-on_screen_off_power_saving_changed (GSettings   *settings,
-                                    const gchar *key,
-                                    gpointer     user_data) {
+on_setting_changed (GSettings   *settings,
+                    const gchar *key,
+                    gpointer     user_data) {
     Bus *bus = bus_get_default ();
     g_autoptr(GVariant) value = g_settings_get_value (settings, key);
 
@@ -65,12 +65,23 @@ settings_init (Settings *self)
     g_signal_connect (
         self->priv->settings,
         "changed::screen-off-power-saving",
-        G_CALLBACK (on_screen_off_power_saving_changed),
+        G_CALLBACK (on_setting_changed),
         self
     );
-    on_screen_off_power_saving_changed (
+    on_setting_changed (
         self->priv->settings,
         "screen-off-power-saving",
+        self
+    );
+    g_signal_connect (
+        self->priv->settings,
+        "changed::screen-off-suspend-processes",
+        G_CALLBACK (on_setting_changed),
+        self
+    );
+    on_setting_changed (
+        self->priv->settings,
+        "screen-off-suspend-processes",
         self
     );
 }
@@ -110,18 +121,4 @@ settings_get_default (void)
         default_settings = SETTINGS (settings_new ());
     }
     return default_settings;
-}
-
-/**
- * settings_get_screen_off_power_saving:
- *
- * Get screen off power saving setting
- *
- * Returns: True if enabled
- */
-gint
-settings_get_screen_off_power_saving (Settings *settings) {
-    return  g_settings_get_int (
-      settings->priv->settings, "screen-off-power-saving"
-    );
 }
