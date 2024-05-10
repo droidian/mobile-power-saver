@@ -59,7 +59,7 @@ cpufreq_dispose (GObject *cpufreq)
 {
     Cpufreq *self = CPUFREQ (cpufreq);
 
-    g_clear_list (&self->priv->cpufreq_devices, g_free);
+    g_list_free_full (self->priv->cpufreq_devices, g_object_unref);
     g_free (self->priv);
 
     G_OBJECT_CLASS (cpufreq_parent_class)->dispose (cpufreq);

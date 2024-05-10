@@ -60,7 +60,7 @@ devfreq_dispose (GObject *devfreq)
 {
     Devfreq *self = DEVFREQ (devfreq);
 
-    g_clear_list (&self->priv->devfreq_devices, g_free);
+    g_list_free_full (self->priv->devfreq_devices, g_object_unref);
     g_free (self->priv);
 
     G_OBJECT_CLASS (devfreq_parent_class)->dispose (devfreq);

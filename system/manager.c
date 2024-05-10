@@ -89,13 +89,11 @@ on_screen_off_suspend_processes_changed (Bus  *bus,
 
     g_variant_get (value, "as", &iter);
     while (g_variant_iter_loop (iter, "s", &process)) {
-        g_message ("%s", process);
         self->priv->screen_off_suspend_processes =
             g_list_append (
                 self->priv->screen_off_suspend_processes, g_strdup (process)
             );
     }
-    on_screen_on (NULL, FALSE, self);
 }
 
 
