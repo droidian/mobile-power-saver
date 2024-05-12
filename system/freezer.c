@@ -89,29 +89,27 @@ freezer_in_list (GList *names, struct Process *process)
     return FALSE;
 }
 
-static void
+static GList *
 freezer_get_pids (Freezer *self)
 {
+    GList *processes = NULL;
     g_autoptr(GDir) proc_dir = NULL;
     const char *pid_dir;
 
     proc_dir = g_dir_open ("/proc", 0, NULL);
     if (proc_dir == NULL) {
         g_warning ("/proc not mounted");
-        return;
+        return NULL;
     }
 
-    g_list_free_full (self->priv->processes, g_free);
-    self->priv->processes = NULL;
-
     while ((pid_dir = g_dir_read_name (proc_dir)) != NULL) {
-        gchar *contents = NULL;
+        g_autofree gchar *contents = NULL;
         g_autofree gchar *directory = g_build_filename (
             "/proc", pid_dir, NULL
         );
 
         if ((contents = g_malloc (MAX_BUFSZ)) == NULL)
-            return;
+            return NULL;
 
         if (read_unvectored(contents, MAX_BUFSZ, directory, "cmdline", ' ')) {
             struct Process *process = g_malloc (sizeof (struct Process));
@@ -119,12 +117,11 @@ freezer_get_pids (Freezer *self)
             process->cmdline = g_strdup (contents);
             sscanf (pid_dir, "%d", &process->pid);
 
-            self->priv->processes = g_list_prepend (
-                self->priv->processes, process
-            );
+            processes = g_list_prepend (processes, process);
         }
-        g_free (contents);
     }
+
+    return processes;
 }
 
 
@@ -132,13 +129,20 @@ freezer_get_pids (Freezer *self)
 static void
 freezer_dispose (GObject *freezer)
 {
+    G_OBJECT_CLASS (freezer_parent_class)->dispose (freezer);
+}
+
+
+static void
+freezer_finalize (GObject *freezer)
+{
     Freezer *self = FREEZER (freezer);
 
     g_list_free_full (self->priv->processes, g_free);
-    g_free (self->priv);
 
-    G_OBJECT_CLASS (freezer_parent_class)->dispose (freezer);
+    G_OBJECT_CLASS (freezer_parent_class)->finalize (freezer);
 }
+
 
 static void
 freezer_class_init (FreezerClass *klass)
@@ -147,6 +151,7 @@ freezer_class_init (FreezerClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = freezer_dispose;
+    object_class->finalize = freezer_finalize;
 }
 
 static void
@@ -178,27 +183,42 @@ freezer_new (void)
 /**
  * freezer_suspend_processes:
  *
- * Set freezer devices to powersave
+ * Suspend processes in list
  *
  * @param #Freezer
- * @param suspend: True to suspend
- * @param cmdlines: process cmdline list
+ * @param names: processes list
  */
 void
-freezer_suspend_processes (Freezer  *self,
-                           gboolean  suspend,
-                           GList *names) {
+freezer_suspend_processes (Freezer  *self, GList *names) {
 
     struct Process *process;
 
-    freezer_get_pids (self);
+    self->priv->processes = freezer_get_pids (self);
+    g_return_if_fail (self->priv->processes != NULL);
 
     GFOREACH (self->priv->processes, process)
-        if (freezer_in_list (names, process)) {
-            if (suspend) {
-                kill (process->pid, SIGSTOP);
-            } else {
-                kill (process->pid, SIGCONT);
-            }
-        }
+        if (freezer_in_list (names, process))
+            kill (process->pid, SIGSTOP);
+}
+
+/**
+ * freezer_resume_processes:
+ *
+ * resume processes
+ *
+ * @param #Freezer
+ */
+void
+freezer_resume_processes (Freezer  *self, GList *names) {
+
+    struct Process *process;
+
+    g_return_if_fail (self->priv->processes != NULL);
+
+    GFOREACH (self->priv->processes, process)
+        if (freezer_in_list (names, process))
+            kill (process->pid, SIGCONT);
+
+    g_list_free_full (self->priv->processes, g_free);
+    self->priv->processes = NULL;
 }

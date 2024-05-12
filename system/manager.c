@@ -12,8 +12,9 @@
 #include "devfreq.h"
 #include "freezer.h"
 #include "kernel_settings.h"
-#include "logind.h"
 #include "manager.h"
+#include "../common/logind.h"
+
 
 struct _ManagerPrivate {
     Cpufreq *cpufreq;
@@ -41,11 +42,17 @@ on_screen_on (Logind  *logind, gboolean screen_on, gpointer user_data) {
         cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
         devfreq_set_powersave (self->priv->devfreq, !screen_on);
         kernel_settings_set_powersave (self->priv->kernel_settings, !screen_on);
-        freezer_suspend_processes (
-            self->priv->freezer,
-            !screen_on,
-            self->priv->screen_off_suspend_processes
-        );
+        if (screen_on) {
+            freezer_resume_processes (
+                self->priv->freezer,
+                self->priv->screen_off_suspend_processes
+            );
+        } else {
+            freezer_suspend_processes (
+                self->priv->freezer,
+                self->priv->screen_off_suspend_processes
+            );
+        }
     }
 }
 
@@ -107,10 +114,16 @@ manager_dispose (GObject *manager)
     g_clear_object (&self->priv->kernel_settings);
     g_clear_object (&self->priv->freezer);
 
-    g_free (self->priv);
-
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
+
+
+static void
+manager_finalize (GObject *manager)
+{
+    G_OBJECT_CLASS (manager_parent_class)->finalize (manager);
+}
+
 
 static void
 manager_class_init (ManagerClass *klass)
@@ -119,6 +132,7 @@ manager_class_init (ManagerClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = manager_dispose;
+    object_class->finalize = manager_finalize;
 }
 
 static void

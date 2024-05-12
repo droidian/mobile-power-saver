@@ -10,13 +10,13 @@
 #include <stdlib.h>
 #include <signal.h>
 
+#include "manager.h"
 #include "settings.h"
 
 #include <glib/gi18n-lib.h>
 
 
 static GMainLoop *loop;
-
 
 static void
 sigint_handler(int dummy) {
@@ -27,6 +27,7 @@ sigint_handler(int dummy) {
 gint
 main (gint argc, gchar * argv[])
 {
+    GObject *manager;
     g_autoptr (GOptionContext) context = NULL;
     g_autoptr (GError) error = NULL;
     gboolean version = FALSE;
@@ -54,12 +55,13 @@ main (gint argc, gchar * argv[])
         return EXIT_SUCCESS;
     }
 
-    settings_get_default ();
+    manager = manager_new ();
 
     loop = g_main_loop_new (NULL, FALSE);
     g_main_loop_run (loop);
 
     g_clear_pointer (&loop, g_main_loop_unref);
+    g_clear_object (&manager);
 
     return EXIT_SUCCESS;
 }

@@ -58,13 +58,20 @@ devfreq_detect_devices (Devfreq *self)
 static void
 devfreq_dispose (GObject *devfreq)
 {
+    G_OBJECT_CLASS (devfreq_parent_class)->dispose (devfreq);
+}
+
+
+static void
+devfreq_finalize (GObject *devfreq)
+{
     Devfreq *self = DEVFREQ (devfreq);
 
     g_list_free_full (self->priv->devfreq_devices, g_object_unref);
-    g_free (self->priv);
 
-    G_OBJECT_CLASS (devfreq_parent_class)->dispose (devfreq);
+    G_OBJECT_CLASS (devfreq_parent_class)->finalize (devfreq);
 }
+
 
 static void
 devfreq_class_init (DevfreqClass *klass)
@@ -73,6 +80,7 @@ devfreq_class_init (DevfreqClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = devfreq_dispose;
+    object_class->finalize = devfreq_finalize;
 }
 
 static void

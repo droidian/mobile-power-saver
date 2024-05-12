@@ -57,13 +57,20 @@ cpufreq_detect_devices (Cpufreq *self)
 static void
 cpufreq_dispose (GObject *cpufreq)
 {
+    G_OBJECT_CLASS (cpufreq_parent_class)->dispose (cpufreq);
+}
+
+
+static void
+cpufreq_finalize (GObject *cpufreq)
+{
     Cpufreq *self = CPUFREQ (cpufreq);
 
     g_list_free_full (self->priv->cpufreq_devices, g_object_unref);
-    g_free (self->priv);
 
-    G_OBJECT_CLASS (cpufreq_parent_class)->dispose (cpufreq);
+    G_OBJECT_CLASS (cpufreq_parent_class)->finalize (cpufreq);
 }
+
 
 static void
 cpufreq_class_init (CpufreqClass *klass)
@@ -72,6 +79,7 @@ cpufreq_class_init (CpufreqClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = cpufreq_dispose;
+    object_class->finalize = cpufreq_finalize;
 }
 
 static void

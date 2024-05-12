@@ -43,6 +43,13 @@ set_governor (FreqDevice  *freq_device, const gchar* governor) {
 static void
 freq_device_dispose (GObject *freq_device)
 {
+    G_OBJECT_CLASS (freq_device_parent_class)->dispose (freq_device);
+}
+
+
+static void
+freq_device_finalize (GObject *freq_device)
+{
     FreqDevice *self = FREQ_DEVICE (freq_device);
 
     g_free (self->priv->default_governor);
@@ -50,10 +57,10 @@ freq_device_dispose (GObject *freq_device)
     g_free (self->priv->device_name);
     g_free (self->priv->governor_node);
     g_free (self->priv->sysfs_dir);
-    g_free (self->priv);
 
-    G_OBJECT_CLASS (freq_device_parent_class)->dispose (freq_device);
+    G_OBJECT_CLASS (freq_device_parent_class)->finalize (freq_device);
 }
+
 
 static void
 freq_device_class_init (FreqDeviceClass *klass)
@@ -62,6 +69,7 @@ freq_device_class_init (FreqDeviceClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = freq_device_dispose;
+    object_class->finalize = freq_device_finalize;
 }
 
 static void

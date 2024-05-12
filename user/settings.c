@@ -8,6 +8,16 @@
 #include "config.h"
 #include "settings.h"
 
+/* signals */
+enum
+{
+    SETTING_CHANGED,
+    LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL];
+
+
 
 struct _SettingsPrivate {
     GSettings *settings;
@@ -26,10 +36,32 @@ static void
 on_setting_changed (GSettings   *settings,
                     const gchar *key,
                     gpointer     user_data) {
-    Bus *bus = bus_get_default ();
+    Settings *self = SETTINGS (user_data);
     g_autoptr(GVariant) value = g_settings_get_value (settings, key);
 
-    bus_set_value (bus, key, value);
+    g_signal_emit(
+        self,
+        signals[SETTING_CHANGED],
+        0,
+        key,
+        value
+    );
+}
+
+
+static void
+settings_notify_settings (Settings *self)
+{
+    on_setting_changed (
+        self->priv->settings,
+        "screen-off-power-saving",
+        self
+    );
+    on_setting_changed (
+        self->priv->settings,
+        "screen-off-suspend-processes",
+        self
+    );
 }
 
 
@@ -39,11 +71,16 @@ settings_dispose (GObject *settings)
     Settings *self = SETTINGS (settings);
 
     g_clear_object (&self->priv->settings);
-    g_free (self->priv);
 
     G_OBJECT_CLASS (settings_parent_class)->dispose (settings);
 }
 
+
+static void
+settings_finalize (GObject *settings)
+{
+    G_OBJECT_CLASS (settings_parent_class)->finalize (settings);
+}
 
 static void
 settings_class_init (SettingsClass *klass)
@@ -52,6 +89,19 @@ settings_class_init (SettingsClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = settings_dispose;
+    object_class->finalize = settings_finalize;
+
+    signals[SETTING_CHANGED] = g_signal_new (
+        "setting-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        2,
+        G_TYPE_STRING,
+        G_TYPE_VARIANT
+    );
 }
 
 
@@ -68,22 +118,14 @@ settings_init (Settings *self)
         G_CALLBACK (on_setting_changed),
         self
     );
-    on_setting_changed (
-        self->priv->settings,
-        "screen-off-power-saving",
-        self
-    );
     g_signal_connect (
         self->priv->settings,
         "changed::screen-off-suspend-processes",
         G_CALLBACK (on_setting_changed),
         self
     );
-    on_setting_changed (
-        self->priv->settings,
-        "screen-off-suspend-processes",
-        self
-    );
+
+    g_idle_add ((GSourceFunc) settings_notify_settings, self);
 }
 
 

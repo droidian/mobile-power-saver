@@ -27,14 +27,20 @@ G_DEFINE_TYPE_WITH_CODE (
 static void
 devfreq_device_dispose (GObject *devfreq_device)
 {
+    G_OBJECT_CLASS (devfreq_device_parent_class)->dispose (devfreq_device);
+}
+
+static void
+devfreq_device_finalize (GObject *devfreq_device)
+{
     DevfreqDevice *self = DEVFREQ_DEVICE (devfreq_device);
 
     g_free (self->priv->default_governor);
     g_free (self->priv->sys_dir);
-    g_free (self->priv);
 
-    G_OBJECT_CLASS (devfreq_device_parent_class)->dispose (devfreq_device);
+    G_OBJECT_CLASS (devfreq_device_parent_class)->finalize (devfreq_device);
 }
+
 
 static void
 devfreq_device_class_init (DevfreqDeviceClass *klass)
@@ -43,6 +49,7 @@ devfreq_device_class_init (DevfreqDeviceClass *klass)
 
     freq_device_class = G_OBJECT_CLASS (klass);
     freq_device_class->dispose = devfreq_device_dispose;
+    freq_device_class->finalize = devfreq_device_finalize;
 }
 
 static void

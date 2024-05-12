@@ -378,10 +378,16 @@ bus_dispose (GObject *bus)
     g_clear_object (&self->priv->adishatz_connection);
     g_clear_object (&self->priv->hadess_connection);
 
-    g_free (self->priv);
-
     G_OBJECT_CLASS (bus_parent_class)->dispose (bus);
 }
+
+
+static void
+bus_finalize (GObject *bus)
+{
+    G_OBJECT_CLASS (bus_parent_class)->finalize (bus);
+}
+
 
 static void
 bus_class_init (BusClass *klass)
@@ -392,6 +398,7 @@ bus_class_init (BusClass *klass)
     object_class->set_property = bus_set_property;
     object_class->get_property = bus_get_property;
     object_class->dispose = bus_dispose;
+    object_class->finalize = bus_finalize;
 
     signals[POWER_SAVING_MODE_CHANGED] = g_signal_new (
         "power-saving-mode-changed",

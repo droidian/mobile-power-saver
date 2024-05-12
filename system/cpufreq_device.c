@@ -28,14 +28,21 @@ G_DEFINE_TYPE_WITH_CODE (
 static void
 cpufreq_device_dispose (GObject *cpufreq_device)
 {
+    G_OBJECT_CLASS (cpufreq_device_parent_class)->dispose (cpufreq_device);
+}
+
+
+static void
+cpufreq_device_finalize (GObject *cpufreq_device)
+{
     CpufreqDevice *self = CPUFREQ_DEVICE (cpufreq_device);
 
     g_free (self->priv->default_governor);
     g_free (self->priv->sys_dir);
-    g_free (self->priv);
 
-    G_OBJECT_CLASS (cpufreq_device_parent_class)->dispose (cpufreq_device);
+    G_OBJECT_CLASS (cpufreq_device_parent_class)->finalize (cpufreq_device);
 }
+
 
 static void
 cpufreq_device_class_init (CpufreqDeviceClass *klass)
@@ -44,6 +51,7 @@ cpufreq_device_class_init (CpufreqDeviceClass *klass)
 
     freq_device_class = G_OBJECT_CLASS (klass);
     freq_device_class->dispose = cpufreq_device_dispose;
+    freq_device_class->finalize = cpufreq_device_finalize;
 }
 
 static void

@@ -27,12 +27,16 @@ G_DEFINE_TYPE_WITH_CODE (
 static void
 kernel_settings_dispose (GObject *kernel_settings)
 {
-    KernelSettings *self = KERNEL_SETTINGS (kernel_settings);
-
-    g_free (self->priv);
-
     G_OBJECT_CLASS (kernel_settings_parent_class)->dispose (kernel_settings);
 }
+
+
+static void
+kernel_settings_finalize (GObject *kernel_settings)
+{
+    G_OBJECT_CLASS (kernel_settings_parent_class)->finalize (kernel_settings);
+}
+
 
 static void
 kernel_settings_class_init (KernelSettingsClass *klass)
@@ -41,6 +45,7 @@ kernel_settings_class_init (KernelSettingsClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = kernel_settings_dispose;
+    object_class->finalize = kernel_settings_finalize;
 }
 
 static void

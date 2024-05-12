@@ -27,10 +27,17 @@ bus_dispose (GObject *bus)
     Bus *self = BUS (bus);
 
     g_clear_object (&self->priv->mps_proxy);
-    g_free (self->priv);
 
     G_OBJECT_CLASS (bus_parent_class)->dispose (bus);
 }
+
+
+static void
+bus_finalize (GObject *bus)
+{
+    G_OBJECT_CLASS (bus_parent_class)->finalize (bus);
+}
+
 
 static void
 bus_class_init (BusClass *klass)
@@ -39,6 +46,7 @@ bus_class_init (BusClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = bus_dispose;
+    object_class->finalize = bus_finalize;
 }
 
 static void

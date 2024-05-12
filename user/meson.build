@@ -1,7 +1,12 @@
 mps_sources = [
   'bus.c',
+  'dozing.c',
   'main.c',
-  'settings.c'
+  'manager.c',
+  'mpris.c',
+  'settings.c',
+  '../common/logind.c',
+  '../common/utils.c'
 ]
 
 mps_deps = [

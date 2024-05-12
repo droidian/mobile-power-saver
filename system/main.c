@@ -10,9 +10,9 @@
 #include <stdlib.h>
 
 #include "bus.h"
-#include "logind.h"
 #include "kernel_settings.h"
 #include "manager.h"
+#include "../common/logind.h"
 
 
 static GMainLoop *loop;
