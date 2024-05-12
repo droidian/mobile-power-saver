@@ -10,7 +10,7 @@
 
     <key name="screen-off-suspend-processes" type="as">
       <default>[]</default>
-      <summary>Suspend this processes when screen is off</summary>
+      <summary>Suspend these processes when screen is off</summary>
       <description>When screen is turned off, processes in list are suspended.</description>
     </key>
 
