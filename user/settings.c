@@ -164,3 +164,31 @@ settings_get_default (void)
     }
     return default_settings;
 }
+
+/**
+ * settings_can_freeze_app:
+ *
+ * Check if an application scope can be freezed
+ *
+ * @self: a #Settings
+ * @app_scope: a setting key
+ *
+ * Returns: TRUE if application scope can be freezed
+ */
+gboolean
+settings_can_freeze_app (Settings *self,
+                         const gchar *app_scope)
+{
+    g_autoptr(GVariant) value = g_settings_get_value (
+        self->priv->settings, "screen-off-suspend-apps-blacklist"
+    );
+    g_autoptr (GVariantIter) iter;
+    const gchar *application;
+
+    g_variant_get (value, "as", &iter);
+    while (g_variant_iter_loop (iter, "s", &application)) {
+        if (g_strrstr (app_scope, application) != NULL)
+            return FALSE;
+    }
+    return TRUE;
+}

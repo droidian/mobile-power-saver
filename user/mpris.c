@@ -331,28 +331,6 @@ mpris_new (void)
     return mpris;
 }
 
-/**
- * mpris_can_freeze:
- *
- * Check if an application scope can be freezed
- *
- * @self: a #Mpris
- * @app_scope: a setting key
- *
- * Returns: TRUE if app id is playing
- */
-gboolean
-mpris_can_freeze (Mpris *self, const gchar *app_scope)
-{
-    struct Player *player;
-
-    GFOREACH (self->priv->players, player) {
-        if (g_strrstr (app_scope, player->desktop_id) != NULL)
-            return !player->is_playing;
-    }
-    return TRUE;
-}
-
 
 static Mpris *default_mpris = NULL;
 /**
@@ -370,3 +348,27 @@ mpris_get_default (void)
     }
     return default_mpris;
 }
+
+
+/**
+ * mpris_can_freeze:
+ *
+ * Check if an application scope can be freezed
+ *
+ * @self: a #Mpris
+ * @app_scope: a setting key
+ *
+ * Returns: TRUE if application scope can be freeezed
+ */
+gboolean
+mpris_can_freeze (Mpris *self, const gchar *app_scope)
+{
+    struct Player *player;
+
+    GFOREACH (self->priv->players, player) {
+        if (g_strrstr (app_scope, player->desktop_id) != NULL)
+            return !player->is_playing;
+    }
+    return TRUE;
+}
+

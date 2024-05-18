@@ -11,6 +11,7 @@
 
 #include "dozing.h"
 #include "mpris.h"
+#include "settings.h"
 #include "../common/define.h"
 #include "../common/utils.h"
 
@@ -47,7 +48,8 @@ dozing_freeze_apps (Dozing *self)
 
     g_message("Freezing apps");
     GFOREACH (self->priv->apps, app) {
-        if (mpris_can_freeze (self->priv->mpris, app)) {
+        if (settings_can_freeze_app (settings_get_default (), app) &&
+                mpris_can_freeze (self->priv->mpris, app)) {
             write_to_file (app, "1");
         }
     }

@@ -44,6 +44,8 @@ struct _SettingsClass {
 GType           settings_get_type                      (void) G_GNUC_CONST;
 Settings       *settings_get_default                   (void);
 GObject*        settings_new                           (void);
+gboolean        settings_can_freeze_app                (Settings *self,
+                                                        const gchar *app_scope);
 G_END_DECLS
 
 #endif
