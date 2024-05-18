@@ -100,6 +100,10 @@ binder_init (Binder *self)
 
     self->priv->client = NULL;
     self->priv->remote_object = NULL;
+    self->priv->service_manager = NULL;
+
+    if (!g_file_test ("/dev/hwbinder", G_FILE_TEST_EXISTS))
+        return;
 
     self->priv->service_manager = gbinder_servicemanager_new("/dev/hwbinder");
     if (self->priv->service_manager != NULL)
@@ -149,6 +153,9 @@ binder_new (void)
 void
 binder_set_powersave (Binder *self, gboolean powersave)
 {
+    if (self->priv->client == NULL)
+        return;
+
     if (powersave) {
         binder_set_modes(self->priv->client, 0, BINDER_POWERSAVE);
     } else {
