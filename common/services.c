@@ -26,19 +26,32 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 
-static gchar *
-services_get_cgroups_path (Services *self)
+static GList *
+services_get_cgroups_paths (Services *self)
 {
-    gchar *path;
+    GList *paths = NULL;
 
-    if (self->priv->service_type == G_BUS_TYPE_SESSION)
-        path = g_strdup_printf(
-            CGROUPS_USER_SERVICES_FREEZE_DIR, getuid(), getuid()
+    if (self->priv->service_type == G_BUS_TYPE_SESSION) {
+        paths = g_list_append (
+            paths,
+            g_strdup_printf(
+                CGROUPS_USER_SERVICES_FREEZE_DIR, getuid(), getuid()
+            )
         );
-    else
-        path = g_strdup (CGROUPS_SYSTEM_SERVICES_FREEZE_DIR);
+        paths = g_list_append (
+            paths,
+            g_strdup_printf(
+                CGROUPS_APPS_FREEZE_DIR, getuid(), getuid()
+            )
+        );
+    } else {
+        paths = g_list_append (
+            paths,
+            g_strdup (CGROUPS_SYSTEM_SERVICES_FREEZE_DIR)
+        );
+    }
 
-    return path;
+    return paths;
 }
 
 
@@ -110,15 +123,20 @@ void
 services_freeze (Services *self,
                  GList   *services)
 {
-    g_autofree gchar *dirname = services_get_cgroups_path (self);
+    GList *paths = services_get_cgroups_paths (self);
+    const gchar *path;
     const gchar *service;
 
-    GFOREACH (services, service) {
-        g_autofree gchar *path = g_build_filename (
-            dirname, service, "cgroup.freeze", NULL
-        );
-        write_to_file (path, "1");
+    GFOREACH (paths, path) {
+        GFOREACH_SUB (services, service) {
+            g_autofree gchar *filename = g_build_filename (
+                path, service, "cgroup.freeze", NULL
+            );
+            if (g_file_test (filename, G_FILE_TEST_EXISTS))
+                write_to_file (filename, "1");
+        }
     }
+    g_list_free_full (paths, g_free);
 }
 
 
@@ -135,13 +153,18 @@ void
 services_unfreeze (Services *self,
                    GList   *services)
 {
-    g_autofree gchar *dirname = services_get_cgroups_path (self);
+    GList *paths = services_get_cgroups_paths (self);
+    const gchar *path;
     const gchar *service;
 
-    GFOREACH (services, service) {
-        g_autofree gchar *path = g_build_filename (
-            dirname, service, "cgroup.freeze", NULL
-        );
-        write_to_file (path, "0");
+    GFOREACH (paths, path) {
+        GFOREACH_SUB (services, service) {
+            g_autofree gchar *filename = g_build_filename (
+                path, service, "cgroup.freeze", NULL
+            );
+            if (g_file_test (filename, G_FILE_TEST_EXISTS))
+                write_to_file (filename, "0");
+        }
     }
+    g_list_free_full (paths, g_free);
 }
