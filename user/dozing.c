@@ -93,7 +93,7 @@ dozing_get_apps (Dozing *self)
 {
     g_autoptr(GDir) sys_dir = NULL;
     g_autofree gchar *dirname = g_strdup_printf(
-        CGROUPS_FREEZE_DIR, getuid(), getuid()
+        CGROUPS_APPS_FREEZE_DIR, getuid(), getuid()
 
     );
     const char *app_dir;

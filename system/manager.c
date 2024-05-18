@@ -14,7 +14,7 @@
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
-#include "../common/systemd.h"
+#include "../common/services.h"
 
 
 struct _ManagerPrivate {
@@ -22,7 +22,7 @@ struct _ManagerPrivate {
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
     Freezer *freezer;
-    Systemd *systemd;
+    Services *services;
 
     gboolean screen_off_power_saving;
     GList *screen_off_suspend_processes;
@@ -47,14 +47,14 @@ on_screen_state_changed (gpointer ignore, gboolean screen_on, gpointer user_data
         cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
         devfreq_set_powersave (self->priv->devfreq, !screen_on);
         kernel_settings_set_powersave (self->priv->kernel_settings, !screen_on);
-        g_message ("stop: %p", self->priv->screen_off_suspend_services);
+
         if (screen_on) {
             freezer_resume_processes (
                 self->priv->freezer,
                 self->priv->screen_off_suspend_processes
             );
-            systemd_start (
-                self->priv->systemd,
+            services_unfreeze (
+                self->priv->services,
                 self->priv->screen_off_suspend_services
             );
         } else {
@@ -62,8 +62,8 @@ on_screen_state_changed (gpointer ignore, gboolean screen_on, gpointer user_data
                 self->priv->freezer,
                 self->priv->screen_off_suspend_processes
             );
-            systemd_stop (
-                self->priv->systemd,
+            services_freeze (
+                self->priv->services,
                 self->priv->screen_off_suspend_services
             );
         }
@@ -126,7 +126,7 @@ on_screen_off_suspend_services_changed (Bus  *bus,
     Manager *self = MANAGER (user_data);
     g_autoptr (GVariantIter) iter;
     gchar *service;
-    g_message ("on_screen_off_suspend_services_changed");
+
     g_list_free_full (
         self->priv->screen_off_suspend_services,
         g_free
@@ -135,7 +135,6 @@ on_screen_off_suspend_services_changed (Bus  *bus,
 
     g_variant_get (value, "as", &iter);
     while (g_variant_iter_loop (iter, "s", &service)) {
-        g_message ("service: %s", service);
         self->priv->screen_off_suspend_services =
             g_list_append (
                 self->priv->screen_off_suspend_services, g_strdup (service)
@@ -153,7 +152,7 @@ manager_dispose (GObject *manager)
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
     g_clear_object (&self->priv->freezer);
-    g_clear_object (&self->priv->systemd);
+    g_clear_object (&self->priv->services);
 
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
@@ -193,7 +192,7 @@ manager_init (Manager *self)
     self->priv->devfreq = DEVFREQ (devfreq_new ());
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
     self->priv->freezer = FREEZER (freezer_new ());
-    self->priv->systemd = SYSTEMD (systemd_new (G_BUS_TYPE_SYSTEM));
+    self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
 
     self->priv->screen_off_power_saving = TRUE;
     self->priv->screen_off_suspend_processes = NULL;

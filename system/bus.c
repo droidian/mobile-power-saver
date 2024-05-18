@@ -547,7 +547,6 @@ void
 bus_screen_state_changed (Bus *self,
                           gboolean enabled)
 {
-    g_message ("bus_screen_state_changed: %b %p", enabled, self->priv->adishatz_connection);
     g_dbus_connection_emit_signal (
         self->priv->adishatz_connection,
         NULL,
