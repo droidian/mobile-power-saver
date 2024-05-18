@@ -55,8 +55,6 @@ main (gint argc, gchar * argv[])
     g_resources_register (resource);
 
     manager_new ();
-    bus_get_default ();
-    logind_new ();
     kernel_settings_new ();
 
     loop = g_main_loop_new (NULL, FALSE);

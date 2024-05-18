@@ -42,7 +42,6 @@ on_mps_proxy_signal (GDBusProxy  *proxy,
 {
     Bus *self = BUS (user_data);
 
-    g_message ("%s", signal_name);
     if (g_strcmp0 (signal_name, "ScreenStateChanged") == 0) {
         gboolean enabled;
 

@@ -53,12 +53,12 @@ on_logind_proxy_properties (GDBusProxy  *proxy,
     g_variant_iter_init (&i, changed_properties);
     while (g_variant_iter_next (&i, "{&sv}", &property, &value)) {
         if (g_strcmp0 (property, "IdleHint") == 0) {
-            gboolean screen_on = g_variant_get_boolean (value);
+            gboolean idle_hint = g_variant_get_boolean (value);
             g_signal_emit(
                 self,
                 signals[SCREEN_STATE_CHANGED],
                 0,
-                !screen_on
+                !idle_hint
             );
         }
 

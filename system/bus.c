@@ -118,7 +118,6 @@ handle_method_call (GDBusConnection *connection,
                     gpointer user_data)
 {
     Bus *self = user_data;
-g_message("call: %s", method_name);
 
     if (g_strcmp0 (method_name, "HoldProfile") == 0) {
         /*

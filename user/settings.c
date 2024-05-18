@@ -49,7 +49,7 @@ on_setting_changed (GSettings   *settings,
 }
 
 
-static void
+static gboolean
 settings_notify_settings (Settings *self)
 {
     on_setting_changed (
@@ -62,6 +62,7 @@ settings_notify_settings (Settings *self)
         "screen-off-suspend-processes",
         self
     );
+    return FALSE;
 }
 
 
