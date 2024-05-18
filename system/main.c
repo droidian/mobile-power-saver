@@ -11,8 +11,8 @@
 
 #include "bus.h"
 #include "kernel_settings.h"
+#include "logind.h"
 #include "manager.h"
-#include "../common/logind.h"
 
 
 static GMainLoop *loop;

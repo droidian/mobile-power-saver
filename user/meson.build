@@ -5,7 +5,6 @@ mps_sources = [
   'manager.c',
   'mpris.c',
   'settings.c',
-  '../common/logind.c',
   '../common/utils.c'
 ]
 

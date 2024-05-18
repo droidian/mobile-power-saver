@@ -13,6 +13,17 @@
 #define DBUS_MPS_PATH                "/org/adishatz/Mps"
 #define DBUS_MPS_INTERFACE           "org.adishatz.Mps"
 
+
+/* signals */
+enum
+{
+    SCREEN_STATE_CHANGED,
+    LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL];
+
+
 struct _BusPrivate {
     GDBusProxy *mps_proxy;
 };
@@ -20,6 +31,32 @@ struct _BusPrivate {
 
 G_DEFINE_TYPE_WITH_CODE (Bus, bus, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Bus))
+
+
+static void
+on_mps_proxy_signal (GDBusProxy  *proxy,
+                     const gchar *sender_name,
+                     const gchar *signal_name,
+                     GVariant    *parameters,
+                     gpointer     user_data)
+{
+    Bus *self = BUS (user_data);
+
+    g_message ("%s", signal_name);
+    if (g_strcmp0 (signal_name, "ScreenStateChanged") == 0) {
+        gboolean enabled;
+
+        g_variant_get (parameters, "(b)", &enabled);
+
+        g_signal_emit(
+            self,
+            signals[SCREEN_STATE_CHANGED],
+            0,
+            enabled
+        );
+    }
+}
+
 
 static void
 bus_dispose (GObject *bus)
@@ -47,6 +84,18 @@ bus_class_init (BusClass *klass)
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = bus_dispose;
     object_class->finalize = bus_finalize;
+
+    signals[SCREEN_STATE_CHANGED] = g_signal_new (
+        "screen-state-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_BOOLEAN
+    );
+
 }
 
 static void
@@ -63,6 +112,13 @@ bus_init (Bus *self)
         DBUS_MPS_INTERFACE,
         NULL,
         NULL
+    );
+
+    g_signal_connect (
+        self->priv->mps_proxy,
+        "g-signal",
+        G_CALLBACK (on_mps_proxy_signal),
+        self
     );
 }
 

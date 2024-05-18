@@ -51,6 +51,8 @@ struct _BusClass {
 GType       bus_get_type        (void) G_GNUC_CONST;
 GObject*    bus_new             (void);
 Bus        *bus_get_default     (void);
+void        bus_screen_state_changed (Bus *self,
+                                      gboolean enabled);
 
 G_END_DECLS
 

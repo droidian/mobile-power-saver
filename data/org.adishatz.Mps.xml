@@ -17,5 +17,23 @@
         <arg direction='in' name='value' type='v'/>
       </method>
 
+      <!--
+        SimulateSreenOff:
+
+        Simulate screen off state
+      -->
+      <method name='SimulateScreenOff'>
+        <arg direction='in' name='simulate' type='b'/>
+      </method>
+
+      <!--
+        ScreenStateChanged:
+
+        Signal emitted when screen state changed.
+      -->
+      <signal name='ScreenStateChanged'>
+        <arg type='b' name='enabled'/>
+      </signal>
+
    </interface>
 </node>

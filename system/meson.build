@@ -7,9 +7,9 @@ mps_sources = [
   'freezer.c',
   'freq_device.c',
   'kernel_settings.c',
+  'logind.c',
   'main.c',
   'manager.c',
-  '../common/logind.c',
   '../common/utils.c'
 ]
 

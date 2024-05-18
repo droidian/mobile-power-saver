@@ -19,6 +19,7 @@ enum
     POWER_SAVING_MODE_CHANGED,
     SCREEN_OFF_POWER_SAVING_CHANGED,
     SCREEN_OFF_SUSPEND_PROCESSES_CHANGED,
+    SCREEN_STATE_CHANGED,
     LAST_SIGNAL
 };
 
@@ -117,6 +118,7 @@ handle_method_call (GDBusConnection *connection,
                     gpointer user_data)
 {
     Bus *self = user_data;
+g_message("call: %s", method_name);
 
     if (g_strcmp0 (method_name, "HoldProfile") == 0) {
         /*
@@ -156,6 +158,24 @@ handle_method_call (GDBusConnection *connection,
                 g_steal_pointer (&value)
             );
         }
+
+        g_dbus_method_invocation_return_value (
+            invocation, NULL
+        );
+        return;
+    }
+
+    if (g_strcmp0 (method_name, "SimulateScreenOff") == 0) {
+        gboolean screen_off;
+
+        g_variant_get (parameters, "(b)", &screen_off);
+
+        g_signal_emit(
+            self,
+            signals[SCREEN_STATE_CHANGED],
+            0,
+            !screen_off
+        );
 
         g_dbus_method_invocation_return_value (
             invocation, NULL
@@ -432,6 +452,17 @@ bus_class_init (BusClass *klass)
         1,
         G_TYPE_VARIANT
     );
+
+    signals[SCREEN_STATE_CHANGED] = g_signal_new (
+        "screen-state-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_BOOLEAN
+    );
 }
 
 static void
@@ -492,4 +523,20 @@ bus_get_default (void)
         default_bus = BUS (bus_new ());
     }
     return g_object_ref (default_bus);
+}
+
+void
+bus_screen_state_changed (Bus *self,
+                          gboolean enabled)
+{
+    g_message ("bus_screen_state_changed: %b %p", enabled, self->priv->adishatz_connection);
+    g_dbus_connection_emit_signal (
+        self->priv->adishatz_connection,
+        NULL,
+        ADISHATZ_DBUS_PATH,
+        ADISHATZ_DBUS_NAME,
+        "ScreenStateChanged",
+        g_variant_new ("(b)", enabled),
+        NULL
+    );
 }

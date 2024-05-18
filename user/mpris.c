@@ -67,20 +67,6 @@ mpris_del_player (struct Player *player)
 }
 
 
-static struct Player *
-mpris_get_player_by_desktop_id (Mpris *self, const gchar *desktop_id)
-{
-    struct Player *player;
-
-    GFOREACH (self->priv->players, player) {
-        if (g_strcmp0 (player->desktop_id, desktop_id) == 0) {
-            return player;
-        }
-    }
-    return NULL;
-}
-
-
 static void
 on_player_proxy_properties (GDBusProxy  *proxy,
                             GVariant    *changed_properties,
@@ -346,24 +332,25 @@ mpris_new (void)
 }
 
 /**
- * mpris_is_playing:
+ * mpris_can_freeze:
  *
- * Check if app id is playing.
+ * Check if an application scope can be freezed
  *
  * @self: a #Mpris
- * @app_ud: a setting key
+ * @app_scope: a setting key
  *
  * Returns: TRUE if app id is playing
  */
 gboolean
-mpris_is_playing (Mpris *self, const gchar *app_id)
+mpris_can_freeze (Mpris *self, const gchar *app_scope)
 {
-    struct Player *player = mpris_get_player_by_desktop_id (self, app_id);
+    struct Player *player;
 
-    if (player == NULL)
-        return FALSE;
-
-    return player->is_playing;
+    GFOREACH (self->priv->players, player) {
+        if (g_strrstr (app_scope, player->desktop_id) != NULL)
+            return !player->is_playing;
+    }
+    return TRUE;
 }
 
 

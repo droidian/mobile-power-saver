@@ -10,6 +10,7 @@
 #include <gio/gio.h>
 
 #include "dozing.h"
+#include "mpris.h"
 #include "../common/define.h"
 #include "../common/utils.h"
 
@@ -21,6 +22,7 @@
 
 struct _DozingPrivate {
     GList *apps;
+    Mpris *mpris;
 
     guint timeout;
     guint timeout_id;
@@ -34,6 +36,7 @@ G_DEFINE_TYPE_WITH_CODE (
     G_ADD_PRIVATE (Dozing)
 )
 
+
 static gboolean dozing_unfreeze_apps (Dozing *self);
 static gboolean
 dozing_freeze_apps (Dozing *self)
@@ -43,8 +46,11 @@ dozing_freeze_apps (Dozing *self)
     g_return_val_if_fail (self->priv->apps != NULL, FALSE);
 
     g_message("Freezing apps");
-    GFOREACH (self->priv->apps, app)
-        write_to_file (app, "1");
+    GFOREACH (self->priv->apps, app) {
+        if (mpris_can_freeze (self->priv->mpris, app)) {
+            write_to_file (app, "1");
+        }
+    }
 
     self->priv->timeout_id = g_timeout_add_seconds (
         self->priv->timeout,
@@ -62,10 +68,9 @@ dozing_unfreeze_apps (Dozing *self)
 
     g_return_val_if_fail (self->priv->apps != NULL, FALSE);
 
-    g_message("Freezing apps");
+    g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)
         write_to_file (app, "0");
-
 
     self->priv->timeout_id = g_timeout_add_seconds (
         (guint) (self->priv->timeout * DOZING_MAINTENANCE),
@@ -97,7 +102,7 @@ dozing_get_apps (Dozing *self)
     }
 
     while ((app_dir = g_dir_read_name (sys_dir)) != NULL) {
-        if (g_str_has_prefix (app_dir, "app-")) {
+        if (g_str_has_prefix (app_dir, "app-") && !g_str_has_prefix (app_dir, "app-org.gnome.Terminal")) {
             gchar *app = g_build_filename (
                 dirname, app_dir, "cgroup.freeze", NULL
             );
@@ -116,6 +121,10 @@ dozing_get_apps (Dozing *self)
 static void
 dozing_dispose (GObject *dozing)
 {
+    Dozing *self = DOZING (dozing);
+
+    g_clear_object (&self->priv->mpris);
+
     G_OBJECT_CLASS (dozing_parent_class)->dispose (dozing);
 }
 
@@ -145,6 +154,8 @@ static void
 dozing_init (Dozing *self)
 {
     self->priv = dozing_get_instance_private (self);
+
+    self->priv->mpris = MPRIS (mpris_new ());
 
     self->priv->apps = NULL;
     self->priv->timeout = DOZING_MIN;

@@ -12,8 +12,8 @@
 #include "devfreq.h"
 #include "freezer.h"
 #include "kernel_settings.h"
+#include "logind.h"
 #include "manager.h"
-#include "../common/logind.h"
 
 
 struct _ManagerPrivate {
@@ -35,10 +35,13 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-on_screen_on (Logind  *logind, gboolean screen_on, gpointer user_data) {
+on_screen_state_changed (gpointer ignore, gboolean screen_on, gpointer user_data) {
     Manager *self = MANAGER (user_data);
 
+    g_message ("on_screen_state_changed: %b", screen_on);
     if (self->priv->screen_off_power_saving) {
+        bus_screen_state_changed (bus_get_default (), screen_on);
+
         cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
         devfreq_set_powersave (self->priv->devfreq, !screen_on);
         kernel_settings_set_powersave (self->priv->kernel_settings, !screen_on);
@@ -150,8 +153,15 @@ manager_init (Manager *self)
 
     g_signal_connect (
         logind_get_default (),
-        "screen-on",
-        G_CALLBACK (on_screen_on),
+        "screen-state-changed",
+        G_CALLBACK (on_screen_state_changed),
+        self
+    );
+
+    g_signal_connect (
+        bus_get_default (),
+        "screen-state-changed",
+        G_CALLBACK (on_screen_state_changed),
         self
     );
 

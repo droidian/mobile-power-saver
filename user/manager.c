@@ -10,14 +10,11 @@
 #include "bus.h"
 #include "dozing.h"
 #include "manager.h"
-#include "mpris.h"
 #include "settings.h"
-#include "../common/logind.h"
 
 
 struct _ManagerPrivate {
     Dozing *dozing;
-    Mpris *mpris;
 
     gboolean screen_off_power_saving;
 };
@@ -48,7 +45,7 @@ on_setting_changed (Settings    *settings,
 }
 
 static void
-on_screen_on (Logind  *logind, gboolean screen_on, gpointer user_data)
+on_screen_state_changed (Bus *bus, gboolean screen_on, gpointer user_data)
 {
     Manager *self = MANAGER (user_data);
 
@@ -68,7 +65,6 @@ manager_dispose (GObject *manager)
     Manager *self = MANAGER (manager);
 
     g_clear_object (&self->priv->dozing);
-    g_clear_object (&self->priv->mpris);
 
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
@@ -98,13 +94,12 @@ manager_init (Manager *self)
     self->priv = manager_get_instance_private (self);
 
     self->priv->dozing = DOZING (dozing_new ());
-    self->priv->mpris = MPRIS (mpris_new ());
     self->priv->screen_off_power_saving = TRUE;
 
     g_signal_connect (
-        logind_get_default (),
-        "screen-on",
-        G_CALLBACK (on_screen_on),
+        bus_get_default (),
+        "screen-state-changed",
+        G_CALLBACK (on_screen_state_changed),
         self
     );
 

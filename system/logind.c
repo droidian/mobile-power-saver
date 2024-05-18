@@ -7,6 +7,7 @@
 
 #include <gio/gio.h>
 
+#include "bus.h"
 #include "logind.h"
 
 
@@ -18,7 +19,7 @@
 /* signals */
 enum
 {
-    SCREEN_ON,
+    SCREEN_STATE_CHANGED,
     LAST_SIGNAL
 };
 
@@ -52,12 +53,13 @@ on_logind_proxy_properties (GDBusProxy  *proxy,
     g_variant_iter_init (&i, changed_properties);
     while (g_variant_iter_next (&i, "{&sv}", &property, &value)) {
         if (g_strcmp0 (property, "IdleHint") == 0) {
-          g_signal_emit(
-            self,
-            signals[SCREEN_ON],
-            0,
-            !g_variant_get_boolean (value)
-          );
+            gboolean screen_on = g_variant_get_boolean (value);
+            g_signal_emit(
+                self,
+                signals[SCREEN_STATE_CHANGED],
+                0,
+                !screen_on
+            );
         }
 
         g_variant_unref (value);
@@ -97,7 +99,7 @@ logind_dispose (GObject *logind)
     Logind *self = LOGIND (logind);
 
     g_clear_object (&self->priv->logind_proxy);
-    
+
     g_free (self->priv);
 
     G_OBJECT_CLASS (logind_parent_class)->dispose (logind);
@@ -110,9 +112,9 @@ logind_class_init (LogindClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = logind_dispose;
-  
-    signals[SCREEN_ON] = g_signal_new (
-        "screen-on",
+
+    signals[SCREEN_STATE_CHANGED] = g_signal_new (
+        "screen-state-changed",
         G_OBJECT_CLASS_TYPE (object_class),
         G_SIGNAL_RUN_LAST,
         0,
@@ -127,7 +129,7 @@ static void
 logind_init (Logind *self)
 {
     self->priv = logind_get_instance_private (self);
-    
+
     logind_connect_logind (self);
 }
 
