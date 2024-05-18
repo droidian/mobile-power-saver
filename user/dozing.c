@@ -104,7 +104,8 @@ dozing_get_apps (Dozing *self)
     }
 
     while ((app_dir = g_dir_read_name (sys_dir)) != NULL) {
-        if (g_str_has_prefix (app_dir, "app-") && !g_str_has_prefix (app_dir, "app-org.gnome.Terminal")) {
+        if (g_str_has_prefix (app_dir, "app-") &&
+                g_str_has_suffix (app_dir, ".scope")) {
             gchar *app = g_build_filename (
                 dirname, app_dir, "cgroup.freeze", NULL
             );
