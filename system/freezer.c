@@ -207,6 +207,8 @@ freezer_suspend_processes (Freezer  *self, GList *names) {
  * resume processes
  *
  * @param #Freezer
+ * @param names: processes list
+ *
  */
 void
 freezer_resume_processes (Freezer  *self, GList *names) {

@@ -10,6 +10,7 @@ mps_sources = [
   'logind.c',
   'main.c',
   'manager.c',
+  '../common/systemd.c',
   '../common/utils.c'
 ]
 

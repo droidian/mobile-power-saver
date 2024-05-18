@@ -44,7 +44,8 @@ dozing_freeze_apps (Dozing *self)
 {
     const gchar *app;
 
-    g_return_val_if_fail (self->priv->apps != NULL, FALSE);
+    if (self->priv->apps == NULL)
+        return FALSE;
 
     g_message("Freezing apps");
     GFOREACH (self->priv->apps, app) {
@@ -68,7 +69,8 @@ dozing_unfreeze_apps (Dozing *self)
 {
     const gchar *app;
 
-    g_return_val_if_fail (self->priv->apps != NULL, FALSE);
+    if (self->priv->apps == NULL)
+        return FALSE;
 
     g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)

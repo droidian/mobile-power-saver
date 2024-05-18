@@ -62,6 +62,11 @@ settings_notify_settings (Settings *self)
         "screen-off-suspend-processes",
         self
     );
+    on_setting_changed (
+        self->priv->settings,
+        "screen-off-suspend-system-services",
+        self
+    );
     return FALSE;
 }
 
@@ -122,6 +127,12 @@ settings_init (Settings *self)
     g_signal_connect (
         self->priv->settings,
         "changed::screen-off-suspend-processes",
+        G_CALLBACK (on_setting_changed),
+        self
+    );
+    g_signal_connect (
+        self->priv->settings,
+        "changed::screen-off-suspend-system-services",
         G_CALLBACK (on_setting_changed),
         self
     );
@@ -192,4 +203,32 @@ settings_can_freeze_app (Settings *self,
             return FALSE;
     }
     return TRUE;
+}
+
+
+/**
+ * settings_get_suspend_services
+ *
+ * Get services those can be suspended
+ *
+ * @self: a #Settings
+ * @app_scope: a setting key
+ *
+ * Return value: (transfer full): services list.
+ */
+GList *
+settings_get_suspend_services (Settings *self)
+{
+    g_autoptr(GVariant) value = g_settings_get_value (
+        self->priv->settings, "screen-off-suspend-user-services"
+    );
+    g_autoptr (GVariantIter) iter;
+    const gchar *service;
+    GList *services = NULL;
+
+    g_variant_get (value, "as", &iter);
+    while (g_variant_iter_loop (iter, "s", &service)) {
+        services = g_list_append (services, g_strdup (service));
+    }
+    return services;
 }

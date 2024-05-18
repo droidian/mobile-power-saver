@@ -19,6 +19,7 @@ enum
     POWER_SAVING_MODE_CHANGED,
     SCREEN_OFF_POWER_SAVING_CHANGED,
     SCREEN_OFF_SUSPEND_PROCESSES_CHANGED,
+    SCREEN_OFF_SUSPEND_SERVICES_CHANGED,
     SCREEN_STATE_CHANGED,
     LAST_SIGNAL
 };
@@ -153,6 +154,13 @@ handle_method_call (GDBusConnection *connection,
             g_signal_emit(
                 self,
                 signals[SCREEN_OFF_SUSPEND_PROCESSES_CHANGED],
+                0,
+                g_steal_pointer (&value)
+            );
+        } else if (g_strcmp0 (setting, "screen-off-suspend-system-services") == 0) {
+            g_signal_emit(
+                self,
+                signals[SCREEN_OFF_SUSPEND_SERVICES_CHANGED],
                 0,
                 g_steal_pointer (&value)
             );
@@ -443,6 +451,17 @@ bus_class_init (BusClass *klass)
 
     signals[SCREEN_OFF_SUSPEND_PROCESSES_CHANGED] = g_signal_new (
         "screen-off-suspend-processes-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_VARIANT
+    );
+
+    signals[SCREEN_OFF_SUSPEND_SERVICES_CHANGED] = g_signal_new (
+        "screen-off-suspend-services-changed",
         G_OBJECT_CLASS_TYPE (object_class),
         G_SIGNAL_RUN_LAST,
         0,

@@ -20,5 +20,17 @@
       <description>When screen is turned off, these apps will be ignored.</description>
     </key>
 
+    <key name="screen-off-suspend-user-services" type="as">
+      <default>[]</default>
+      <summary>Suspend these services when screen is off</summary>
+      <description>When screen is turned off, services in list are suspended.</description>
+    </key>
+
+    <key name="screen-off-suspend-system-services" type="as">
+      <default>[]</default>
+      <summary>Suspend these services when screen is off</summary>
+      <description>When screen is turned off, services in list are suspended.</description>
+    </key>
+
   </schema>
 </schemalist>

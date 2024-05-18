@@ -11,10 +11,12 @@
 #include "dozing.h"
 #include "manager.h"
 #include "settings.h"
+#include "../common/systemd.h"
 
 
 struct _ManagerPrivate {
     Dozing *dozing;
+    Systemd *systemd;
 
     gboolean screen_off_power_saving;
 };
@@ -44,16 +46,20 @@ on_setting_changed (Settings    *settings,
     }
 }
 
+
 static void
 on_screen_state_changed (Bus *bus, gboolean screen_on, gpointer user_data)
 {
     Manager *self = MANAGER (user_data);
 
     if (self->priv->screen_off_power_saving) {
+        GList *services = settings_get_suspend_services (settings_get_default ());
         if (screen_on) {
             dozing_stop (self->priv->dozing);
+            systemd_start (self->priv->systemd, services);
         } else {
             dozing_start (self->priv->dozing);
+            systemd_stop (self->priv->systemd, services);
         }
     }
 }
@@ -65,6 +71,7 @@ manager_dispose (GObject *manager)
     Manager *self = MANAGER (manager);
 
     g_clear_object (&self->priv->dozing);
+    g_clear_object (&self->priv->systemd);
 
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
@@ -94,6 +101,8 @@ manager_init (Manager *self)
     self->priv = manager_get_instance_private (self);
 
     self->priv->dozing = DOZING (dozing_new ());
+    self->priv->systemd = SYSTEMD (systemd_new (G_BUS_TYPE_SESSION));
+
     self->priv->screen_off_power_saving = TRUE;
 
     g_signal_connect (

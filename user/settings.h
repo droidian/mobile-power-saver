@@ -46,6 +46,7 @@ Settings       *settings_get_default                   (void);
 GObject*        settings_new                           (void);
 gboolean        settings_can_freeze_app                (Settings *self,
                                                         const gchar *app_scope);
+GList          *settings_get_suspend_services          (Settings *self);
 G_END_DECLS
 
 #endif

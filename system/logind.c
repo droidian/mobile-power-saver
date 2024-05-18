@@ -93,6 +93,7 @@ logind_connect_logind (Logind *self) {
     );
 }
 
+
 static void
 logind_dispose (GObject *logind)
 {
@@ -105,6 +106,14 @@ logind_dispose (GObject *logind)
     G_OBJECT_CLASS (logind_parent_class)->dispose (logind);
 }
 
+
+static void
+logind_finalize (GObject *logind)
+{
+    G_OBJECT_CLASS (logind_parent_class)->finalize (logind);
+}
+
+
 static void
 logind_class_init (LogindClass *klass)
 {
@@ -112,6 +121,7 @@ logind_class_init (LogindClass *klass)
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = logind_dispose;
+    object_class->finalize = logind_finalize;
 
     signals[SCREEN_STATE_CHANGED] = g_signal_new (
         "screen-state-changed",
