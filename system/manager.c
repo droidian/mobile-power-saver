@@ -7,6 +7,7 @@
 
 #include <gio/gio.h>
 
+#include "binder.h"
 #include "bus.h"
 #include "cpufreq.h"
 #include "devfreq.h"
@@ -18,6 +19,7 @@
 
 
 struct _ManagerPrivate {
+    Binder *binder;
     Cpufreq *cpufreq;
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
@@ -44,6 +46,7 @@ on_screen_state_changed (gpointer ignore, gboolean screen_on, gpointer user_data
     if (self->priv->screen_off_power_saving) {
         bus_screen_state_changed (bus_get_default (), screen_on);
 
+        binder_set_powersave (self->priv->binder, !screen_on);
         cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
         devfreq_set_powersave (self->priv->devfreq, !screen_on);
         kernel_settings_set_powersave (self->priv->kernel_settings, !screen_on);
@@ -148,6 +151,7 @@ manager_dispose (GObject *manager)
 {
     Manager *self = MANAGER (manager);
 
+    g_clear_object (&self->priv->binder);
     g_clear_object (&self->priv->cpufreq);
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
@@ -188,6 +192,7 @@ manager_init (Manager *self)
 {
     self->priv = manager_get_instance_private (self);
 
+    self->priv->binder = BINDER (binder_new ());
     self->priv->cpufreq = CPUFREQ (cpufreq_new ());
     self->priv->devfreq = DEVFREQ (devfreq_new ());
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());

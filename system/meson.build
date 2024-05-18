@@ -6,6 +6,7 @@ mps_sources = [
   'devfreq_device.c',
   'freezer.c',
   'freq_device.c',
+  'binder.c',
   'kernel_settings.c',
   'logind.c',
   'main.c',
@@ -18,6 +19,7 @@ mps_deps = [
   dependency('glib-2.0'),
   dependency('gio-2.0'),
   dependency('gio-unix-2.0'),
+  dependency('libgbinder')
 ]
 
 executable('mobile-power-saver', mps_sources,
