@@ -101,8 +101,6 @@ logind_dispose (GObject *logind)
 
     g_clear_object (&self->priv->logind_proxy);
 
-    g_free (self->priv);
-
     G_OBJECT_CLASS (logind_parent_class)->dispose (logind);
 }
 
