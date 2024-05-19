@@ -234,7 +234,8 @@ freezer_resume_processes (Freezer *self,
 
     struct Process *process;
 
-    g_return_if_fail (self->priv->processes != NULL);
+    if (self->priv->processes == NULL)
+        return;
 
     GFOREACH (self->priv->processes, process)
         if (freezer_in_list (names, process))
