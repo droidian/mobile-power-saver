@@ -44,8 +44,10 @@ struct _FreezerClass {
 GType           freezer_get_type            (void) G_GNUC_CONST;
 
 GObject*        freezer_new                 (void);
-void            freezer_suspend_processes   (Freezer *freezer, GList *names);
-void            freezer_resume_processes    (Freezer *freezer, GList *names);
+void            freezer_suspend_processes   (Freezer *freezer,
+                                             GList   *names);
+void            freezer_resume_processes    (Freezer *freezer,
+                                             GList   *names);
 G_END_DECLS
 
 #endif

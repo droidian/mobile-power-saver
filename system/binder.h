@@ -44,8 +44,8 @@ struct _BinderClass {
 GType           binder_get_type            (void) G_GNUC_CONST;
 
 GObject*        binder_new                 (void);
-void            binder_set_powersave       (Binder *self,
-                                            gboolean powersave);
+void            binder_set_powersave       (Binder   *self,
+                                            gboolean  powersave);
 
 G_END_DECLS
 

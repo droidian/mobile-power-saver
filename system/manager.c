@@ -40,7 +40,10 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-on_screen_state_changed (gpointer ignore, gboolean screen_on, gpointer user_data) {
+on_screen_state_changed (gpointer ignore,
+                         gboolean screen_on,
+                         gpointer user_data)
+{
     Manager *self = MANAGER (user_data);
 
     if (self->priv->screen_off_power_saving) {
@@ -75,9 +78,10 @@ on_screen_state_changed (gpointer ignore, gboolean screen_on, gpointer user_data
 
 
 static void
-on_power_saving_mode_changed (Bus  *bus,
-                              const gchar* governor,
-                              gpointer user_data) {
+on_power_saving_mode_changed (Bus         *bus,
+                              const gchar *governor,
+                              gpointer     user_data)
+{
     Manager *self = MANAGER (user_data);
 
     cpufreq_set_governor (self->priv->cpufreq, governor);
@@ -86,9 +90,10 @@ on_power_saving_mode_changed (Bus  *bus,
 
 
 static void
-on_screen_off_power_saving_changed (Bus  *bus,
-                                    gboolean screen_off_power_saving,
-                                    gpointer user_data) {
+on_screen_off_power_saving_changed (Bus      *bus,
+                                    gboolean  screen_off_power_saving,
+                                    gpointer  user_data)
+{
     Manager *self = MANAGER (user_data);
 
     self->priv->screen_off_power_saving = screen_off_power_saving;
@@ -100,9 +105,10 @@ on_screen_off_power_saving_changed (Bus  *bus,
 }
 
 static void
-on_screen_off_suspend_processes_changed (Bus  *bus,
+on_screen_off_suspend_processes_changed (Bus      *bus,
                                          GVariant *value,
-                                         gpointer user_data) {
+                                         gpointer  user_data)
+{
     Manager *self = MANAGER (user_data);
     g_autoptr (GVariantIter) iter;
     gchar *process;
@@ -119,13 +125,15 @@ on_screen_off_suspend_processes_changed (Bus  *bus,
                 self->priv->screen_off_suspend_processes, g_strdup (process)
             );
     }
+    g_variant_unref (value);
 }
 
 
 static void
-on_screen_off_suspend_services_changed (Bus  *bus,
+on_screen_off_suspend_services_changed (Bus      *bus,
                                         GVariant *value,
-                                        gpointer user_data) {
+                                        gpointer  user_data)
+{
     Manager *self = MANAGER (user_data);
     g_autoptr (GVariantIter) iter;
     gchar *service;
@@ -143,6 +151,7 @@ on_screen_off_suspend_services_changed (Bus  *bus,
                 self->priv->screen_off_suspend_services, g_strdup (service)
             );
     }
+    g_variant_unref (value);
 }
 
 

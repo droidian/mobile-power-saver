@@ -48,7 +48,9 @@ on_setting_changed (Settings    *settings,
 
 
 static void
-on_screen_state_changed (Bus *bus, gboolean screen_on, gpointer user_data)
+on_screen_state_changed (Bus      *bus,
+                         gboolean  screen_on,
+                         gpointer  user_data)
 {
     Manager *self = MANAGER (user_data);
 

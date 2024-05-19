@@ -44,8 +44,8 @@ struct _KernelSettingsClass {
 GType           kernel_settings_get_type      (void) G_GNUC_CONST;
 
 GObject*        kernel_settings_new           (void);
-void            kernel_settings_set_powersave (KernelSettings  *kernel_settings,
-                                               gboolean  powersave);
+void            kernel_settings_set_powersave (KernelSettings *kernel_settings,
+                                               gboolean        powersave);
 
 G_END_DECLS
 

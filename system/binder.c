@@ -11,9 +11,9 @@
 #include "binder.h"
 
 enum Hints {
-    BINDER_INTERACTION = 0x00000002,
-    BINDER_POWERSAVE = 0x00000005,
-    BINDER_PERFORMANCE = 0x00000006
+    BINDER_INTERACTION  = 0x00000002,
+    BINDER_POWERSAVE    = 0x00000005,
+    BINDER_PERFORMANCE  = 0x00000006
 };
 
 
@@ -33,8 +33,8 @@ G_DEFINE_TYPE_WITH_CODE (
 
 
 static void
-binder_set_modes(GBinderClient* client,
-                 const gint interactive,
+binder_set_modes(GBinderClient   *client,
+                 const gint       interactive,
                  const enum Hints hint)
 {
     gint status;
@@ -151,7 +151,8 @@ binder_new (void)
  *
  */
 void
-binder_set_powersave (Binder *self, gboolean powersave)
+binder_set_powersave (Binder  *self,
+                      gboolean powersave)
 {
     if (self->priv->client == NULL)
         return;

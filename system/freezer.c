@@ -33,9 +33,25 @@ struct Process {
     gchar *cmdline;
 };
 
+
+static void
+freezer_process_free (gpointer user_data)
+{
+    struct Process *process = user_data;
+
+    g_free (process->cmdline);
+    g_free (process);
+}
+
+
 // From https://gitlab.com/procps-ng/procps
 //
-static int read_unvectored(char *restrict const dst, unsigned sz, const char *whom, const char *what, char sep) {
+static int read_unvectored(char *restrict const dst,
+                           unsigned             sz,
+                           const char          *whom,
+                           const char          *what,
+                           char                 sep)
+{
     char path[PROCPATHLEN];
     int fd, len;
     unsigned n = 0;
@@ -75,7 +91,8 @@ static int read_unvectored(char *restrict const dst, unsigned sz, const char *wh
 }
 
 static gboolean
-freezer_in_list (GList *names, struct Process *process)
+freezer_in_list (GList          *names,
+                 struct Process *process)
 {
     gchar *name;
 
@@ -138,7 +155,7 @@ freezer_finalize (GObject *freezer)
 {
     Freezer *self = FREEZER (freezer);
 
-    g_list_free_full (self->priv->processes, g_free);
+    g_list_free_full (self->priv->processes, freezer_process_free);
 
     G_OBJECT_CLASS (freezer_parent_class)->finalize (freezer);
 }
@@ -189,7 +206,8 @@ freezer_new (void)
  * @param names: processes list
  */
 void
-freezer_suspend_processes (Freezer  *self, GList *names) {
+freezer_suspend_processes (Freezer *self,
+                           GList   *names) {
 
     struct Process *process;
 
@@ -211,7 +229,8 @@ freezer_suspend_processes (Freezer  *self, GList *names) {
  *
  */
 void
-freezer_resume_processes (Freezer  *self, GList *names) {
+freezer_resume_processes (Freezer *self,
+                          GList   *names) {
 
     struct Process *process;
 

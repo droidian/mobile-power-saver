@@ -68,7 +68,8 @@ on_logind_proxy_properties (GDBusProxy  *proxy,
 
 
 static void
-logind_connect_logind (Logind *self) {
+logind_connect_logind (Logind *self)
+{
     g_autoptr (GError) error = NULL;
 
     self->priv->logind_proxy = g_dbus_proxy_new_for_bus_sync (
@@ -170,8 +171,23 @@ static Logind *default_logind = NULL;
 Logind *
 logind_get_default (void)
 {
-    if (!default_logind) {
+    if (default_logind == NULL) {
         default_logind = LOGIND (logind_new ());
     }
-    return g_object_ref (default_logind);
+    return default_logind;
+}
+
+/**
+ * logind_free_default:
+ *
+ * Free the default #Logind.
+ *
+ */
+void
+logind_free_default (void)
+{
+    if (default_logind != NULL) {
+        g_clear_object (&default_logind);
+        default_logind = NULL;
+    }
 }

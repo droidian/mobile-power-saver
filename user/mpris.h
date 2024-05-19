@@ -42,7 +42,7 @@ struct _MprisClass {
 };
 
 GType       mpris_get_type       (void) G_GNUC_CONST;
-Mpris      *mpris_get_default    (void);
+
 GObject*    mpris_new            (void);
 gboolean    mpris_can_freeze     (Mpris *self,
                                   const gchar *app_scope);

@@ -119,7 +119,8 @@ cpufreq_new (void)
  * @param powersave: True to enable powersave
  */
 void
-cpufreq_set_powersave (Cpufreq  *cpufreq, gboolean  powersave) {
+cpufreq_set_powersave (Cpufreq  *cpufreq,
+                       gboolean  powersave) {
     CpufreqDevice *cpufreq_device;
 
     GFOREACH (cpufreq->priv->cpufreq_devices, cpufreq_device)
@@ -135,7 +136,8 @@ cpufreq_set_powersave (Cpufreq  *cpufreq, gboolean  powersave) {
  * @param governor: new governor to set
  */
 void
-cpufreq_set_governor (Cpufreq  *cpufreq, const gchar* governor) {
+cpufreq_set_governor (Cpufreq     *cpufreq,
+                      const gchar *governor) {
     CpufreqDevice *cpufreq_device;
 
     GFOREACH (cpufreq->priv->cpufreq_devices, cpufreq_device)

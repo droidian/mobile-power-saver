@@ -152,7 +152,10 @@ bus_new (void)
  * @value: a setting value
  */
 void
-bus_set_value (Bus *self, const gchar *key, GVariant *value) {
+bus_set_value (Bus         *self,
+               const gchar *key,
+               GVariant    *value)
+{
     g_autoptr (GError) error = NULL;
     g_autoptr(GVariant) result = NULL;
 

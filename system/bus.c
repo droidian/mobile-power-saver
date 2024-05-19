@@ -109,14 +109,14 @@ get_profiles_variant (void)
 
 
 static void
-handle_method_call (GDBusConnection *connection,
-                    const gchar *sender,
-                    const gchar *object_path,
-                    const gchar *interface_name,
-                    const gchar *method_name,
-                    GVariant *parameters,
+handle_method_call (GDBusConnection       *connection,
+                    const gchar           *sender,
+                    const gchar           *object_path,
+                    const gchar           *interface_name,
+                    const gchar           *method_name,
+                    GVariant              *parameters,
                     GDBusMethodInvocation *invocation,
-                    gpointer user_data)
+                    gpointer               user_data)
 {
     Bus *self = user_data;
 
@@ -193,12 +193,12 @@ handle_method_call (GDBusConnection *connection,
 
 static GVariant *
 handle_get_property (GDBusConnection *connection,
-                     const gchar *sender,
-                     const gchar *object_path,
-                     const gchar *interface_name,
-                     const gchar *property_name,
-                     GError **error,
-                     gpointer user_data)
+                     const gchar     *sender,
+                     const gchar     *object_path,
+                     const gchar     *interface_name,
+                     const gchar     *property_name,
+                     GError         **error,
+                     gpointer         user_data)
 {
     Bus *self = user_data;
 
@@ -266,8 +266,8 @@ static const GDBusInterfaceVTable hadess_interface_vtable = {
 
 static void
 on_bus_acquired (GDBusConnection *connection,
-                 const gchar *name,
-                 gpointer user_data)
+                 const gchar     *name,
+                 gpointer         user_data)
 {
     Bus *self = user_data;
     guint registration_id;
@@ -306,24 +306,24 @@ on_bus_acquired (GDBusConnection *connection,
 
 static void
 on_name_acquired (GDBusConnection *connection,
-                  const gchar *name,
-                  gpointer user_data)
+                  const gchar     *name,
+                  gpointer         user_data)
 {}
 
 
 static void
 on_name_lost (GDBusConnection *connection,
-              const gchar *name,
-              gpointer user_data)
+              const gchar     *name,
+              gpointer         user_data)
 {
     g_error ("Cannot own D-Bus name. Verify installation: %s\n", name);
 }
 
 static void
-bus_set_property (GObject *object,
-                        guint property_id,
-                        const GValue *value,
-                        GParamSpec *pspec)
+bus_set_property (GObject      *object,
+                  guint         property_id,
+                  const GValue *value,
+                  GParamSpec   *pspec)
 {
     switch (property_id) {
         default:
@@ -333,9 +333,9 @@ bus_set_property (GObject *object,
 }
 
 static void
-bus_get_property (GObject *object,
-                  guint property_id,
-                  GValue *value,
+bus_get_property (GObject    *object,
+                  guint       property_id,
+                  GValue     *value,
                   GParamSpec *pspec)
 {
     switch (property_id) {
@@ -348,8 +348,8 @@ bus_get_property (GObject *object,
 static GDBusNodeInfo *
 bus_init_path (const gchar *dbus_name,
                const gchar *xml,
-               guint *owner_id,
-               gpointer user_data)
+               guint       *owner_id,
+               gpointer     user_data)
 {
     Bus *self = user_data;
     GBytes *bytes;
@@ -537,14 +537,30 @@ static Bus *default_bus = NULL;
 Bus *
 bus_get_default (void)
 {
-    if (!default_bus) {
+    if (default_bus == NULL) {
         default_bus = BUS (bus_new ());
     }
     return g_object_ref (default_bus);
 }
 
+
+/**
+ * bus_free_default:
+ *
+ * Free the default #Bus.
+ *
+ */
 void
-bus_screen_state_changed (Bus *self,
+bus_free_default (void)
+{
+    if (default_bus != NULL) {
+        g_clear_object (&default_bus);
+        default_bus = NULL;
+    }
+}
+
+void
+bus_screen_state_changed (Bus     *self,
                           gboolean enabled)
 {
     g_dbus_connection_emit_signal (

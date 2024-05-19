@@ -27,6 +27,7 @@ sigint_handler(int dummy) {
 gint
 main (gint argc, gchar * argv[])
 {
+    GObject *manager;
     GResource *resource;
     g_autoptr (GOptionContext) context = NULL;
     g_autoptr (GError) error = NULL;
@@ -54,13 +55,15 @@ main (gint argc, gchar * argv[])
     resource = g_resource_load (MPS_RESOURCES, NULL);
     g_resources_register (resource);
 
-    manager_new ();
-    kernel_settings_new ();
+    manager = manager_new ();
 
     loop = g_main_loop_new (NULL, FALSE);
     g_main_loop_run (loop);
 
     g_clear_pointer (&loop, g_main_loop_unref);
+    g_clear_object (&manager);
+    logind_free_default ();
+    bus_free_default ();
 
     return EXIT_SUCCESS;
 }

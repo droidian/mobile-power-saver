@@ -44,10 +44,10 @@ struct _DevfreqClass {
 GType           devfreq_get_type            (void) G_GNUC_CONST;
 
 GObject*        devfreq_new                 (void);
-void            devfreq_set_powersave       (Devfreq  *devfreq,
-                                             gboolean  powersave);
-void            devfreq_set_governor        (Devfreq  *devfreq,
-                                             const gchar* governor);
+void            devfreq_set_powersave       (Devfreq     *devfreq,
+                                             gboolean     powersave);
+void            devfreq_set_governor        (Devfreq     *devfreq,
+                                             const gchar *governor);
 G_END_DECLS
 
 #endif

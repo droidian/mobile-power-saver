@@ -175,7 +175,9 @@ kernel_settings_new (void)
  * @param powersave: True to enable powersave
  */
 void
-kernel_settings_set_powersave (KernelSettings  *kernel_settings, gboolean  powersave) {
+kernel_settings_set_powersave (KernelSettings *kernel_settings,
+                               gboolean        powersave)
+{
     if (powersave) {
         /* https://www.fatalerrors.org/a/schedtune-learning-notes.html */
         write_to_file (

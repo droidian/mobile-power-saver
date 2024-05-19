@@ -26,7 +26,9 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-set_governor (FreqDevice  *freq_device, const gchar* governor) {
+set_governor (FreqDevice  *freq_device,
+              const gchar *governor)
+{
     g_autofree gchar *filename = g_build_filename (
         freq_device->priv->sysfs_dir,
         freq_device->priv->device_name,
@@ -115,7 +117,7 @@ freq_device_new (void)
  *
  **/
 void
-freq_device_set_sysfs_settings (FreqDevice *self,
+freq_device_set_sysfs_settings (FreqDevice  *self,
                                 const gchar *directory,
                                 const gchar *governor_node)
 {
@@ -138,7 +140,8 @@ freq_device_set_sysfs_settings (FreqDevice *self,
  *
  **/
 void
-freq_device_set_name (FreqDevice *self, const gchar *device_name)
+freq_device_set_name (FreqDevice  *self,
+                      const gchar *device_name)
 {
     g_autofree gchar *contents = NULL;
 
@@ -171,7 +174,9 @@ freq_device_set_name (FreqDevice *self, const gchar *device_name)
  * @param powersave: True to enable powersave
  */
 void
-freq_device_set_powersave (FreqDevice  *self,  gboolean  powersave) {
+freq_device_set_powersave (FreqDevice *self,
+                           gboolean    powersave)
+{
     if (powersave)
         set_governor (self, "powersave");
     else if (self->priv->current_governor != NULL)
@@ -190,7 +195,9 @@ freq_device_set_powersave (FreqDevice  *self,  gboolean  powersave) {
  * @param governor: new governor to set
  */
 void
-freq_device_set_governor (FreqDevice  *self, const gchar* governor) {
+freq_device_set_governor (FreqDevice  *self,
+                          const gchar *governor)
+{
     if (self->priv->current_governor != NULL)
         g_free (self->priv->current_governor);
 

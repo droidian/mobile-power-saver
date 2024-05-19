@@ -45,6 +45,7 @@ GType           logind_get_type            (void) G_GNUC_CONST;
 
 GObject*        logind_new                 (void);
 Logind*         logind_get_default         (void);
+void            logind_free_default        (void);
 
 G_END_DECLS
 

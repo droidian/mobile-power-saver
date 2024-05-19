@@ -91,7 +91,9 @@ on_player_proxy_properties (GDBusProxy  *proxy,
 
 
 static void
-add_player (Mpris *self, const gchar *name, const gchar *desktop_id)
+add_player (Mpris       *self,
+            const gchar *name,
+            const gchar *desktop_id)
 {
     GDBusProxy *player_bus;
     struct Player *player;
@@ -136,7 +138,8 @@ add_player (Mpris *self, const gchar *name, const gchar *desktop_id)
 
 
 static void
-add_player_if_desktop_entry (Mpris *self, const gchar *name)
+add_player_if_desktop_entry (Mpris       *self,
+                             const gchar *name)
 {
     GDBusProxy *player;
     GVariant *desktop_entry;
@@ -167,7 +170,8 @@ add_player_if_desktop_entry (Mpris *self, const gchar *name)
 
 
 static void
-del_player (Mpris *self, const gchar *name)
+del_player (Mpris       *self,
+            const gchar *name)
 {
     struct Player *player;
 
@@ -332,36 +336,19 @@ mpris_new (void)
 }
 
 
-static Mpris *default_mpris = NULL;
-/**
- * mpris_get_default:
- *
- * Gets the default #Mpris.
- *
- * Return value: (transfer full): the default #Mpris.
- */
-Mpris *
-mpris_get_default (void)
-{
-    if (!default_mpris) {
-        default_mpris = MPRIS (mpris_new ());
-    }
-    return default_mpris;
-}
-
-
 /**
  * mpris_can_freeze:
  *
  * Check if an application scope can be freezed
  *
  * @self: a #Mpris
- * @app_scope: a setting key
+ * @app_scope: application cgroup scope
  *
  * Returns: TRUE if application scope can be freeezed
  */
 gboolean
-mpris_can_freeze (Mpris *self, const gchar *app_scope)
+mpris_can_freeze (Mpris       *self,
+                  const gchar *app_scope)
 {
     struct Player *player;
 

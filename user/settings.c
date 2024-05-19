@@ -35,7 +35,8 @@ G_DEFINE_TYPE_WITH_CODE (
 static void
 on_setting_changed (GSettings   *settings,
                     const gchar *key,
-                    gpointer     user_data) {
+                    gpointer     user_data)
+{
     Settings *self = SETTINGS (user_data);
     g_autoptr(GVariant) value = g_settings_get_value (settings, key);
 
@@ -171,11 +172,28 @@ static Settings *default_settings = NULL;
 Settings *
 settings_get_default (void)
 {
-    if (!default_settings) {
+    if (default_settings == NULL) {
         default_settings = SETTINGS (settings_new ());
     }
     return default_settings;
 }
+
+
+/**
+ * settings_free_default:
+ *
+ * Free the default #Settings.
+ *
+ */
+void
+settings_free_default (void)
+{
+    if (default_settings == NULL) {
+        g_clear_object (&default_settings);
+        default_settings = NULL;
+    }
+}
+
 
 /**
  * settings_can_freeze_app:
@@ -183,12 +201,12 @@ settings_get_default (void)
  * Check if an application scope can be freezed
  *
  * @self: a #Settings
- * @app_scope: a setting key
+ * @app_scope: application cgroup scope
  *
  * Returns: TRUE if application scope can be freezed
  */
 gboolean
-settings_can_freeze_app (Settings *self,
+settings_can_freeze_app (Settings    *self,
                          const gchar *app_scope)
 {
     g_autoptr(GVariant) value = g_settings_get_value (
@@ -212,7 +230,6 @@ settings_can_freeze_app (Settings *self,
  * Get services those can be suspended
  *
  * @self: a #Settings
- * @app_scope: a setting key
  *
  * Return value: (transfer full): services list.
  */

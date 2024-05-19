@@ -92,7 +92,8 @@ services_init (Services *self)
  *
  * Creates a new #Services
  *
- * @param #GBusType: target service type
+ * @param #GBusType: target service type (G_BUS_TYPE_SYSTEM/G_BUS_TYPE_SESSION).
+ * Yes, we use DBus type :)
  *
  * Returns: (transfer full): a new #Services
  *
@@ -121,7 +122,7 @@ services_new (GBusType service_type)
  **/
 void
 services_freeze (Services *self,
-                 GList   *services)
+                 GList    *services)
 {
     GList *paths = services_get_cgroups_paths (self);
     const gchar *path;

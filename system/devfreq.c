@@ -121,7 +121,8 @@ devfreq_new (void)
  * @param powersave: True to enable powersave
  */
 void
-devfreq_set_powersave (Devfreq  *devfreq, gboolean  powersave) {
+devfreq_set_powersave (Devfreq  *devfreq,
+                       gboolean  powersave) {
     DevfreqDevice *devfreq_device;
 
     GFOREACH (devfreq->priv->devfreq_devices, devfreq_device)
@@ -137,7 +138,8 @@ devfreq_set_powersave (Devfreq  *devfreq, gboolean  powersave) {
  * @param governor: new governor to set
  */
 void
-devfreq_set_governor (Devfreq  *devfreq, const gchar* governor) {
+devfreq_set_governor (Devfreq     *devfreq,
+                      const gchar *governor) {
     DevfreqDevice *devfreq_device;
 
     GFOREACH (devfreq->priv->devfreq_devices, devfreq_device)

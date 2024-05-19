@@ -48,11 +48,12 @@ struct _BusClass {
     GObjectClass parent_class;
 };
 
-GType       bus_get_type        (void) G_GNUC_CONST;
-GObject*    bus_new             (void);
-Bus        *bus_get_default     (void);
-void        bus_screen_state_changed (Bus *self,
-                                      gboolean enabled);
+GType       bus_get_type             (void) G_GNUC_CONST;
+GObject*    bus_new                  (void);
+Bus        *bus_get_default          (void);
+void        bus_screen_state_changed (Bus      *self,
+                                      gboolean  enabled);
+void        bus_free_default         (void);
 
 G_END_DECLS
 
