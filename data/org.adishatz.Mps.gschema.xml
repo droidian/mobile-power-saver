@@ -27,7 +27,7 @@
     </key>
 
     <key name="screen-off-suspend-system-services" type="as">
-      <default>['sshd.service']</default>
+      <default>[]</default>
       <summary>Suspend these services when screen is off</summary>
       <description>When screen is turned off, services in list are suspended.</description>
     </key>
