@@ -102,10 +102,12 @@ binder_init (Binder *self)
     self->priv->remote_object = NULL;
     self->priv->service_manager = NULL;
 
-    if (!g_file_test ("/dev/hwbinder", G_FILE_TEST_EXISTS))
+    if (!g_file_test (GBINDER_DEFAULT_HWBINDER, G_FILE_TEST_EXISTS))
         return;
 
-    self->priv->service_manager = gbinder_servicemanager_new("/dev/hwbinder");
+    self->priv->service_manager = gbinder_servicemanager_new(
+        GBINDER_DEFAULT_HWBINDER
+    );
     if (self->priv->service_manager != NULL)
         self->priv->remote_object = gbinder_servicemanager_get_service_sync(
             self->priv->service_manager,

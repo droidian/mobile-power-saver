@@ -111,7 +111,7 @@ on_screen_off_suspend_processes_changed (Bus      *bus,
 {
     Manager *self = MANAGER (user_data);
     g_autoptr (GVariantIter) iter;
-    gchar *process;
+    const gchar *process;
 
     g_list_free_full (
         self->priv->screen_off_suspend_processes, g_free

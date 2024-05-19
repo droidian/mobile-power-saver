@@ -1,0 +1,291 @@
+commit 4c7934565f6aad8b505f434d83812d36be669642
+Author: Cédric Bellegarde <cedric.bellegarde@adishatz.org>
+Date:   Sun May 19 12:16:45 2024 +0200
+
+    power: Add support for mobile-power-saver
+
+diff --git a/panels/applications/cc-applications-panel.c b/panels/applications/cc-applications-panel.c
+index cc7c43d39..ff186f707 100644
+--- a/panels/applications/cc-applications-panel.c
++++ b/panels/applications/cc-applications-panel.c
+@@ -145,6 +145,9 @@ struct _CcApplicationsPanel
+   guint64          app_size;
+   guint64          cache_size;
+   guint64          data_size;
++
++  AdwSwitchRow        *suspend;
++  AdwPreferencesGroup *power_section;
+ };
+ 
+ static void select_app (CcApplicationsPanel *self,
+@@ -161,6 +164,21 @@ enum
+   PROP_PARAMETERS
+ };
+ 
++static gboolean
++is_mobile_power_saver_available (void)
++{
++  GSettingsSchema *res = g_settings_schema_source_lookup (
++      g_settings_schema_source_get_default(), "org.adishatz.Mps", TRUE);
++
++  if (res != NULL)
++    {
++      g_free (res);
++      return TRUE;
++    }
++
++  return FALSE;
++}
++
+ static gboolean
+ gnome_software_is_installed (void)
+ {
+@@ -1229,6 +1247,41 @@ on_storage_row_activated_cb (CcApplicationsPanel *self)
+   gtk_window_present (self->storage_dialog);
+ }
+ 
++static void
++on_suspend_row_activated_cb (CcApplicationsPanel *self)
++{
++  if (is_mobile_power_saver_available ())
++    {
++      g_autoptr(GSettings) settings = g_settings_new ("org.adishatz.Mps");
++      g_autoptr(GVariant) value = g_settings_get_value (
++            settings, "screen-off-suspend-apps-blacklist");
++      GVariantBuilder builder;
++      g_autoptr (GVariantIter) iter;
++      const gchar *app_id;
++      gboolean is_active = adw_switch_row_get_active (self->suspend);
++      g_variant_builder_init (
++        &builder, G_VARIANT_TYPE ("as")
++      );
++
++      g_variant_get (value, "as", &iter);
++      while (g_variant_iter_loop (iter, "s", &app_id))
++        {
++          if (g_strcmp0 (app_id, self->current_app_id) == 0)
++            continue;
++
++          g_variant_builder_add (&builder, "s", app_id);
++        }
++
++      if (!is_active)
++        g_variant_builder_add (&builder, "s", self->current_app_id);
++
++      g_settings_set_value (settings,
++                            "screen-off-suspend-apps-blacklist",
++                            g_variant_builder_end (&builder));
++    }
++}
++
++
+ static void
+ on_items_changed_cb (GListModel *list,
+                   guint       position,
+@@ -1406,6 +1459,31 @@ update_usage_section (CcApplicationsPanel *self,
+   gtk_widget_set_visible (GTK_WIDGET (self->usage_section), portal_app_id || has_builtin);
+ }
+ 
++static void
++update_power_section (CcApplicationsPanel *self,
++                      GAppInfo            *info)
++{
++  g_autoptr(GSettings) settings = g_settings_new ("org.adishatz.Mps");
++  g_autoptr(GVariant) value = g_settings_get_value (
++        settings, "screen-off-suspend-apps-blacklist");
++  g_autoptr (GVariantIter) iter;
++  const gchar *app_id;
++  gboolean is_blacklisted = FALSE;
++
++  g_variant_get (value, "as", &iter);
++  while (g_variant_iter_loop (iter, "s", &app_id))
++    {
++      if (g_strcmp0 (app_id, self->current_app_id) == 0)
++        {
++          is_blacklisted = TRUE;
++          break;
++        }
++    }
++
++  gtk_widget_set_visible (GTK_WIDGET (self->power_section), TRUE);
++  adw_switch_row_set_active (self->suspend, !is_blacklisted);
++}
++
+ /* --- panel setup --- */
+ 
+ static void
+@@ -1445,6 +1523,9 @@ update_panel (CcApplicationsPanel *self,
+   g_set_object (&self->current_app_info, info);
+   self->current_app_id = get_app_id (info);
+   self->current_portal_app_id = get_portal_app_id (info);
++
++  if (is_mobile_power_saver_available ())
++    update_power_section (self, info);
+ }
+ 
+ 
+@@ -1820,6 +1901,8 @@ cc_applications_panel_class_init (CcApplicationsPanelClass *klass)
+   gtk_widget_class_bind_template_child (widget_class, CcApplicationsPanel, total);
+   gtk_widget_class_bind_template_child (widget_class, CcApplicationsPanel, usage_section);
+   gtk_widget_class_bind_template_child (widget_class, CcApplicationsPanel, view_details_button);
++  gtk_widget_class_bind_template_child (widget_class, CcApplicationsPanel, suspend);
++  gtk_widget_class_bind_template_child (widget_class, CcApplicationsPanel, power_section);
+ 
+   gtk_widget_class_bind_template_callback (widget_class, camera_cb);
+   gtk_widget_class_bind_template_callback (widget_class, location_cb);
+@@ -1843,6 +1926,7 @@ cc_applications_panel_class_init (CcApplicationsPanelClass *klass)
+   gtk_widget_class_bind_template_callback (widget_class, on_app_search_entry_search_stopped_cb);
+ 
+   gtk_widget_class_bind_template_callback (widget_class, on_storage_row_activated_cb);
++  gtk_widget_class_bind_template_callback (widget_class, on_suspend_row_activated_cb);
+ }
+ 
+ static GtkWidget *
+diff --git a/panels/applications/cc-applications-panel.ui b/panels/applications/cc-applications-panel.ui
+index 0f5a8b193..d21fc6991 100644
+--- a/panels/applications/cc-applications-panel.ui
++++ b/panels/applications/cc-applications-panel.ui
+@@ -387,6 +387,20 @@
+                             </child>
+                           </object>
+                         </child>
++                        <child>
++                          <object class="AdwPreferencesGroup" id="power_section">
++                              <property name="title" translatable="yes">Power Saving</property>
++                              <property name="visible">False</property>
++                              <child>
++                              <object class="AdwSwitchRow" id="suspend">
++                                <property name="title" translatable="yes">Suspend application</property>
++                                <property name="subtitle" translatable="yes">Allow suspending application</property>
++                                <property name="use_underline">True</property>
++                                <signal name="notify::active" handler="on_suspend_row_activated_cb" object="CcApplicationsPanel" swapped="yes"/>
++                              </object>
++                            </child>
++                          </object>
++                        </child>
+                       </object>
+                     </child>
+                   </object>
+diff --git a/panels/power/cc-power-panel.c b/panels/power/cc-power-panel.c
+index 11c098c99..6a9b35927 100644
+--- a/panels/power/cc-power-panel.c
++++ b/panels/power/cc-power-panel.c
+@@ -56,6 +56,7 @@ struct _CcPowerPanel
+   GtkListBox        *power_profile_info_listbox;
+   AdwPreferencesGroup *power_profile_section;
+   AdwSwitchRow      *power_saver_low_battery_row;
++  AdwSwitchRow      *power_saver_screen_off_row;
+   GtkComboBox       *suspend_on_battery_delay_combo;
+   AdwSwitchRow      *suspend_on_battery_switch_row;
+   GtkWidget         *suspend_on_battery_group;
+@@ -63,6 +64,7 @@ struct _CcPowerPanel
+   AdwSwitchRow      *suspend_on_ac_switch_row;
+ 
+   GSettings     *gsd_settings;
++  GSettings     *mps_settings;
+   GSettings     *session_settings;
+   GSettings     *interface_settings;
+   UpClient      *up_client;
+@@ -89,6 +91,21 @@ enum
+   ACTION_MODEL_VALUE
+ };
+ 
++static gboolean
++g_settings_schema_exist (const char * id)
++{
++  GSettingsSchema *res = g_settings_schema_source_lookup (
++      g_settings_schema_source_get_default(), id, TRUE);
++
++  if (res != NULL)
++    {
++      g_free (res);
++      return TRUE;
++    }
++
++  return FALSE;
++}
++
+ static const char *
+ cc_power_panel_get_help_uri (CcPanel *panel)
+ {
+@@ -148,6 +165,19 @@ update_power_saver_low_battery_row_visibility (CcPowerPanel *self)
+                           self->power_profiles_proxy && kind == UP_DEVICE_KIND_BATTERY);
+ }
+ 
++static void
++update_power_saver_screen_off_row_visibility (CcPowerPanel *self)
++{
++  g_autoptr(UpDevice) composite = NULL;
++  gboolean mobile_power_saver = g_settings_schema_exist ("org.adishatz.Mps");
++  UpDeviceKind kind;
++
++  composite = up_client_get_display_device (self->up_client);
++  g_object_get (composite, "kind", &kind, NULL);
++  gtk_widget_set_visible (GTK_WIDGET (self->power_saver_screen_off_row),
++                          mobile_power_saver && kind == UP_DEVICE_KIND_BATTERY);
++}
++
+ static void
+ up_client_changed (CcPowerPanel *self)
+ {
+@@ -242,6 +272,7 @@ up_client_changed (CcPowerPanel *self)
+     }
+ 
+   update_power_saver_low_battery_row_visibility (self);
++  update_power_saver_screen_off_row_visibility (self);
+ }
+ 
+ static void
+@@ -1267,6 +1298,7 @@ setup_power_profiles (CcPowerPanel *self)
+     power_profile_update_info_boxes (self);
+ 
+   update_power_saver_low_battery_row_visibility (self);
++  update_power_saver_screen_off_row_visibility (self);
+ }
+ 
+ static void
+@@ -1390,6 +1422,7 @@ cc_power_panel_class_init (CcPowerPanelClass *klass)
+   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, power_profile_info_listbox);
+   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, power_profile_section);
+   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, power_saver_low_battery_row);
++  gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, power_saver_screen_off_row);
+   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, suspend_on_battery_delay_combo);
+   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, suspend_on_battery_switch_row);
+   gtk_widget_class_bind_template_child (widget_class, CcPowerPanel, suspend_on_battery_group);
+@@ -1419,6 +1452,7 @@ cc_power_panel_init (CcPowerPanel *self)
+   self->up_client = up_client_new ();
+ 
+   self->gsd_settings = g_settings_new ("org.gnome.settings-daemon.plugins.power");
++  self->mps_settings = g_settings_new ("org.adishatz.Mps");
+   self->session_settings = g_settings_new ("org.gnome.desktop.session");
+   self->interface_settings = g_settings_new ("org.gnome.desktop.interface");
+ 
+@@ -1437,6 +1471,9 @@ cc_power_panel_init (CcPowerPanel *self)
+   g_settings_bind (self->gsd_settings, "power-saver-profile-on-low-battery",
+                    self->power_saver_low_battery_row, "active",
+                    G_SETTINGS_BIND_DEFAULT);
++  g_settings_bind (self->mps_settings, "screen-off-power-saving",
++                   self->power_saver_screen_off_row, "active",
++                   G_SETTINGS_BIND_DEFAULT);
+ 
+   setup_general_section (self);
+ 
+diff --git a/panels/power/cc-power-panel.ui b/panels/power/cc-power-panel.ui
+index 76de6f036..6d74dca6c 100644
+--- a/panels/power/cc-power-panel.ui
++++ b/panels/power/cc-power-panel.ui
+@@ -155,6 +155,14 @@
+                     <property name="use_underline">True</property>
+                   </object>
+                 </child>
++                <child>
++                  <object class="AdwSwitchRow" id="power_saver_screen_off_row">
++                    <property name="visible">False</property>
++                    <property name="title" translatable="yes">Screen off Power _Saver</property>
++                    <property name="subtitle" translatable="yes">Turn on power saver mode when screen is off</property>
++                    <property name="use_underline">True</property>
++                  </object>
++                </child>
+                 <child>
+                   <object class="CcListRow" id="automatic_suspend_row">
+                     <property name="visible">False</property>
