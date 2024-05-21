@@ -15,20 +15,32 @@
 #include "../common/define.h"
 #include "../common/utils.h"
 
-#define DOZING_MIN          60          /* Minimal dozing duration in seconds */
-#define DOZING_MAX          1800        /* Maximal dozing duration in seconds */
-#define DOZING_DELTA        60          /* Delta dozing duration in seconds */
-#define DOZING_MAINTENANCE  300 / 1800  /* 5 minutes for 30 minutes dozing */
+#define DOZING_PRE_SLEEP          60
+#define DOZING_LIGHT_SLEEP        300
+#define DOZING_LIGHT_MAINTENANCE  30
+#define DOZING_MEDIUM_SLEEP       600
+#define DOZING_MEDIUM_MAINTENANCE 50
+#define DOZING_FULL_SLEEP         1200
+#define DOZING_FULL_MAINTENANCE   80
 
+enum DozingType {
+    DOZING_LIGHT,
+    DOZING_LIGHT_1,
+    DOZING_LIGHT_2,
+    DOZING_LIGHT_3,
+    DOZING_MEDIUM,
+    DOZING_MEDIUM_1,
+    DOZING_MEDIUM_2,
+    DOZING_FULL
+};
 
 struct _DozingPrivate {
     GList *apps;
     Mpris *mpris;
 
-    guint timeout;
+    guint type;
     guint timeout_id;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Dozing,
@@ -37,6 +49,27 @@ G_DEFINE_TYPE_WITH_CODE (
     G_ADD_PRIVATE (Dozing)
 )
 
+static guint
+dozing_get_maintenance (Dozing *self)
+{
+    if (self->priv->type < DOZING_MEDIUM)
+        return DOZING_LIGHT_MAINTENANCE;
+    else if (self->priv->type < DOZING_FULL)
+        return DOZING_MEDIUM_MAINTENANCE;
+    else
+        return DOZING_FULL_MAINTENANCE;
+}
+
+static guint
+dozing_get_sleep (Dozing *self)
+{
+    if (self->priv->type < DOZING_MEDIUM)
+        return DOZING_LIGHT_SLEEP;
+    else if (self->priv->type < DOZING_FULL)
+        return DOZING_MEDIUM_SLEEP;
+    else
+        return DOZING_FULL_SLEEP;
+}
 
 static gboolean dozing_unfreeze_apps (Dozing *self);
 static gboolean
@@ -56,7 +89,7 @@ dozing_freeze_apps (Dozing *self)
     }
 
     self->priv->timeout_id = g_timeout_add_seconds (
-        self->priv->timeout,
+        dozing_get_sleep (self),
         (GSourceFunc) dozing_unfreeze_apps,
         self
     );
@@ -77,13 +110,13 @@ dozing_unfreeze_apps (Dozing *self)
         write_to_file (app, "0");
 
     self->priv->timeout_id = g_timeout_add_seconds (
-        (guint) (self->priv->timeout * DOZING_MAINTENANCE),
+        dozing_get_maintenance (self),
         (GSourceFunc) dozing_freeze_apps,
         self
     );
 
-    /* Doze for some more time */
-    self->priv->timeout = MIN (DOZING_MAX, self->priv->timeout + DOZING_DELTA);
+    if (self->priv->type < DOZING_FULL)
+        self->priv->type += 1;
 
     return FALSE;
 }
@@ -121,8 +154,6 @@ dozing_get_apps (Dozing *self)
     return apps;
 }
 
-
-
 static void
 dozing_dispose (GObject *dozing)
 {
@@ -133,7 +164,6 @@ dozing_dispose (GObject *dozing)
     G_OBJECT_CLASS (dozing_parent_class)->dispose (dozing);
 }
 
-
 static void
 dozing_finalize (GObject *dozing)
 {
@@ -143,7 +173,6 @@ dozing_finalize (GObject *dozing)
 
     G_OBJECT_CLASS (dozing_parent_class)->finalize (dozing);
 }
-
 
 static void
 dozing_class_init (DozingClass *klass)
@@ -163,7 +192,7 @@ dozing_init (Dozing *self)
     self->priv->mpris = MPRIS (mpris_new ());
 
     self->priv->apps = NULL;
-    self->priv->timeout = DOZING_MIN;
+    self->priv->type = DOZING_LIGHT;
 }
 
 /**
@@ -195,8 +224,12 @@ void
 dozing_start (Dozing  *self) {
     self->priv->apps = dozing_get_apps(self);
 
-    self->priv->timeout = DOZING_MIN;
-    dozing_freeze_apps (self);
+    self->priv->type = DOZING_LIGHT;
+    self->priv->timeout_id = g_timeout_add_seconds (
+        DOZING_PRE_SLEEP,
+        (GSourceFunc) dozing_freeze_apps,
+        self
+    );
 }
 
 /**
