@@ -7,7 +7,6 @@
 #include "freq_device.h"
 #include "../common/utils.h"
 
-
 struct _FreqDevicePrivate {
     gchar *sysfs_dir;
     gchar *device_name;
@@ -16,7 +15,6 @@ struct _FreqDevicePrivate {
     gchar *default_governor;
     gchar *current_governor;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     FreqDevice,
@@ -41,13 +39,11 @@ set_governor (FreqDevice  *freq_device,
     write_to_file (filename, governor);
 }
 
-
 static void
 freq_device_dispose (GObject *freq_device)
 {
     G_OBJECT_CLASS (freq_device_parent_class)->dispose (freq_device);
 }
-
 
 static void
 freq_device_finalize (GObject *freq_device)
@@ -62,7 +58,6 @@ freq_device_finalize (GObject *freq_device)
 
     G_OBJECT_CLASS (freq_device_parent_class)->finalize (freq_device);
 }
-
 
 static void
 freq_device_class_init (FreqDeviceClass *klass)
@@ -164,7 +159,6 @@ freq_device_set_name (FreqDevice  *self,
     }
 }
 
-
 /**
  * freq_device_set_powersave:
  *
@@ -184,7 +178,6 @@ freq_device_set_powersave (FreqDevice *self,
     else
         set_governor (self, self->priv->default_governor);
 }
-
 
 /**
  * freq_device_set_governor:

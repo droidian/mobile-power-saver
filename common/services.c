@@ -12,11 +12,9 @@
 #include "../common/define.h"
 #include "../common/utils.h"
 
-
 struct _ServicesPrivate {
     GBusType service_type;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Services,
@@ -24,7 +22,6 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Services)
 )
-
 
 static GList *
 services_get_cgroups_paths (Services *self)
@@ -54,20 +51,17 @@ services_get_cgroups_paths (Services *self)
     return paths;
 }
 
-
 static void
 services_dispose (GObject *services)
 {
     G_OBJECT_CLASS (services_parent_class)->dispose (services);
 }
 
-
 static void
 services_finalize (GObject *services)
 {
     G_OBJECT_CLASS (services_parent_class)->finalize (services);
 }
-
 
 static void
 services_class_init (ServicesClass *klass)
@@ -79,13 +73,11 @@ services_class_init (ServicesClass *klass)
     object_class->finalize = services_finalize;
 }
 
-
 static void
 services_init (Services *self)
 {
     self->priv = services_get_instance_private (self);
 }
-
 
 /**
  * services_new:
@@ -109,7 +101,6 @@ services_new (GBusType service_type)
 
     return services;
 }
-
 
 /**
  * services_freeze:
@@ -139,7 +130,6 @@ services_freeze (Services *self,
     }
     g_list_free_full (paths, g_free);
 }
-
 
 /**
  * services_unfreeze:

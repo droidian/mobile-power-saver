@@ -17,7 +17,6 @@
 #include "manager.h"
 #include "../common/services.h"
 
-
 struct _ManagerPrivate {
     Binder *binder;
     Cpufreq *cpufreq;
@@ -30,7 +29,6 @@ struct _ManagerPrivate {
     GList *screen_off_suspend_processes;
     GList *screen_off_suspend_services;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Manager,
@@ -76,7 +74,6 @@ on_screen_state_changed (gpointer ignore,
     }
 }
 
-
 static void
 on_power_saving_mode_changed (Bus         *bus,
                               const gchar *governor,
@@ -87,7 +84,6 @@ on_power_saving_mode_changed (Bus         *bus,
     cpufreq_set_governor (self->priv->cpufreq, governor);
     devfreq_set_governor (self->priv->devfreq, governor);
 }
-
 
 static void
 on_screen_off_power_saving_changed (Bus      *bus,
@@ -128,7 +124,6 @@ on_screen_off_suspend_processes_changed (Bus      *bus,
     g_variant_unref (value);
 }
 
-
 static void
 on_screen_off_suspend_services_changed (Bus      *bus,
                                         GVariant *value,
@@ -154,7 +149,6 @@ on_screen_off_suspend_services_changed (Bus      *bus,
     g_variant_unref (value);
 }
 
-
 static void
 manager_dispose (GObject *manager)
 {
@@ -170,7 +164,6 @@ manager_dispose (GObject *manager)
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
 
-
 static void
 manager_finalize (GObject *manager)
 {
@@ -184,7 +177,6 @@ manager_finalize (GObject *manager)
     );
     G_OBJECT_CLASS (manager_parent_class)->finalize (manager);
 }
-
 
 static void
 manager_class_init (ManagerClass *klass)

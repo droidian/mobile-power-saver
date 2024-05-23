@@ -13,7 +13,6 @@
 #define DBUS_MPS_PATH                "/org/adishatz/Mps"
 #define DBUS_MPS_INTERFACE           "org.adishatz.Mps"
 
-
 /* signals */
 enum
 {
@@ -23,15 +22,12 @@ enum
 
 static guint signals[LAST_SIGNAL];
 
-
 struct _BusPrivate {
     GDBusProxy *mps_proxy;
 };
 
-
 G_DEFINE_TYPE_WITH_CODE (Bus, bus, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Bus))
-
 
 static void
 on_mps_proxy_signal (GDBusProxy  *proxy,
@@ -56,7 +52,6 @@ on_mps_proxy_signal (GDBusProxy  *proxy,
     }
 }
 
-
 static void
 bus_dispose (GObject *bus)
 {
@@ -67,13 +62,11 @@ bus_dispose (GObject *bus)
     G_OBJECT_CLASS (bus_parent_class)->dispose (bus);
 }
 
-
 static void
 bus_finalize (GObject *bus)
 {
     G_OBJECT_CLASS (bus_parent_class)->finalize (bus);
 }
-
 
 static void
 bus_class_init (BusClass *klass)
@@ -172,7 +165,6 @@ bus_set_value (Bus         *self,
     if (error != NULL)
         g_warning ("Error updating setting: %s", error->message);
 }
-
 
 static Bus *default_bus = NULL;
 /**

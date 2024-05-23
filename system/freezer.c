@@ -19,7 +19,6 @@ struct _FreezerPrivate {
     GList *processes;
 };
 
-
 G_DEFINE_TYPE_WITH_CODE (
     Freezer,
     freezer,
@@ -27,12 +26,10 @@ G_DEFINE_TYPE_WITH_CODE (
     G_ADD_PRIVATE (Freezer)
 )
 
-
 struct Process {
     pid_t pid;
     gchar *cmdline;
 };
-
 
 static void
 freezer_process_free (gpointer user_data)
@@ -42,7 +39,6 @@ freezer_process_free (gpointer user_data)
     g_free (process->cmdline);
     g_free (process);
 }
-
 
 // From https://gitlab.com/procps-ng/procps
 //
@@ -141,14 +137,11 @@ freezer_get_pids (Freezer *self)
     return processes;
 }
 
-
-
 static void
 freezer_dispose (GObject *freezer)
 {
     G_OBJECT_CLASS (freezer_parent_class)->dispose (freezer);
 }
-
 
 static void
 freezer_finalize (GObject *freezer)
@@ -159,7 +152,6 @@ freezer_finalize (GObject *freezer)
 
     G_OBJECT_CLASS (freezer_parent_class)->finalize (freezer);
 }
-
 
 static void
 freezer_class_init (FreezerClass *klass)

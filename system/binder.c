@@ -16,13 +16,11 @@ enum Hints {
     BINDER_PERFORMANCE  = 0x00000006
 };
 
-
 struct _BinderPrivate {
     GBinderServiceManager *service_manager;
     GBinderRemoteObject *remote_object;
     GBinderClient *client;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Binder,
@@ -30,7 +28,6 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Binder)
 )
-
 
 static void
 binder_set_modes(GBinderClient   *client,
@@ -56,13 +53,11 @@ binder_set_modes(GBinderClient   *client,
     gbinder_local_request_unref(req);
 }
 
-
 static void
 binder_dispose (GObject *binder)
 {
     G_OBJECT_CLASS (binder_parent_class)->dispose (binder);
 }
-
 
 static void
 binder_finalize (GObject *binder)
@@ -81,7 +76,6 @@ binder_finalize (GObject *binder)
     G_OBJECT_CLASS (binder_parent_class)->finalize (binder);
 }
 
-
 static void
 binder_class_init (BinderClass *klass)
 {
@@ -91,7 +85,6 @@ binder_class_init (BinderClass *klass)
     object_class->dispose = binder_dispose;
     object_class->finalize = binder_finalize;
 }
-
 
 static void
 binder_init (Binder *self)

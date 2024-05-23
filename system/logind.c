@@ -10,11 +10,9 @@
 #include "bus.h"
 #include "logind.h"
 
-
 #define LOGIND_DBUS_NAME       "org.freedesktop.login1"
 #define LOGIND_DBUS_PATH       "/org/freedesktop/login1/seat/seat0"
 #define LOGIND_DBUS_INTERFACE  "org.freedesktop.login1.Seat"
-
 
 /* signals */
 enum
@@ -25,11 +23,9 @@ enum
 
 static guint signals[LAST_SIGNAL];
 
-
 struct _LogindPrivate {
     GDBusProxy *logind_proxy;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Logind,
@@ -37,7 +33,6 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Logind)
 )
-
 
 static void
 on_logind_proxy_properties (GDBusProxy  *proxy,
@@ -66,7 +61,6 @@ on_logind_proxy_properties (GDBusProxy  *proxy,
     }
 }
 
-
 static void
 logind_connect_logind (Logind *self)
 {
@@ -94,7 +88,6 @@ logind_connect_logind (Logind *self)
     );
 }
 
-
 static void
 logind_dispose (GObject *logind)
 {
@@ -105,13 +98,11 @@ logind_dispose (GObject *logind)
     G_OBJECT_CLASS (logind_parent_class)->dispose (logind);
 }
 
-
 static void
 logind_finalize (GObject *logind)
 {
     G_OBJECT_CLASS (logind_parent_class)->finalize (logind);
 }
-
 
 static void
 logind_class_init (LogindClass *klass)

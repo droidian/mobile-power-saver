@@ -19,7 +19,6 @@
 #define DBUS_MPRIS_PLAYER_INTERFACE     "org.mpris.MediaPlayer2.Player"
 #define DBUS_MPRIS_PREFIX               "org.mpris.MediaPlayer2."
 
-
 struct Player {
     GDBusProxy *bus;
     gchar      *name;
@@ -27,17 +26,14 @@ struct Player {
     gboolean   is_playing;
 };
 
-
 struct _MprisPrivate {
     GDBusProxy *dbus_proxy;
 
     GList *players;
 };
 
-
 G_DEFINE_TYPE_WITH_CODE (Mpris, mpris, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Mpris))
-
 
 static struct Player *
 mpris_get_player (GDBusProxy  *bus,
@@ -56,7 +52,6 @@ mpris_get_player (GDBusProxy  *bus,
     return player;
 }
 
-
 static void
 mpris_del_player (struct Player *player)
 {
@@ -65,7 +60,6 @@ mpris_del_player (struct Player *player)
     g_free (player->desktop_id);
     g_free (player);
 }
-
 
 static void
 on_player_proxy_properties (GDBusProxy  *proxy,
@@ -88,7 +82,6 @@ on_player_proxy_properties (GDBusProxy  *proxy,
         g_variant_unref (value);
     }
 }
-
 
 static void
 add_player (Mpris       *self,
@@ -136,7 +129,6 @@ add_player (Mpris       *self,
     );
 }
 
-
 static void
 add_player_if_desktop_entry (Mpris       *self,
                              const gchar *name)
@@ -168,7 +160,6 @@ add_player_if_desktop_entry (Mpris       *self,
          add_player (self, name, desktop_id);
 }
 
-
 static void
 del_player (Mpris       *self,
             const gchar *name)
@@ -190,7 +181,6 @@ del_player (Mpris       *self,
         }
     }
 }
-
 
 static void
 add_players (Mpris *self)
@@ -219,7 +209,6 @@ add_players (Mpris *self)
     while (g_variant_iter_loop (iter, "&s", &player))
         add_player_if_desktop_entry(self, player);
 }
-
 
 static void
 on_dbus_signal (GDBusProxy  *proxy,
@@ -251,7 +240,6 @@ on_dbus_signal (GDBusProxy  *proxy,
     }
 }
 
-
 static void
 mpris_dispose (GObject *mpris)
 {
@@ -266,7 +254,6 @@ mpris_dispose (GObject *mpris)
     G_OBJECT_CLASS (mpris_parent_class)->dispose (mpris);
 }
 
-
 static void
 mpris_finalize (GObject *mpris)
 {
@@ -276,7 +263,6 @@ mpris_finalize (GObject *mpris)
 
     G_OBJECT_CLASS (mpris_parent_class)->finalize (mpris);
 }
-
 
 static void
 mpris_class_init (MprisClass *klass)
@@ -334,7 +320,6 @@ mpris_new (void)
 
     return mpris;
 }
-
 
 /**
  * mpris_can_freeze:

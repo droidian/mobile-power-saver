@@ -17,12 +17,9 @@ enum
 
 static guint signals[LAST_SIGNAL];
 
-
-
 struct _SettingsPrivate {
     GSettings *settings;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Settings,
@@ -30,7 +27,6 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Settings)
 )
-
 
 static void
 on_setting_changed (GSettings   *settings,
@@ -48,7 +44,6 @@ on_setting_changed (GSettings   *settings,
         value
     );
 }
-
 
 static gboolean
 settings_notify_settings (Settings *self)
@@ -71,7 +66,6 @@ settings_notify_settings (Settings *self)
     return FALSE;
 }
 
-
 static void
 settings_dispose (GObject *settings)
 {
@@ -81,7 +75,6 @@ settings_dispose (GObject *settings)
 
     G_OBJECT_CLASS (settings_parent_class)->dispose (settings);
 }
-
 
 static void
 settings_finalize (GObject *settings)
@@ -110,7 +103,6 @@ settings_class_init (SettingsClass *klass)
         G_TYPE_VARIANT
     );
 }
-
 
 static void
 settings_init (Settings *self)
@@ -141,7 +133,6 @@ settings_init (Settings *self)
     g_idle_add ((GSourceFunc) settings_notify_settings, self);
 }
 
-
 /**
  * settings_new:
  *
@@ -160,7 +151,6 @@ settings_new (void)
     return settings;
 }
 
-
 static Settings *default_settings = NULL;
 /**
  * settings_get_default:
@@ -178,7 +168,6 @@ settings_get_default (void)
     return default_settings;
 }
 
-
 /**
  * settings_free_default:
  *
@@ -193,7 +182,6 @@ settings_free_default (void)
         default_settings = NULL;
     }
 }
-
 
 /**
  * settings_can_freeze_app:
@@ -222,7 +210,6 @@ settings_can_freeze_app (Settings    *self,
     }
     return TRUE;
 }
-
 
 /**
  * settings_get_suspend_services

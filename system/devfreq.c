@@ -12,11 +12,9 @@
 #include "../common/define.h"
 #include "../common/utils.h"
 
-
 struct _DevfreqPrivate {
     GList *devfreq_devices;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Devfreq,
@@ -24,7 +22,6 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Devfreq)
 )
-
 
 static void
 devfreq_detect_devices (Devfreq *self)
@@ -61,7 +58,6 @@ devfreq_dispose (GObject *devfreq)
     G_OBJECT_CLASS (devfreq_parent_class)->dispose (devfreq);
 }
 
-
 static void
 devfreq_finalize (GObject *devfreq)
 {
@@ -71,7 +67,6 @@ devfreq_finalize (GObject *devfreq)
 
     G_OBJECT_CLASS (devfreq_parent_class)->finalize (devfreq);
 }
-
 
 static void
 devfreq_class_init (DevfreqClass *klass)
@@ -110,7 +105,6 @@ devfreq_new (void)
 
     return devfreq;
 }
-
 
 /**
  * devfreq_set_powersave:

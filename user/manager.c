@@ -13,7 +13,6 @@
 #include "settings.h"
 #include "../common/services.h"
 
-
 struct _ManagerPrivate {
     Dozing *dozing;
     Services *services;
@@ -21,14 +20,12 @@ struct _ManagerPrivate {
     gboolean screen_off_power_saving;
 };
 
-
 G_DEFINE_TYPE_WITH_CODE (
     Manager,
     manager,
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Manager)
 )
-
 
 static void
 on_setting_changed (Settings    *settings,
@@ -45,7 +42,6 @@ on_setting_changed (Settings    *settings,
         self->priv->screen_off_power_saving = g_variant_get_boolean (value);
     }
 }
-
 
 static void
 on_screen_state_changed (Bus      *bus,
@@ -66,7 +62,6 @@ on_screen_state_changed (Bus      *bus,
     }
 }
 
-
 static void
 manager_dispose (GObject *manager)
 {
@@ -78,13 +73,11 @@ manager_dispose (GObject *manager)
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
 
-
 static void
 manager_finalize (GObject *manager)
 {
     G_OBJECT_CLASS (manager_parent_class)->finalize (manager);
 }
-
 
 static void
 manager_class_init (ManagerClass *klass)
@@ -95,7 +88,6 @@ manager_class_init (ManagerClass *klass)
     object_class->dispose = manager_dispose;
     object_class->finalize = manager_finalize;
 }
-
 
 static void
 manager_init (Manager *self)

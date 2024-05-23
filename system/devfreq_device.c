@@ -15,14 +15,12 @@ struct _DevfreqDevicePrivate {
     gchar *default_governor;
 };
 
-
 G_DEFINE_TYPE_WITH_CODE (
     DevfreqDevice,
     devfreq_device,
     TYPE_FREQ_DEVICE,
     G_ADD_PRIVATE (DevfreqDevice)
 )
-
 
 static void
 devfreq_device_dispose (GObject *devfreq_device)
@@ -40,7 +38,6 @@ devfreq_device_finalize (GObject *devfreq_device)
 
     G_OBJECT_CLASS (devfreq_device_parent_class)->finalize (devfreq_device);
 }
-
 
 static void
 devfreq_device_class_init (DevfreqDeviceClass *klass)

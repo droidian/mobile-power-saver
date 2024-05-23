@@ -12,11 +12,9 @@
 #include "../common/define.h"
 #include "../common/utils.h"
 
-
 struct _CpufreqPrivate {
     GList *cpufreq_devices;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     Cpufreq,
@@ -60,7 +58,6 @@ cpufreq_dispose (GObject *cpufreq)
     G_OBJECT_CLASS (cpufreq_parent_class)->dispose (cpufreq);
 }
 
-
 static void
 cpufreq_finalize (GObject *cpufreq)
 {
@@ -70,7 +67,6 @@ cpufreq_finalize (GObject *cpufreq)
 
     G_OBJECT_CLASS (cpufreq_parent_class)->finalize (cpufreq);
 }
-
 
 static void
 cpufreq_class_init (CpufreqClass *klass)

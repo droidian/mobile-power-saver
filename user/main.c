@@ -15,14 +15,12 @@
 
 #include <glib/gi18n-lib.h>
 
-
 static GMainLoop *loop;
 
 static void
 sigint_handler(int dummy) {
     g_main_loop_quit (loop);
 }
-
 
 gint
 main (gint argc, gchar * argv[])

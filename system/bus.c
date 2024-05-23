@@ -26,7 +26,6 @@ enum
 
 static guint signals[LAST_SIGNAL];
 
-
 struct _BusPrivate {
     GDBusConnection *adishatz_connection;
     GDBusConnection *hadess_connection;
@@ -43,7 +42,6 @@ struct _BusPrivate {
 G_DEFINE_TYPE_WITH_CODE (Bus, bus, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Bus))
 
-
 static const gchar*
 get_power_profile_as_string (PowerProfile power_profile) {
     switch (power_profile) {
@@ -58,7 +56,6 @@ get_power_profile_as_string (PowerProfile power_profile) {
     }
 }
 
-
 static PowerProfile
 get_power_profile_from_string (const gchar *name)
 {
@@ -69,7 +66,6 @@ get_power_profile_from_string (const gchar *name)
     return POWER_PROFILE_BALANCED;
 }
 
-
 static const gchar *
 get_governor_from_power_profile (const gchar *name) {
     if (g_strcmp0 (name, "power-saver") == 0)
@@ -78,7 +74,6 @@ get_governor_from_power_profile (const gchar *name) {
         return "performance";
     return NULL;
 }
-
 
 static GVariant *
 get_profiles_variant (void)
@@ -106,7 +101,6 @@ get_profiles_variant (void)
 
   return g_variant_builder_end (&builder);
 }
-
 
 static void
 handle_method_call (GDBusConnection       *connection,
@@ -217,7 +211,6 @@ handle_get_property (GDBusConnection *connection,
     return NULL;
 }
 
-
 static gboolean
 handle_set_property (GDBusConnection  *connection,
                      const gchar      *sender,
@@ -250,7 +243,6 @@ handle_set_property (GDBusConnection  *connection,
         return FALSE;
     }
 }
-
 
 static const GDBusInterfaceVTable adishatz_interface_vtable = {
     handle_method_call,
@@ -309,7 +301,6 @@ on_name_acquired (GDBusConnection *connection,
                   const gchar     *name,
                   gpointer         user_data)
 {}
-
 
 static void
 on_name_lost (GDBusConnection *connection,
@@ -408,13 +399,11 @@ bus_dispose (GObject *bus)
     G_OBJECT_CLASS (bus_parent_class)->dispose (bus);
 }
 
-
 static void
 bus_finalize (GObject *bus)
 {
     G_OBJECT_CLASS (bus_parent_class)->finalize (bus);
 }
-
 
 static void
 bus_class_init (BusClass *klass)
@@ -542,7 +531,6 @@ bus_get_default (void)
     }
     return g_object_ref (default_bus);
 }
-
 
 /**
  * bus_free_default:

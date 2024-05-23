@@ -10,11 +10,9 @@
 #include "kernel_settings.h"
 #include "../common/utils.h"
 
-
 struct _KernelSettingsPrivate {
     unsigned short int placeholder;
 };
-
 
 G_DEFINE_TYPE_WITH_CODE (
     KernelSettings,
@@ -23,20 +21,17 @@ G_DEFINE_TYPE_WITH_CODE (
     G_ADD_PRIVATE (KernelSettings)
 )
 
-
 static void
 kernel_settings_dispose (GObject *kernel_settings)
 {
     G_OBJECT_CLASS (kernel_settings_parent_class)->dispose (kernel_settings);
 }
 
-
 static void
 kernel_settings_finalize (GObject *kernel_settings)
 {
     G_OBJECT_CLASS (kernel_settings_parent_class)->finalize (kernel_settings);
 }
-
 
 static void
 kernel_settings_class_init (KernelSettingsClass *klass)
