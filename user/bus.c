@@ -138,7 +138,7 @@ bus_new (void)
 /**
  * bus_set_value:
  *
- * Gets the next pending alarm.
+ * Set value on the bus.
  *
  * @self: a #Bus
  * @key: a setting key
@@ -163,7 +163,7 @@ bus_set_value (Bus         *self,
     );
 
     if (error != NULL)
-        g_warning ("Error updating setting: %s", error->message);
+        g_warning ("Error setting value: %s", error->message);
 }
 
 static Bus *default_bus = NULL;
