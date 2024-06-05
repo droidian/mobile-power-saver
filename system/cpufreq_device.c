@@ -10,16 +10,14 @@
 #include "cpufreq_device.h"
 #include "../common/define.h"
 
-struct _CpufreqDevicePrivate {
-    gchar *sys_dir;
-    gchar *default_governor;
-};
+/* struct _CpufreqDevicePrivate { */
+/* }; */
 
 G_DEFINE_TYPE_WITH_CODE (
     CpufreqDevice,
     cpufreq_device,
     TYPE_FREQ_DEVICE,
-    G_ADD_PRIVATE (CpufreqDevice)
+    /* G_ADD_PRIVATE (CpufreqDevice) */
 )
 
 static void
@@ -31,11 +29,6 @@ cpufreq_device_dispose (GObject *cpufreq_device)
 static void
 cpufreq_device_finalize (GObject *cpufreq_device)
 {
-    CpufreqDevice *self = CPUFREQ_DEVICE (cpufreq_device);
-
-    g_free (self->priv->default_governor);
-    g_free (self->priv->sys_dir);
-
     G_OBJECT_CLASS (cpufreq_device_parent_class)->finalize (cpufreq_device);
 }
 
