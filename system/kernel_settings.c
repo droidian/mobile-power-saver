@@ -10,15 +10,14 @@
 #include "kernel_settings.h"
 #include "../common/utils.h"
 
-struct _KernelSettingsPrivate {
-    unsigned short int placeholder;
-};
+/* struct _KernelSettingsPrivate { */
+/* }; */
 
 G_DEFINE_TYPE_WITH_CODE (
     KernelSettings,
     kernel_settings,
     G_TYPE_OBJECT,
-    G_ADD_PRIVATE (KernelSettings)
+    /* G_ADD_PRIVATE (KernelSettings) */
 )
 
 static void
