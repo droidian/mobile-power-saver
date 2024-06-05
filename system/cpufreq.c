@@ -24,7 +24,7 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-cpufreq_detect_devices (Cpufreq *self)
+detect_devices (Cpufreq *self)
 {
     g_autoptr(GDir) policies_dir = NULL;
     const char *policy_dir;
@@ -85,7 +85,7 @@ cpufreq_init (Cpufreq *self)
 
     self->priv->cpufreq_devices = NULL;
 
-    cpufreq_detect_devices (self);
+    detect_devices (self);
 }
 
 /**

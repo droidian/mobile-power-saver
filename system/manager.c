@@ -15,6 +15,7 @@
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
+#include "../common/define.h"
 #include "../common/services.h"
 
 struct _ManagerPrivate {
@@ -36,6 +37,15 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Manager)
 )
+
+static const gchar *
+get_governor_from_power_profile (PowerProfile power_profile) {
+    if (power_profile == POWER_PROFILE_POWER_SAVER)
+        return "powersave";
+    if (power_profile == POWER_PROFILE_PERFORMANCE)
+        return "performance";
+    return NULL;
+}
 
 static void
 on_screen_state_changed (gpointer ignore,
@@ -76,10 +86,11 @@ on_screen_state_changed (gpointer ignore,
 
 static void
 on_power_saving_mode_changed (Bus         *bus,
-                              const gchar *governor,
+                              PowerProfile power_profile,
                               gpointer     user_data)
 {
     Manager *self = MANAGER (user_data);
+    const gchar *governor = get_governor_from_power_profile (power_profile);
 
     cpufreq_set_governor (self->priv->cpufreq, governor);
     devfreq_set_governor (self->priv->devfreq, governor);

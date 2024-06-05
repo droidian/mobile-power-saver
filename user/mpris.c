@@ -36,10 +36,10 @@ G_DEFINE_TYPE_WITH_CODE (Mpris, mpris, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Mpris))
 
 static struct Player *
-mpris_get_player (GDBusProxy  *bus,
-                  const gchar *name,
-                  const gchar *desktop_id,
-                  gboolean is_playing)
+get_player (GDBusProxy  *bus,
+            const gchar *name,
+            const gchar *desktop_id,
+            gboolean is_playing)
 {
     struct Player *player;
 
@@ -53,7 +53,7 @@ mpris_get_player (GDBusProxy  *bus,
 }
 
 static void
-mpris_del_player (struct Player *player)
+clear_player (struct Player *player)
 {
     g_clear_object (&player->bus);
     g_free (player->name);
@@ -117,7 +117,7 @@ add_player (Mpris       *self,
     is_playing = g_strcmp0 (g_variant_get_string (value, NULL), "Playing") == 0;
     g_variant_unref (value);
 
-    player = mpris_get_player (player_bus, name, desktop_id, is_playing);
+    player = get_player (player_bus, name, desktop_id, is_playing);
 
     self->priv->players = g_list_append (self->priv->players, player);
 
@@ -176,7 +176,7 @@ del_player (Mpris       *self,
             self->priv->players = g_list_remove_all (
                 self->priv->players, player
             );
-            mpris_del_player (player);
+            clear_player (player);
             return;
         }
     }
@@ -247,7 +247,7 @@ mpris_dispose (GObject *mpris)
     struct Player *player;
 
     GFOREACH (self->priv->players, player)
-        mpris_del_player (player);
+        clear_player (player);
 
     g_clear_object (&self->priv->dbus_proxy);
 

@@ -8,13 +8,6 @@
 #include <glib.h>
 #include <glib-object.h>
 
-typedef enum {
-  POWER_PROFILE_POWER_SAVER,
-  POWER_PROFILE_BALANCED,
-  POWER_PROFILE_PERFORMANCE,
-  POWER_PROFILE_LAST
-} PowerProfile;
-
 #define TYPE_BUS (bus_get_type ())
 
 #define BUS(obj) \

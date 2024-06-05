@@ -5,6 +5,7 @@
 #include <gio/gio.h>
 
 #include "bus.h"
+#include "../common/define.h"
 #include "../common/utils.h"
 
 #define ADISHATZ_DBUS_NAME "org.adishatz.Mps"
@@ -64,15 +65,6 @@ get_power_profile_from_string (const gchar *name)
     if (g_strcmp0 (name, "performance") == 0)
         return POWER_PROFILE_PERFORMANCE;
     return POWER_PROFILE_BALANCED;
-}
-
-static const gchar *
-get_governor_from_power_profile (const gchar *name) {
-    if (g_strcmp0 (name, "power-saver") == 0)
-        return "powersave";
-    if (g_strcmp0 (name, "performance") == 0)
-        return "performance";
-    return NULL;
 }
 
 static GVariant *
@@ -234,7 +226,7 @@ handle_set_property (GDBusConnection  *connection,
             self,
             signals[POWER_SAVING_MODE_CHANGED],
             0,
-            get_governor_from_power_profile (power_profile)
+            self->priv->power_profile
         );
         return TRUE;
     } else {
@@ -424,7 +416,7 @@ bus_class_init (BusClass *klass)
         NULL, NULL, NULL,
         G_TYPE_NONE,
         1,
-        G_TYPE_STRING
+        G_TYPE_INT
     );
 
     signals[SCREEN_OFF_POWER_SAVING_CHANGED] = g_signal_new (

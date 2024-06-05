@@ -50,7 +50,7 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static guint
-dozing_get_maintenance (Dozing *self)
+get_maintenance (Dozing *self)
 {
     if (self->priv->type < DOZING_MEDIUM)
         return DOZING_LIGHT_MAINTENANCE;
@@ -61,7 +61,7 @@ dozing_get_maintenance (Dozing *self)
 }
 
 static guint
-dozing_get_sleep (Dozing *self)
+get_sleep (Dozing *self)
 {
     if (self->priv->type < DOZING_MEDIUM)
         return DOZING_LIGHT_SLEEP;
@@ -71,9 +71,9 @@ dozing_get_sleep (Dozing *self)
         return DOZING_FULL_SLEEP;
 }
 
-static gboolean dozing_unfreeze_apps (Dozing *self);
+static gboolean unfreeze_apps (Dozing *self);
 static gboolean
-dozing_freeze_apps (Dozing *self)
+freeze_apps (Dozing *self)
 {
     const gchar *app;
 
@@ -89,8 +89,8 @@ dozing_freeze_apps (Dozing *self)
     }
 
     self->priv->timeout_id = g_timeout_add_seconds (
-        dozing_get_sleep (self),
-        (GSourceFunc) dozing_unfreeze_apps,
+        get_sleep (self),
+        (GSourceFunc) unfreeze_apps,
         self
     );
 
@@ -98,7 +98,7 @@ dozing_freeze_apps (Dozing *self)
 }
 
 static gboolean
-dozing_unfreeze_apps (Dozing *self)
+unfreeze_apps (Dozing *self)
 {
     const gchar *app;
 
@@ -110,8 +110,8 @@ dozing_unfreeze_apps (Dozing *self)
         write_to_file (app, "0");
 
     self->priv->timeout_id = g_timeout_add_seconds (
-        dozing_get_maintenance (self),
-        (GSourceFunc) dozing_freeze_apps,
+        get_maintenance (self),
+        (GSourceFunc) freeze_apps,
         self
     );
 
@@ -122,7 +122,7 @@ dozing_unfreeze_apps (Dozing *self)
 }
 
 static GList *
-dozing_get_apps (Dozing *self)
+get_apps (Dozing *self)
 {
     g_autoptr(GDir) sys_dir = NULL;
     g_autofree gchar *dirname = g_strdup_printf(
@@ -222,12 +222,12 @@ dozing_new (void)
  */
 void
 dozing_start (Dozing  *self) {
-    self->priv->apps = dozing_get_apps(self);
+    self->priv->apps = get_apps(self);
 
     self->priv->type = DOZING_LIGHT;
     self->priv->timeout_id = g_timeout_add_seconds (
         DOZING_PRE_SLEEP,
-        (GSourceFunc) dozing_freeze_apps,
+        (GSourceFunc) freeze_apps,
         self
     );
 }

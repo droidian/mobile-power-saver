@@ -24,7 +24,7 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static GList *
-services_get_cgroups_paths (Services *self)
+get_cgroups_paths (Services *self)
 {
     GList *paths = NULL;
 
@@ -115,7 +115,7 @@ void
 services_freeze (Services *self,
                  GList    *services)
 {
-    GList *paths = services_get_cgroups_paths (self);
+    GList *paths = get_cgroups_paths (self);
     const gchar *path;
     const gchar *service;
 
@@ -144,7 +144,7 @@ void
 services_unfreeze (Services *self,
                    GList   *services)
 {
-    GList *paths = services_get_cgroups_paths (self);
+    GList *paths = get_cgroups_paths (self);
     const gchar *path;
     const gchar *service;
 

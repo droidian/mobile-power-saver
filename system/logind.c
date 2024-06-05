@@ -62,7 +62,7 @@ on_logind_proxy_properties (GDBusProxy  *proxy,
 }
 
 static void
-logind_connect_logind (Logind *self)
+connect_logind (Logind *self)
 {
     g_autoptr (GError) error = NULL;
 
@@ -130,7 +130,7 @@ logind_init (Logind *self)
 {
     self->priv = logind_get_instance_private (self);
 
-    logind_connect_logind (self);
+    connect_logind (self);
 }
 
 /**

@@ -46,7 +46,7 @@ on_setting_changed (GSettings   *settings,
 }
 
 static gboolean
-settings_notify_settings (Settings *self)
+notify_settings (Settings *self)
 {
     on_setting_changed (
         self->priv->settings,
@@ -130,7 +130,7 @@ settings_init (Settings *self)
         self
     );
 
-    g_idle_add ((GSourceFunc) settings_notify_settings, self);
+    g_idle_add ((GSourceFunc) notify_settings, self);
 }
 
 /**

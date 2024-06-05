@@ -24,7 +24,7 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-devfreq_detect_devices (Devfreq *self)
+detect_devices (Devfreq *self)
 {
     g_autoptr(GDir) devfreq_dir = NULL;
     const char *device_dir;
@@ -85,7 +85,7 @@ devfreq_init (Devfreq *self)
 
     self->priv->devfreq_devices = NULL;
 
-    devfreq_detect_devices (self);
+    detect_devices (self);
 }
 
 /**

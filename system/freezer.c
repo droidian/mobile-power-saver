@@ -32,7 +32,7 @@ struct Process {
 };
 
 static void
-freezer_process_free (gpointer user_data)
+process_free (gpointer user_data)
 {
     struct Process *process = user_data;
 
@@ -87,7 +87,7 @@ static int read_unvectored(char *restrict const dst,
 }
 
 static gboolean
-freezer_in_list (GList          *names,
+process_in_list (GList          *names,
                  struct Process *process)
 {
     gchar *name;
@@ -103,7 +103,7 @@ freezer_in_list (GList          *names,
 }
 
 static GList *
-freezer_get_pids (Freezer *self)
+get_pids (Freezer *self)
 {
     GList *processes = NULL;
     g_autoptr(GDir) proc_dir = NULL;
@@ -148,7 +148,7 @@ freezer_finalize (GObject *freezer)
 {
     Freezer *self = FREEZER (freezer);
 
-    g_list_free_full (self->priv->processes, freezer_process_free);
+    g_list_free_full (self->priv->processes, process_free);
 
     G_OBJECT_CLASS (freezer_parent_class)->finalize (freezer);
 }
@@ -203,11 +203,11 @@ freezer_suspend_processes (Freezer *self,
 
     struct Process *process;
 
-    self->priv->processes = freezer_get_pids (self);
+    self->priv->processes = get_pids (self);
     g_return_if_fail (self->priv->processes != NULL);
 
     GFOREACH (self->priv->processes, process)
-        if (freezer_in_list (names, process))
+        if (process_in_list (names, process))
             kill (process->pid, SIGSTOP);
 }
 
@@ -230,7 +230,7 @@ freezer_resume_processes (Freezer *self,
         return;
 
     GFOREACH (self->priv->processes, process)
-        if (freezer_in_list (names, process))
+        if (process_in_list (names, process))
             kill (process->pid, SIGCONT);
 
     g_list_free_full (self->priv->processes, g_free);
