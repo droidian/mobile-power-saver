@@ -15,7 +15,6 @@
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
-#include "../common/define.h"
 #include "../common/services.h"
 
 struct _ManagerPrivate {
@@ -94,6 +93,7 @@ on_power_saving_mode_changed (Bus         *bus,
 
     cpufreq_set_governor (self->priv->cpufreq, governor);
     devfreq_set_governor (self->priv->devfreq, governor);
+    binder_set_power_profile (self->priv->binder, power_profile);
 }
 
 static void

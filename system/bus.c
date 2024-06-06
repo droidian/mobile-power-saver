@@ -302,32 +302,6 @@ on_name_lost (GDBusConnection *connection,
     g_error ("Cannot own D-Bus name. Verify installation: %s\n", name);
 }
 
-static void
-bus_set_property (GObject      *object,
-                  guint         property_id,
-                  const GValue *value,
-                  GParamSpec   *pspec)
-{
-    switch (property_id) {
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-            break;
-    }
-}
-
-static void
-bus_get_property (GObject    *object,
-                  guint       property_id,
-                  GValue     *value,
-                  GParamSpec *pspec)
-{
-    switch (property_id) {
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-            break;
-    }
-}
-
 static GDBusNodeInfo *
 bus_init_path (const gchar *dbus_name,
                const gchar *xml,
@@ -403,8 +377,6 @@ bus_class_init (BusClass *klass)
     GObjectClass *object_class;
 
     object_class = G_OBJECT_CLASS (klass);
-    object_class->set_property = bus_set_property;
-    object_class->get_property = bus_get_property;
     object_class->dispose = bus_dispose;
     object_class->finalize = bus_finalize;
 

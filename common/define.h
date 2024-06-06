@@ -2,6 +2,9 @@
  * Copyright Cedric Bellegarde <cedric.bellegarde@adishatz.org>
  */
 
+#ifndef DEFINE_H
+#define DEFINE_H
+
 #define CPUFREQ_POLICIES_DIR "/sys/devices/system/cpu/cpufreq/"
 #define CPUFREQ_DIR ""
 #define DEVFREQ_DIR "/sys/class/devfreq/"
@@ -10,9 +13,16 @@
 #define CGROUPS_SYSTEM_SERVICES_FREEZE_DIR "/sys/fs/cgroup/system.slice"
 
 typedef enum {
-  POWER_PROFILE_POWER_SAVER,
-  POWER_PROFILE_BALANCED,
-  POWER_PROFILE_PERFORMANCE,
-  POWER_PROFILE_LAST
+    POWER_PROFILE_POWER_SAVER,
+    POWER_PROFILE_BALANCED,
+    POWER_PROFILE_PERFORMANCE,
+    POWER_PROFILE_LAST
 } PowerProfile;
 
+typedef enum {
+    BINDER_SERVICE_MANAGER_TYPE_AIDL,
+    BINDER_SERVICE_MANAGER_TYPE_HIDL
+
+} BinderServiceManagerType;
+
+#endif

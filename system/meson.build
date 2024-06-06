@@ -1,4 +1,8 @@
 mps_sources = [
+  'binder.c',
+  'binder_client.c',
+  'binder_power.c',
+  'binder_radio.c',
   'bus.c',
   'cpufreq.c',
   'cpufreq_device.c',
@@ -6,7 +10,6 @@ mps_sources = [
   'devfreq_device.c',
   'freezer.c',
   'freq_device.c',
-  'binder.c',
   'kernel_settings.c',
   'logind.c',
   'main.c',
