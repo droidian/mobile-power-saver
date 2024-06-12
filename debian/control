@@ -5,6 +5,8 @@ Maintainer: Cédric Bellegarde <cedric.bellegarde@adishatz.org>
 Rules-Requires-Root: no
 Build-Depends:
  debhelper-compat (= 13),
+ libnl-3-dev,
+ libnl-genl-3-dev,
 Standards-Version: 4.6.2
 Homepage: https://gitlab.gnome.org/gnumdk/mobile-power-saver
 #Vcs-Browser: https://gitlab.gnome.org/gnumdk/mobile-power-saver

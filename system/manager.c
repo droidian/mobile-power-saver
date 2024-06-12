@@ -15,6 +15,7 @@
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
+#include "wifi.h"
 #include "../common/services.h"
 
 struct _ManagerPrivate {
@@ -24,6 +25,7 @@ struct _ManagerPrivate {
     KernelSettings *kernel_settings;
     Freezer *freezer;
     Services *services;
+    WiFi *wifi;
 
     gboolean screen_off_power_saving;
     GList *screen_off_suspend_processes;
@@ -60,6 +62,7 @@ on_screen_state_changed (gpointer ignore,
         cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
         devfreq_set_powersave (self->priv->devfreq, !screen_on);
         kernel_settings_set_powersave (self->priv->kernel_settings, !screen_on);
+        wifi_set_powersave (self->priv->wifi, !screen_on);
 
         if (screen_on) {
             freezer_resume_processes (
@@ -171,6 +174,7 @@ manager_dispose (GObject *manager)
     g_clear_object (&self->priv->kernel_settings);
     g_clear_object (&self->priv->freezer);
     g_clear_object (&self->priv->services);
+    g_clear_object (&self->priv->wifi);
 
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
@@ -210,6 +214,7 @@ manager_init (Manager *self)
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
     self->priv->freezer = FREEZER (freezer_new ());
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
+    self->priv->wifi = WIFI (wifi_new ());
 
     self->priv->screen_off_power_saving = TRUE;
     self->priv->screen_off_suspend_processes = NULL;

@@ -14,6 +14,7 @@ mps_sources = [
   'logind.c',
   'main.c',
   'manager.c',
+  'wifi.c',
   '../common/services.c',
   '../common/utils.c'
 ]
@@ -22,6 +23,7 @@ mps_deps = [
   dependency('glib-2.0'),
   dependency('gio-2.0'),
   dependency('gio-unix-2.0'),
+  dependency('libnl-genl-3.0'),
   dependency('libgbinder')
 ]
 
