@@ -58,9 +58,9 @@ static int get_wifi_interface (struct nl_msg *msg,
     );
 
     if (tb_msg[NL80211_ATTR_IFNAME]) {
-        self->priv->ifindex = if_nametoindex (
-            nla_get_string(tb_msg[NL80211_ATTR_IFNAME])
-        );
+        gchar *ifname = nla_get_string(tb_msg[NL80211_ATTR_IFNAME]);
+        if (g_str_has_prefix (ifname, "wl"))
+            self->priv->ifindex = if_nametoindex (ifname);
     }
 
     return NL_SKIP;
