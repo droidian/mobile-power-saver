@@ -15,7 +15,7 @@
     </key>
 
     <key name="screen-off-suspend-apps-blacklist" type="as">
-      <default>['org.gnome.Lollypop', 'org.gnome.Calls', 'sm.puri.Chatty', 'org.gnome.clocks', 'org.kop316.antispam']</default>
+      <default>['org.gnome.Calls', 'sm.puri.Chatty', 'org.gnome.clocks', 'org.kop316.antispam']</default>
       <summary>Do not suspend these apps when screen is off</summary>
       <description>When screen is turned off, these apps will be ignored.</description>
     </key>
