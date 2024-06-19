@@ -131,8 +131,6 @@ freq_device_set_sysfs_settings (FreqDevice  *self,
  * @self: #FreqDevice
  * @device_name: device name
  *
- * Returns: (transfer full): a new #FreqDevice
- *
  **/
 void
 freq_device_set_name (FreqDevice  *self,
@@ -157,6 +155,22 @@ freq_device_set_name (FreqDevice  *self,
                   filename,
                   self->priv->default_governor);
     }
+}
+
+/**
+ * freq_device_get_name:
+ *
+ * Get #FreqDevice device name
+ *
+ * @self: #FreqDevice
+ *
+ * Returns: device name
+ *
+ **/
+const gchar*
+freq_device_get_name (FreqDevice  *self)
+{
+    return self->priv->device_name;
 }
 
 /**

@@ -14,6 +14,12 @@
       <description>When screen is turned off, processes in list are suspended.</description>
     </key>
 
+    <key name="devfreq-blacklist" type="as">
+      <default>[]</default>
+      <summary>[MAINTAINER ONLY] Do not set those devfreq devices to powersave</summary>
+      <description>Some devfreq devices may hang if so. Use a GLib schema override for your device.</description>
+    </key>
+
     <key name="screen-off-suspend-apps-blacklist" type="as">
       <default>['org.gnome.Calls', 'sm.puri.Chatty', 'org.gnome.clocks', 'org.kop316.antispam']</default>
       <summary>Do not suspend these apps when screen is off</summary>

@@ -22,6 +22,7 @@ enum
     SCREEN_OFF_SUSPEND_PROCESSES_CHANGED,
     SCREEN_OFF_SUSPEND_SERVICES_CHANGED,
     SCREEN_STATE_CHANGED,
+    DEVFREQ_BLACKLIST_SETTED,
     LAST_SIGNAL
 };
 
@@ -147,6 +148,13 @@ handle_method_call (GDBusConnection       *connection,
             g_signal_emit(
                 self,
                 signals[SCREEN_OFF_SUSPEND_SERVICES_CHANGED],
+                0,
+                g_steal_pointer (&value)
+            );
+        } else if (g_strcmp0 (setting, "devfreq-blacklist") == 0) {
+            g_signal_emit(
+                self,
+                signals[DEVFREQ_BLACKLIST_SETTED],
                 0,
                 g_steal_pointer (&value)
             );
@@ -433,6 +441,17 @@ bus_class_init (BusClass *klass)
         G_TYPE_NONE,
         1,
         G_TYPE_BOOLEAN
+    );
+
+    signals[DEVFREQ_BLACKLIST_SETTED] = g_signal_new (
+        "devfreq-blacklist-setted",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_VARIANT
     );
 }
 

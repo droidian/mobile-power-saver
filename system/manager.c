@@ -139,6 +139,22 @@ on_screen_off_suspend_processes_changed (Bus      *bus,
 }
 
 static void
+on_devfreq_blacklist_setted (Bus      *bus,
+                             GVariant *value,
+                             gpointer  user_data)
+{
+    Manager *self = MANAGER (user_data);
+    g_autoptr (GVariantIter) iter;
+    const gchar *device;
+
+    g_variant_get (value, "as", &iter);
+    while (g_variant_iter_loop (iter, "s", &device)) {
+        devfreq_blacklist (self->priv->devfreq, device);
+    }
+    g_variant_unref (value);
+}
+
+static void
 on_screen_off_suspend_services_changed (Bus      *bus,
                                         GVariant *value,
                                         gpointer  user_data)
@@ -256,6 +272,12 @@ manager_init (Manager *self)
         bus_get_default (),
         "screen-off-suspend-services-changed",
         G_CALLBACK (on_screen_off_suspend_services_changed),
+        self
+    );
+    g_signal_connect (
+        bus_get_default (),
+        "devfreq-blacklist-setted",
+        G_CALLBACK (on_devfreq_blacklist_setted),
         self
     );
 }

@@ -106,6 +106,33 @@ devfreq_new (void)
     return devfreq;
 }
 
+
+/**
+ * devfreq_blacklist:
+ *
+ * Blacklist device from powersaving
+ *
+ * @param #Devfreq
+ * @param device_name: name to blacklist
+ */
+void
+devfreq_blacklist (Devfreq     *self,
+                   const gchar *device_name)
+{
+    DevfreqDevice *devfreq_device;
+
+    GFOREACH (self->priv->devfreq_devices, devfreq_device) {
+        if (g_strcmp0 (freq_device_get_name (
+                       FREQ_DEVICE (devfreq_device)), device_name) == 0) {
+            self->priv->devfreq_devices = g_list_remove (
+                self->priv->devfreq_devices, devfreq_device
+            );
+            g_clear_object (&devfreq_device);
+            break;
+        }
+    }
+}
+
 /**
  * devfreq_set_powersave:
  *
@@ -115,11 +142,11 @@ devfreq_new (void)
  * @param powersave: True to enable powersave
  */
 void
-devfreq_set_powersave (Devfreq  *devfreq,
+devfreq_set_powersave (Devfreq  *self,
                        gboolean  powersave) {
     DevfreqDevice *devfreq_device;
 
-    GFOREACH (devfreq->priv->devfreq_devices, devfreq_device)
+    GFOREACH (self->priv->devfreq_devices, devfreq_device)
         freq_device_set_powersave (FREQ_DEVICE (devfreq_device), powersave);
 }
 
@@ -132,10 +159,10 @@ devfreq_set_powersave (Devfreq  *devfreq,
  * @param governor: new governor to set
  */
 void
-devfreq_set_governor (Devfreq     *devfreq,
+devfreq_set_governor (Devfreq     *self,
                       const gchar *governor) {
     DevfreqDevice *devfreq_device;
 
-    GFOREACH (devfreq->priv->devfreq_devices, devfreq_device)
+    GFOREACH (self->priv->devfreq_devices, devfreq_device)
         freq_device_set_governor (FREQ_DEVICE (devfreq_device), governor);
 }

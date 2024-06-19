@@ -63,6 +63,11 @@ notify_settings (Settings *self)
         "screen-off-suspend-system-services",
         self
     );
+    on_setting_changed (
+        self->priv->settings,
+        "devfreq-blacklist",
+        self
+    );
     return FALSE;
 }
 
