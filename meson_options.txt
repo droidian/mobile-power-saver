@@ -1,0 +1,3 @@
+# features
+option('binder', type: 'boolean', value: true, description: 'Enable or disable Binder support')
+option('wifi', type: 'boolean', value: true, description: 'Enable or disable Wi-Fi powersave support')
