@@ -85,6 +85,36 @@ nla_put_failure:
 }
 
 static void
+init_wifi_interfaces(WiFi *self)
+{
+    struct nl_msg *msg;
+    struct nl_cb *cb;
+    gint err = 1;
+
+    msg = nlmsg_alloc();
+    g_return_if_fail (msg != NULL);
+
+    cb = nl_cb_alloc (NL_CB_DEFAULT);
+    if (cb == NULL) {
+        nlmsg_free (msg);
+        return;
+    }
+
+    nl_cb_set (cb, NL_CB_VALID, NL_CB_CUSTOM, get_wifi_interface, self);
+    genlmsg_put (msg, 0, 0, self->priv->genl_family_id , 0,
+                NLM_F_DUMP, NL80211_CMD_GET_INTERFACE, 0);
+    nl_send_auto_complete(self->priv->socket, msg);
+
+    nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, finish_handler, &err);
+
+    while (err > 0)
+        nl_recvmsgs(self->priv->socket, cb);
+
+    nlmsg_free (msg);
+    nl_cb_put (cb);
+}
+
+static void
 wifi_dispose (GObject *wifi)
 {
     G_OBJECT_CLASS (wifi_parent_class)->dispose (wifi);
@@ -113,10 +143,6 @@ wifi_class_init (WiFiClass *klass)
 static void
 wifi_init (WiFi *self)
 {
-    struct nl_msg *msg;
-    struct nl_cb *cb;
-    gint err = 1;
-
     self->priv = wifi_get_instance_private (self);
     self->priv->ifindex = -1;
 
@@ -134,28 +160,6 @@ wifi_init (WiFi *self)
     self->priv->genl_family_id = genl_ctrl_resolve(
         self->priv->socket, "nl80211"
     );
-
-    msg = nlmsg_alloc();
-    g_return_if_fail (msg != NULL);
-
-    cb = nl_cb_alloc (NL_CB_DEFAULT);
-    if (cb == NULL) {
-        nlmsg_free (msg);
-        return;
-    }
-
-    nl_cb_set (cb, NL_CB_VALID, NL_CB_CUSTOM, get_wifi_interface, self);
-    genlmsg_put (msg, 0, 0, self->priv->genl_family_id , 0,
-                NLM_F_DUMP, NL80211_CMD_GET_INTERFACE, 0);
-    nl_send_auto_complete(self->priv->socket, msg);
-
-    nl_cb_set(cb, NL_CB_FINISH, NL_CB_CUSTOM, finish_handler, &err);
-
-    while (err > 0)
-        nl_recvmsgs(self->priv->socket, cb);
-
-    nlmsg_free (msg);
-    nl_cb_put (cb);
 }
 
 /**
@@ -191,6 +195,11 @@ wifi_set_powersave (WiFi     *self,
     struct nl_msg *msg  = NULL;
 
     g_return_if_fail (self->priv->socket != NULL);
+
+    if (self->priv->ifindex == -1) {
+        init_wifi_interfaces (self);
+    }
+
     g_return_if_fail (self->priv->ifindex != -1);
 
     msg = nl80211_alloc_msg(self, NL80211_CMD_SET_POWER_SAVE);
