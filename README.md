@@ -23,7 +23,7 @@ These are only examples that need to be tweaked depending on device/OS!
 
 - Suspend user services:
 
-`$ gsettings set org.adishatz.Mps screen-off-suspend-user-services "['gvfs-afc-volume-monitor.service', 'org.gnome.SettingsDaemon.Rfkill.service', 'org.gnome.SettingsDaemon.Sharing.service', 'org.gnome.SettingsDaemon.Color.service', 'gvfs-mtp-volume-monitor.service', 'gvfs-udisks2-volume-monitor.service', 'org.gnome.SettingsDaemon.Housekeeping.service', 'org.gnome.SettingsDaemon.Wacom.service', 'org.gnome.SettingsDaemon.Smartcard.service', 'org.gnome.SettingsDaemon.PrintNotifications.service', 'org.gnome.SettingsDaemon.MediaKeys.service', 'org.gnome.SettingsDaemon.A11ySettings.service', 'gnome-keyring-daemon.service', 'gcr-ssh-agent.service', 'org.droidian.Flashlightd.service']"`
+`$ gsettings set org.adishatz.Mps screen-off-suspend-user-services "['gvfs-afc-volume-monitor.service']"`
 
 ## Depends on
 
