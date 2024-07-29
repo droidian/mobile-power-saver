@@ -5,6 +5,10 @@ Maintainer: Cédric Bellegarde <cedric.bellegarde@adishatz.org>
 Rules-Requires-Root: no
 Build-Depends:
  debhelper-compat (= 13),
+ meson,
+ libglib2.0-dev,
+ libgbinder-dev,
+ libgbinder-radio-dev,
  libnl-3-dev,
  libnl-genl-3-dev,
 Standards-Version: 4.6.2
