@@ -20,4 +20,6 @@ Depends:
  dbus,
  ${shlibs:Depends},
  ${misc:Depends},
+Provides: droidian-power-management
+Conflicts: droidian-power-management
 Description: Mobile Power Saver enable hard power saving when screen is off.
