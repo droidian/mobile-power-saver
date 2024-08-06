@@ -118,19 +118,7 @@ settings_init (Settings *self)
 
     g_signal_connect (
         self->priv->settings,
-        "changed::screen-off-power-saving",
-        G_CALLBACK (on_setting_changed),
-        self
-    );
-    g_signal_connect (
-        self->priv->settings,
-        "changed::screen-off-suspend-processes",
-        G_CALLBACK (on_setting_changed),
-        self
-    );
-    g_signal_connect (
-        self->priv->settings,
-        "changed::screen-off-suspend-system-services",
+        "changed",
         G_CALLBACK (on_setting_changed),
         self
     );
