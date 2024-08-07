@@ -25,16 +25,6 @@ if wifi_enabled
   mps_sources += [ 'wifi.c' ]
 endif
 
-if binder_enabled
-  mps_deps += [ dependency('libgbinder') ]
-  mps_sources += [
-    'binder.c',
-    'binder_client.c',
-    'binder_power.c',
-    'binder_radio.c',
-  ]
-endif
-
 executable('mobile-power-saver', mps_sources,
   dependencies: mps_deps,
   install_dir: sbin_dir,
