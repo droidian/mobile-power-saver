@@ -186,7 +186,7 @@ static void
 add_players (Mpris *self)
 {
     g_autoptr (GError) error = NULL;
-    g_autoptr(GVariant) value = NULL;
+    g_autoptr (GVariant) value = NULL;
     g_autoptr (GVariantIter) iter;
     const gchar *player;
 

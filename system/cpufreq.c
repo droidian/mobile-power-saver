@@ -26,7 +26,7 @@ G_DEFINE_TYPE_WITH_CODE (
 static void
 detect_devices (Cpufreq *self)
 {
-    g_autoptr(GDir) policies_dir = NULL;
+    g_autoptr (GDir) policies_dir = NULL;
     const char *policy_dir;
 
     policies_dir = g_dir_open (CPUFREQ_POLICIES_DIR, 0, NULL);

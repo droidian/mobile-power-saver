@@ -40,7 +40,7 @@ on_logind_proxy_properties (GDBusProxy  *proxy,
                             char       **invalidated_properties,
                             gpointer     user_data)
 {
-    Logind *self = user_data;
+    Logind *self = LOGIND (user_data);
     GVariant *value;
     char *property;
     GVariantIter i;

@@ -9,6 +9,7 @@
 
 #include <gio/gio.h>
 
+#include "bus.h"
 #include "dozing.h"
 #include "mpris.h"
 #include "settings.h"
@@ -75,7 +76,10 @@ static gboolean unfreeze_apps (Dozing *self);
 static gboolean
 freeze_apps (Dozing *self)
 {
+    Bus *bus = bus_get_default ();
     const gchar *app;
+
+    bus_set_value (bus, "apps-dozing", g_variant_new ("b", TRUE));
 
     if (self->priv->apps == NULL)
         return FALSE;
@@ -100,7 +104,10 @@ freeze_apps (Dozing *self)
 static gboolean
 unfreeze_apps (Dozing *self)
 {
+    Bus *bus = bus_get_default ();
     const gchar *app;
+
+    bus_set_value (bus, "apps-dozing", g_variant_new ("b", FALSE));
 
     if (self->priv->apps == NULL)
         return FALSE;
@@ -124,7 +131,7 @@ unfreeze_apps (Dozing *self)
 static GList *
 get_apps (Dozing *self)
 {
-    g_autoptr(GDir) sys_dir = NULL;
+    g_autoptr (GDir) sys_dir = NULL;
     g_autofree gchar *dirname = g_strdup_printf(
         CGROUPS_APPS_FREEZE_DIR, getuid(), getuid()
 
@@ -241,12 +248,15 @@ dozing_start (Dozing  *self) {
  */
 void
 dozing_stop (Dozing  *self) {
+    Bus *bus = bus_get_default ();
     const gchar *app;
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
 
     GFOREACH (self->priv->apps, app)
         write_to_file (app, "0");
+
+    bus_set_value (bus, "apps-dozing", g_variant_new ("b", FALSE));
 
     g_list_free_full (self->priv->apps, g_free);
     self->priv->apps = NULL;

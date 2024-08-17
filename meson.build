@@ -21,6 +21,7 @@ bin_dir = join_paths(get_option('prefix'), get_option('bindir'))
 sbin_dir = join_paths(get_option('prefix'), get_option('sbindir'))
 
 wifi_enabled = get_option('wifi')
+mm_enabled = get_option('mm')
 
 config_h = configuration_data()
 config_h.set('APP_ID', '"org.adishatz.Mps"')
@@ -34,6 +35,10 @@ config_h.set_quoted('LOCALEDIR', localedir)
 
 if wifi_enabled
 config_h.set('WIFI_ENABLED', 1)
+endif
+
+if mm_enabled
+config_h.set('MM_ENABLED', 1)
 endif
 
 configure_file(output: 'config.h', configuration: config_h)
