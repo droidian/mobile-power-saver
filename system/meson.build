@@ -10,6 +10,8 @@ mps_sources = [
   'logind.c',
   'main.c',
   'manager.c',
+  'modem.c',
+  'network_manager.c',
   '../common/services.c',
   '../common/utils.c'
 ]
@@ -23,6 +25,13 @@ mps_deps = [
 if wifi_enabled
   mps_deps += [ dependency('libnl-genl-3.0') ]
   mps_sources += [ 'wifi.c' ]
+endif
+
+if mm_enabled
+  mps_deps += [ dependency('mm-glib') ]
+  mps_sources += [ 'modem_mm.c' ]
+else
+  mps_sources += [ 'modem_ofono.c', 'modem_ofono_device.c' ]
 endif
 
 executable('mobile-power-saver', mps_sources,

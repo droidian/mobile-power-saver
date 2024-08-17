@@ -34,7 +34,7 @@ on_setting_changed (GSettings   *settings,
                     gpointer     user_data)
 {
     Settings *self = SETTINGS (user_data);
-    g_autoptr(GVariant) value = g_settings_get_value (settings, key);
+    g_autoptr (GVariant) value = g_settings_get_value (settings, key);
 
     g_signal_emit(
         self,
@@ -48,26 +48,21 @@ on_setting_changed (GSettings   *settings,
 static gboolean
 notify_settings (Settings *self)
 {
-    on_setting_changed (
-        self->priv->settings,
-        "screen-off-power-saving",
-        self
-    );
-    on_setting_changed (
-        self->priv->settings,
-        "screen-off-suspend-processes",
-        self
-    );
-    on_setting_changed (
-        self->priv->settings,
-        "screen-off-suspend-system-services",
-        self
-    );
-    on_setting_changed (
-        self->priv->settings,
-        "devfreq-blacklist",
-        self
-    );
+    g_autoptr(GSettingsSchema) schema = g_settings_schema_source_lookup (
+        g_settings_schema_source_get_default (),
+        APP_ID,
+        TRUE);
+    gchar **keys = g_settings_schema_list_keys (schema);
+    gint i;
+
+    for (i = 0; keys[i] != NULL; i++) {
+        on_setting_changed (
+            self->priv->settings,
+            keys[i],
+            self
+        );
+    }
+
     return FALSE;
 }
 
@@ -190,7 +185,7 @@ gboolean
 settings_can_freeze_app (Settings    *self,
                          const gchar *app_scope)
 {
-    g_autoptr(GVariant) value = g_settings_get_value (
+    g_autoptr (GVariant) value = g_settings_get_value (
         self->priv->settings, "screen-off-suspend-apps-blacklist"
     );
     g_autoptr (GVariantIter) iter;
@@ -216,7 +211,7 @@ settings_can_freeze_app (Settings    *self,
 GList *
 settings_get_suspend_services (Settings *self)
 {
-    g_autoptr(GVariant) value = g_settings_get_value (
+    g_autoptr (GVariant) value = g_settings_get_value (
         self->priv->settings, "screen-off-suspend-user-services"
     );
     g_autoptr (GVariantIter) iter;

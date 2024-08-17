@@ -150,7 +150,7 @@ bus_set_value (Bus         *self,
                GVariant    *value)
 {
     g_autoptr (GError) error = NULL;
-    g_autoptr(GVariant) result = NULL;
+    g_autoptr (GVariant) result = NULL;
 
     result = g_dbus_proxy_call_sync (
         self->priv->mps_proxy,

@@ -100,7 +100,7 @@ freq_device_new (void)
 }
 
 /**
- * freq_device_set_sysfs_dir:
+ * freq_device_set_sysfs_settings:
  *
  * Set #FreqDevice policy directory
  *

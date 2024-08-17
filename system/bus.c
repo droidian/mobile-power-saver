@@ -23,6 +23,8 @@ enum
     SCREEN_OFF_SUSPEND_SERVICES_CHANGED,
     SCREEN_STATE_CHANGED,
     DEVFREQ_BLACKLIST_SETTED,
+    APPS_DOZING_CHANGED,
+    RADIO_POWER_SAVING_CHANGED,
     LAST_SIGNAL
 };
 
@@ -127,7 +129,7 @@ handle_method_call (GDBusConnection       *connection,
 
     if (g_strcmp0 (method_name, "Set") == 0) {
         const gchar *setting;
-        g_autoptr(GVariant) value;
+        g_autoptr (GVariant) value;
 
         g_variant_get (parameters, "(&sv)", &setting, &value);
         if (g_strcmp0 (setting, "screen-off-power-saving") == 0) {
@@ -158,11 +160,26 @@ handle_method_call (GDBusConnection       *connection,
                 0,
                 g_steal_pointer (&value)
             );
+        } else if (g_strcmp0 (setting, "apps-dozing") == 0) {
+            g_signal_emit(
+                self,
+                signals[APPS_DOZING_CHANGED],
+                0,
+                g_variant_get_boolean (value)
+            );
+        } else if (g_strcmp0 (setting, "radio-power-saving") == 0) {
+            g_signal_emit(
+                self,
+                signals[RADIO_POWER_SAVING_CHANGED],
+                0,
+                g_variant_get_boolean (value)
+            );
         }
 
         g_dbus_method_invocation_return_value (
             invocation, NULL
         );
+
         return;
     }
 
@@ -452,6 +469,28 @@ bus_class_init (BusClass *klass)
         G_TYPE_NONE,
         1,
         G_TYPE_VARIANT
+    );
+
+    signals[APPS_DOZING_CHANGED] = g_signal_new (
+        "apps-dozing-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_BOOLEAN
+    );
+
+    signals[RADIO_POWER_SAVING_CHANGED] = g_signal_new (
+        "radio-power-saving-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_BOOLEAN
     );
 }
 

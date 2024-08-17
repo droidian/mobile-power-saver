@@ -9,12 +9,19 @@
 
 #include "bus.h"
 #include "cpufreq.h"
+#include "config.h"
 #include "devfreq.h"
 #include "freezer.h"
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
-#include "config.h"
+#include "modem.h"
+#ifdef MM_ENABLED
+#include "modem_mm.h"
+#else
+#include "modem_ofono.h"
+#endif
+#include "network_manager.h"
 
 #ifdef WIFI_ENABLED
 #include "wifi.h"
@@ -28,6 +35,8 @@ struct _ManagerPrivate {
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
     Freezer *freezer;
+    NetworkManager *network_manager;
+    Modem  *modem;
     Services *services;
 #ifdef WIFI_ENABLED
     WiFi *wifi;
@@ -36,6 +45,8 @@ struct _ManagerPrivate {
     gboolean screen_off_power_saving;
     GList *screen_off_suspend_processes;
     GList *screen_off_suspend_services;
+
+    gboolean radio_power_saving;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -67,7 +78,8 @@ on_screen_state_changed (gpointer ignore,
         devfreq_set_powersave (self->priv->devfreq, !screen_on);
         kernel_settings_set_powersave (self->priv->kernel_settings, !screen_on);
 #ifdef WIFI_ENABLED
-        wifi_set_powersave (self->priv->wifi, !screen_on);
+        if (self->priv->radio_power_saving)
+            wifi_set_powersave (self->priv->wifi, !screen_on);
 #endif
 
         if (screen_on) {
@@ -160,6 +172,66 @@ on_devfreq_blacklist_setted (Bus      *bus,
 }
 
 static void
+on_radio_power_saving_changed (Bus      *bus,
+                               gboolean  radio_power_saving,
+                               gpointer  user_data)
+{
+    Manager *self = MANAGER (user_data);
+    ModemClass *klass;
+
+    klass = MODEM_GET_CLASS (self->priv->modem);
+
+    self->priv->radio_power_saving = radio_power_saving;
+
+    if (self->priv->radio_power_saving)
+        klass->apply_powersave (self->priv->modem);
+    else
+        klass->reset_powersave (self->priv->modem);
+}
+
+static void
+on_apps_dozing_changed (NetworkManager *network_manager,
+                        gboolean        enabled,
+                        gpointer        user_data)
+{
+    Manager *self = MANAGER (user_data);
+    ModemClass *klass;
+    gboolean updated;
+
+    /* Here we assume AP set with screen on/dozing off */
+    if (network_manager_has_ap (self->priv->network_manager))
+        return;
+
+    klass = MODEM_GET_CLASS (self->priv->modem);
+
+    updated = modem_set_powersave (
+        self->priv->modem, enabled, MODEM_POWERSAVE_DOZING
+    );
+
+    if (updated && self->priv->radio_power_saving)
+        klass->apply_powersave (self->priv->modem);
+}
+
+static void
+on_connection_type_wifi (NetworkManager *network_manager,
+                         gboolean        enabled,
+                         gpointer        user_data)
+{
+    Manager *self = MANAGER (user_data);
+    ModemClass *klass;
+    gboolean updated;
+
+    klass = MODEM_GET_CLASS (self->priv->modem);
+
+    updated = modem_set_powersave (
+        self->priv->modem, enabled, MODEM_POWERSAVE_WIFI
+    );
+
+    if (updated && self->priv->radio_power_saving)
+        klass->apply_powersave (self->priv->modem);
+}
+
+static void
 on_screen_off_suspend_services_changed (Bus      *bus,
                                         GVariant *value,
                                         gpointer  user_data)
@@ -193,6 +265,8 @@ manager_dispose (GObject *manager)
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
     g_clear_object (&self->priv->freezer);
+    g_clear_object (&self->priv->network_manager);
+    g_clear_object (&self->priv->modem);
     g_clear_object (&self->priv->services);
 #ifdef WIFI_ENABLED
     g_clear_object (&self->priv->wifi);
@@ -234,12 +308,19 @@ manager_init (Manager *self)
     self->priv->devfreq = DEVFREQ (devfreq_new ());
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
     self->priv->freezer = FREEZER (freezer_new ());
+    self->priv->network_manager = NETWORK_MANAGER (network_manager_new ());
+#ifdef MM_ENABLED
+    self->priv->modem = MODEM (modem_mm_new ());
+#else
+    self->priv->modem = MODEM (modem_ofono_new ());
+#endif
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
 #ifdef WIFI_ENABLED
     self->priv->wifi = WIFI (wifi_new ());
 #endif
 
     self->priv->screen_off_power_saving = TRUE;
+    self->priv->radio_power_saving = FALSE;
     self->priv->screen_off_suspend_processes = NULL;
 
     g_signal_connect (
@@ -287,6 +368,26 @@ manager_init (Manager *self)
         G_CALLBACK (on_devfreq_blacklist_setted),
         self
     );
+    g_signal_connect (
+        bus_get_default (),
+        "apps-dozing-changed",
+        G_CALLBACK (on_apps_dozing_changed),
+        self
+    );
+    g_signal_connect (
+        bus_get_default (),
+        "radio-power-saving-changed",
+        G_CALLBACK (on_radio_power_saving_changed),
+        self
+    );
+    g_signal_connect (
+        self->priv->network_manager,
+        "connection-type-wifi",
+        G_CALLBACK (on_connection_type_wifi),
+        self
+    );
+
+    network_manager_check_wifi (self->priv->network_manager);
 }
 
 /**

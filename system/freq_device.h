@@ -39,7 +39,6 @@ struct _FreqDevice {
 
 struct _FreqDeviceClass {
     GObjectClass parent_class;
-    void (*set_sysfs_dir) (FreqDevice *instance);
 };
 
 GType           freq_device_get_type            (void) G_GNUC_CONST;
