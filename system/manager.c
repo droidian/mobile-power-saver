@@ -190,7 +190,7 @@ on_radio_power_saving_changed (Bus      *bus,
 }
 
 static void
-on_apps_dozing_changed (NetworkManager *network_manager,
+on_suspend_modem_changed (NetworkManager *network_manager,
                         gboolean        enabled,
                         gpointer        user_data)
 {
@@ -370,8 +370,8 @@ manager_init (Manager *self)
     );
     g_signal_connect (
         bus_get_default (),
-        "apps-dozing-changed",
-        G_CALLBACK (on_apps_dozing_changed),
+        "suspend-modem-changed",
+        G_CALLBACK (on_suspend_modem_changed),
         self
     );
     g_signal_connect (

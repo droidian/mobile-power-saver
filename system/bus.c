@@ -23,7 +23,7 @@ enum
     SCREEN_OFF_SUSPEND_SERVICES_CHANGED,
     SCREEN_STATE_CHANGED,
     DEVFREQ_BLACKLIST_SETTED,
-    APPS_DOZING_CHANGED,
+    SUSPEND_MODEM_CHANGED,
     RADIO_POWER_SAVING_CHANGED,
     LAST_SIGNAL
 };
@@ -160,10 +160,10 @@ handle_method_call (GDBusConnection       *connection,
                 0,
                 g_steal_pointer (&value)
             );
-        } else if (g_strcmp0 (setting, "apps-dozing") == 0) {
+        } else if (g_strcmp0 (setting, "suspend-modem") == 0) {
             g_signal_emit(
                 self,
-                signals[APPS_DOZING_CHANGED],
+                signals[SUSPEND_MODEM_CHANGED],
                 0,
                 g_variant_get_boolean (value)
             );
@@ -471,8 +471,8 @@ bus_class_init (BusClass *klass)
         G_TYPE_VARIANT
     );
 
-    signals[APPS_DOZING_CHANGED] = g_signal_new (
-        "apps-dozing-changed",
+    signals[SUSPEND_MODEM_CHANGED] = g_signal_new (
+        "suspend-modem-changed",
         G_OBJECT_CLASS_TYPE (object_class),
         G_SIGNAL_RUN_LAST,
         0,
