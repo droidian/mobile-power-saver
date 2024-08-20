@@ -221,7 +221,7 @@ handle_set_property (GDBusConnection  *connection,
                      GError          **error,
                      gpointer          user_data)
 {
-  Bus *self = user_data;
+    Bus *self = user_data;
 
     if (g_strcmp0 (property_name, "ActiveProfile") == 0) {
         const gchar *power_profile = g_variant_get_string (value, NULL);
