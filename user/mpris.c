@@ -114,6 +114,9 @@ add_player (Mpris       *self,
     value = g_dbus_proxy_get_cached_property (
         player_bus, "PlaybackStatus"
     );
+
+    g_return_if_fail (value != NULL);
+
     is_playing = g_strcmp0 (g_variant_get_string (value, NULL), "Playing") == 0;
     g_variant_unref (value);
 
@@ -133,9 +136,9 @@ static void
 add_player_if_desktop_entry (Mpris       *self,
                              const gchar *name)
 {
-    GDBusProxy *player;
-    GVariant *desktop_entry;
-    const gchar *desktop_id;
+    g_autoptr (GDBusProxy) player = NULL;
+    g_autoptr (GVariant) desktop_entry = NULL;
+    const gchar *desktop_id = NULL;
 
     if (!g_str_has_prefix (name, DBUS_MPRIS_PREFIX))
         return;
@@ -154,8 +157,12 @@ add_player_if_desktop_entry (Mpris       *self,
     g_return_if_fail (player != NULL);
 
     desktop_entry = g_dbus_proxy_get_cached_property (player, "DesktopEntry");
-    desktop_id = g_variant_get_string(desktop_entry, NULL);
-    g_variant_unref (desktop_entry);
+
+    if (desktop_entry == NULL)
+        return;
+
+    desktop_id = g_variant_get_string (desktop_entry, NULL);
+
     if (desktop_id != NULL && strlen (desktop_id) > 0)
          add_player (self, name, desktop_id);
 }
@@ -186,7 +193,7 @@ static void
 add_players (Mpris *self)
 {
     g_autoptr (GError) error = NULL;
-    g_autoptr(GVariant) value = NULL;
+    g_autoptr (GVariant) value = NULL;
     g_autoptr (GVariantIter) iter;
     const gchar *player;
 

@@ -26,7 +26,7 @@ G_DEFINE_TYPE_WITH_CODE (
 static void
 detect_devices (Devfreq *self)
 {
-    g_autoptr(GDir) devfreq_dir = NULL;
+    g_autoptr (GDir) devfreq_dir = NULL;
     const char *device_dir;
 
     devfreq_dir = g_dir_open (DEVFREQ_DIR, 0, NULL);
