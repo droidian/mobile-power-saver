@@ -17,6 +17,8 @@ struct _ModemMMPrivate {
     MMManager *manager;
 
     GList *modems;
+
+    guint blacklist;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -75,12 +77,22 @@ modem_mm_set_powersave (Modem    *self,
             guint allowed, preferred;
             g_autoptr (GError) error = NULL;
 
+            allowed = modes[0].allowed;
+            preferred = modes[0].preferred;
+
             if (powersave) {
-                allowed = modes[n_modes - 1].allowed;
-                preferred = modes[n_modes - 1].preferred;
-            } else {
-                allowed = modes[0].allowed;
-                preferred = modes[0].preferred;
+                gint i = n_modes - 1;
+                guint previous_flags = 0;
+                while (i != 0) {
+                    guint flags = modes[i].allowed & ~previous_flags;
+                    if ((flags & this->priv->blacklist) == 0) {
+                        allowed = modes[i].allowed;
+                        preferred = modes[i].preferred;
+                        break;
+                    }
+                    previous_flags = modes[i].allowed;
+                    i -= 1;
+                }
             }
 
             g_message ("Modem mode: %u %u", allowed, preferred);
@@ -113,6 +125,14 @@ modem_mm_reset_powersave (Modem *self)
     modem_mm_set_powersave (self, FALSE);
 }
 
+static void
+modem_mm_set_blacklist (Modem *self,
+                        gint   blacklist)
+{
+    ModemMM *this = MODEM_MM (self);
+
+    this->priv->blacklist = blacklist;
+}
 
 static void
 modem_mm_dispose (GObject *modem_mm)
@@ -148,6 +168,7 @@ modem_mm_class_init (ModemMMClass *klass)
     modem_class = MODEM_CLASS (klass);
     modem_class->apply_powersave = modem_mm_apply_powersave;
     modem_class->reset_powersave = modem_mm_reset_powersave;
+    modem_class->set_blacklist = modem_mm_set_blacklist;
 }
 
 static void

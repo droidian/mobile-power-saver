@@ -38,6 +38,12 @@
       <description>Save power by moving radio devices to lower data mode.</description>
     </key>
 
+    <key name="radio-power-saving-blacklist" type="i">
+      <default>1</default>
+      <summary>Blacklisted access mode for powersaving</summary>
+      <description>See ModemManager MMModemMode for values.</description>
+    </key>
+
     <key name="devfreq-blacklist" type="as">
       <default>[]</default>
       <summary>[MAINTAINER ONLY] Do not set those devfreq devices to powersave</summary>

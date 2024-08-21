@@ -190,6 +190,24 @@ on_radio_power_saving_changed (Bus      *bus,
 }
 
 static void
+on_radio_power_saving_blacklist_changed (Bus      *bus,
+                                         gint      blacklist,
+                                         gpointer  user_data)
+{
+    Manager *self = MANAGER (user_data);
+    ModemClass *klass;
+
+    klass = MODEM_GET_CLASS (self->priv->modem);
+
+    klass->set_blacklist (self->priv->modem, blacklist);
+
+    if (self->priv->radio_power_saving)
+        klass->apply_powersave (self->priv->modem);
+    else
+        klass->reset_powersave (self->priv->modem);
+}
+
+static void
 on_suspend_modem_changed (NetworkManager *network_manager,
                         gboolean        enabled,
                         gpointer        user_data)
@@ -378,6 +396,12 @@ manager_init (Manager *self)
         bus_get_default (),
         "radio-power-saving-changed",
         G_CALLBACK (on_radio_power_saving_changed),
+        self
+    );
+    g_signal_connect (
+        bus_get_default (),
+        "radio-power-saving-blacklist-changed",
+        G_CALLBACK (on_radio_power_saving_blacklist_changed),
         self
     );
     g_signal_connect (

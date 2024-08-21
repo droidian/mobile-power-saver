@@ -25,6 +25,7 @@ enum
     DEVFREQ_BLACKLIST_SETTED,
     SUSPEND_MODEM_CHANGED,
     RADIO_POWER_SAVING_CHANGED,
+    RADIO_POWER_SAVING_BLACKLIST_CHANGED,
     LAST_SIGNAL
 };
 
@@ -173,6 +174,13 @@ handle_method_call (GDBusConnection       *connection,
                 signals[RADIO_POWER_SAVING_CHANGED],
                 0,
                 g_variant_get_boolean (value)
+            );
+        } else if (g_strcmp0 (setting, "radio-power-saving-blacklist") == 0) {
+            g_signal_emit(
+                self,
+                signals[RADIO_POWER_SAVING_BLACKLIST_CHANGED],
+                0,
+                g_variant_get_int32 (value)
             );
         }
 
@@ -491,6 +499,17 @@ bus_class_init (BusClass *klass)
         G_TYPE_NONE,
         1,
         G_TYPE_BOOLEAN
+    );
+
+    signals[RADIO_POWER_SAVING_BLACKLIST_CHANGED] = g_signal_new (
+        "radio-power-saving-blacklist-changed",
+        G_OBJECT_CLASS_TYPE (object_class),
+        G_SIGNAL_RUN_LAST,
+        0,
+        NULL, NULL, NULL,
+        G_TYPE_NONE,
+        1,
+        G_TYPE_INT
     );
 }
 

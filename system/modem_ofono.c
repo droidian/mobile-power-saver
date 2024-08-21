@@ -125,6 +125,20 @@ modem_ofono_reset_powersave (Modem *self)
 }
 
 static void
+modem_ofono_set_blacklist (Modem *self,
+                           gint   blacklist)
+{
+    ModemOfono *this = MODEM_OFONO (self);
+    ModemOfonoDevice *device;
+
+    GFOREACH (this->priv->modems, device) {
+        modem_ofono_device_set_blacklist (
+            device, blacklist
+        );
+    }
+}
+
+static void
 modem_ofono_dispose (GObject *modem_ofono)
 {
     ModemOfono *self = MODEM_OFONO (modem_ofono);
@@ -157,6 +171,7 @@ modem_ofono_class_init (ModemOfonoClass *klass)
     modem_class = MODEM_CLASS (klass);
     modem_class->apply_powersave = modem_ofono_apply_powersave;
     modem_class->reset_powersave = modem_ofono_reset_powersave;
+    modem_class->set_blacklist = modem_ofono_set_blacklist;
 }
 
 static void

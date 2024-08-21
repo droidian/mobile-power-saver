@@ -50,4 +50,3 @@ GObject*        modem_mm_new           (void);
 G_END_DECLS
 
 #endif
-

@@ -49,7 +49,8 @@ GObject*        modem_ofono_device_new             (const gchar      *path);
 const gchar*    modem_ofono_device_get_path        (ModemOfonoDevice *self);
 void            modem_ofono_device_apply_powersave (ModemOfonoDevice *self,
                                                     gboolean          powersave);
-
+void            modem_ofono_device_set_blacklist   (ModemOfonoDevice *self,
+                                                    guint             blacklist);
 G_END_DECLS
 
 #endif

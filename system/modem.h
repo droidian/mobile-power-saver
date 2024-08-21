@@ -49,6 +49,8 @@ struct _ModemClass {
     GObjectClass parent_class;
     void (*apply_powersave) (Modem *self);
     void (*reset_powersave) (Modem *self);
+    void (*set_blacklist)   (Modem *self,
+                             gint   blacklist);
 };
 
 GType           modem_get_type        (void) G_GNUC_CONST;

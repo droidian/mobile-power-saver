@@ -9,6 +9,7 @@
 
 #include "network_manager.h"
 #include "modem_ofono_device.h"
+#include "../common/define.h"
 #include "../common/utils.h"
 
 #define OFONO_DBUS_NAME                     "org.ofono"
@@ -36,6 +37,8 @@ struct _ModemOfonoDevicePrivate {
     GDBusProxy *modem_ofono_device_radio_proxy;
 
     gchar *device_path;
+
+    guint blacklist;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -102,6 +105,33 @@ init_radio (ModemOfonoDevice *self)
     }
 
     g_signal_emit_by_name(self, "device-ready", NULL);
+}
+
+static gboolean
+is_technology_blacklisted (ModemOfonoDevice *self,
+                           const gchar      *technology)
+{
+    if (g_strcmp0 (technology, "gsm") == 0) {
+        if ((self->priv->blacklist & MM_MODEM_MODE_2G) == MM_MODEM_MODE_2G)
+            return TRUE;
+    }
+
+    if (g_strcmp0 (technology, "umts") == 0) {
+        if ((self->priv->blacklist & MM_MODEM_MODE_3G) == MM_MODEM_MODE_3G)
+            return TRUE;
+    }
+
+    if (g_strcmp0 (technology, "lte") == 0) {
+        if ((self->priv->blacklist & MM_MODEM_MODE_4G) == MM_MODEM_MODE_4G)
+            return TRUE;
+    }
+
+    if (g_strcmp0 (technology, "nr") == 0) {
+        if ((self->priv->blacklist & MM_MODEM_MODE_5G) == MM_MODEM_MODE_5G)
+            return TRUE;
+    }
+
+    return FALSE;
 }
 
 static void
@@ -380,6 +410,8 @@ modem_ofono_device_apply_powersave (ModemOfonoDevice *self,
 
             g_variant_get (property_value, "as", &tech_iter);
             while (g_variant_iter_loop (tech_iter, "&s", &tech_value, NULL)) {
+                if (is_technology_blacklisted (self, tech_value))
+                    continue;
                 technology = g_strdup (tech_value);
                 if (powersave)
                     break;
@@ -387,4 +419,10 @@ modem_ofono_device_apply_powersave (ModemOfonoDevice *self,
         }
     }
     set_technology_preference (self, technology);
+}
+
+void modem_ofono_device_set_blacklist (ModemOfonoDevice *self,
+                                       guint             blacklist)
+{
+    self->priv->blacklist = blacklist;
 }
