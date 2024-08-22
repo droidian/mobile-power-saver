@@ -50,10 +50,10 @@ G_DEFINE_TYPE_WITH_CODE (
 
 static void
 on_modem_proxy_signal (GDBusProxy  *proxy,
-                     const gchar *sender_name,
-                     const gchar *signal_name,
-                     GVariant    *parameters,
-                     gpointer     user_data);
+                       const gchar *sender_name,
+                       const gchar *signal_name,
+                       GVariant    *parameters,
+                       gpointer     user_data);
 
 static void
 set_technology_preference (ModemOfonoDevice       *self,
@@ -421,6 +421,15 @@ modem_ofono_device_apply_powersave (ModemOfonoDevice *self,
     set_technology_preference (self, technology);
 }
 
+/**
+ * modem_ofono_device_set_blacklist:
+ *
+ * Creates a new #ModemOfonoDevice
+ *
+ * @param self: #ModemOfonoDevice
+ * @param blacklist: flags
+ *
+ **/
 void modem_ofono_device_set_blacklist (ModemOfonoDevice *self,
                                        guint             blacklist)
 {

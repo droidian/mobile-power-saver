@@ -209,8 +209,8 @@ on_radio_power_saving_blacklist_changed (Bus      *bus,
 
 static void
 on_suspend_modem_changed (NetworkManager *network_manager,
-                        gboolean        enabled,
-                        gpointer        user_data)
+                          gboolean        enabled,
+                          gpointer        user_data)
 {
     Manager *self = MANAGER (user_data);
     ModemClass *klass;
