@@ -30,6 +30,8 @@
 #include "../common/define.h"
 #include "../common/services.h"
 
+#define APPLY_DELAY 500
+
 struct _ManagerPrivate {
     Cpufreq *cpufreq;
     Devfreq *devfreq;
@@ -47,6 +49,8 @@ struct _ManagerPrivate {
     GList *screen_off_suspend_services;
 
     gboolean radio_power_saving;
+
+    guint apply_timeout_id;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -63,6 +67,24 @@ get_governor_from_power_profile (PowerProfile power_profile) {
     if (power_profile == POWER_PROFILE_PERFORMANCE)
         return "performance";
     return NULL;
+}
+
+static gboolean
+on_apply_timeout (gpointer user_data)
+{
+    Manager *self = MANAGER (user_data);
+    ModemClass *klass;
+
+    klass = MODEM_GET_CLASS (self->priv->modem);
+
+    self->priv->apply_timeout_id = 0;
+
+    if (self->priv->radio_power_saving)
+        klass->apply_powersave (self->priv->modem);
+    else
+        klass->reset_powersave (self->priv->modem);
+
+    return FALSE;
 }
 
 static void
@@ -177,16 +199,13 @@ on_radio_power_saving_changed (Bus      *bus,
                                gpointer  user_data)
 {
     Manager *self = MANAGER (user_data);
-    ModemClass *klass;
-
-    klass = MODEM_GET_CLASS (self->priv->modem);
 
     self->priv->radio_power_saving = radio_power_saving;
 
-    if (self->priv->radio_power_saving)
-        klass->apply_powersave (self->priv->modem);
-    else
-        klass->reset_powersave (self->priv->modem);
+    g_clear_handle_id (&self->priv->apply_timeout_id, g_source_remove);
+    self->priv->apply_timeout_id = g_timeout_add (
+        APPLY_DELAY, (GSourceFunc) on_apply_timeout, self
+    );
 }
 
 static void
@@ -201,10 +220,10 @@ on_radio_power_saving_blacklist_changed (Bus      *bus,
 
     klass->set_blacklist (self->priv->modem, blacklist);
 
-    if (self->priv->radio_power_saving)
-        klass->apply_powersave (self->priv->modem);
-    else
-        klass->reset_powersave (self->priv->modem);
+    g_clear_handle_id (&self->priv->apply_timeout_id, g_source_remove);
+    self->priv->apply_timeout_id = g_timeout_add (
+        APPLY_DELAY, (GSourceFunc) on_apply_timeout, self
+    );
 }
 
 static void
@@ -304,6 +323,9 @@ manager_finalize (GObject *manager)
     g_list_free_full (
         self->priv->screen_off_suspend_services, g_free
     );
+
+    g_clear_handle_id (&self->priv->apply_timeout_id, g_source_remove);
+
     G_OBJECT_CLASS (manager_parent_class)->finalize (manager);
 }
 
@@ -339,6 +361,7 @@ manager_init (Manager *self)
 
     self->priv->screen_off_power_saving = TRUE;
     self->priv->radio_power_saving = FALSE;
+    self->priv->apply_timeout_id = 0;
     self->priv->screen_off_suspend_processes = NULL;
 
     g_signal_connect (
