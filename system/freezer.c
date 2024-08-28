@@ -106,7 +106,7 @@ static GList *
 get_pids (Freezer *self)
 {
     GList *processes = NULL;
-    g_autoptr(GDir) proc_dir = NULL;
+    g_autoptr (GDir) proc_dir = NULL;
     const char *pid_dir;
 
     proc_dir = g_dir_open ("/proc", 0, NULL);

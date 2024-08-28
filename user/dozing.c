@@ -9,8 +9,10 @@
 
 #include <gio/gio.h>
 
+#include "bus.h"
 #include "dozing.h"
 #include "mpris.h"
+#include "network_manager.h"
 #include "settings.h"
 #include "../common/define.h"
 #include "../common/utils.h"
@@ -36,6 +38,7 @@ enum DozingType {
 
 struct _DozingPrivate {
     GList *apps;
+    NetworkManager *network_manager;
     Mpris *mpris;
 
     guint type;
@@ -48,6 +51,9 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Dozing)
 )
+
+static gboolean freeze_apps (Dozing *self);
+static gboolean unfreeze_apps (Dozing *self);
 
 static guint
 get_maintenance (Dozing *self)
@@ -71,11 +77,46 @@ get_sleep (Dozing *self)
         return DOZING_FULL_SLEEP;
 }
 
-static gboolean unfreeze_apps (Dozing *self);
+static void
+queue_next_freeze (Dozing *self)
+{
+    self->priv->timeout_id = g_timeout_add_seconds (
+        get_maintenance (self),
+        (GSourceFunc) freeze_apps,
+        self
+    );
+
+    if (self->priv->type < DOZING_FULL)
+        self->priv->type += 1;
+}
+
 static gboolean
 freeze_apps (Dozing *self)
 {
+    Bus *bus = bus_get_default ();
     const gchar *app;
+    Bandwidth bandwidth;
+
+    network_manager_stop_modem_monitoring (self->priv->network_manager);
+
+    bandwidth = network_manager_get_bandwidth (self->priv->network_manager);
+
+    /* Do not suspend any app */
+    if (bandwidth == BANDWIDTH_HIGH) {
+        g_message ("Network usage is high: no dozing");
+        self->priv->timeout_id = g_timeout_add_seconds (
+            DOZING_PRE_SLEEP,
+            (GSourceFunc) freeze_apps,
+            self
+        );
+        return FALSE;
+    }
+
+    /* Do not suspend modem */
+    if (bandwidth == BANDWIDTH_LOW)
+        bus_set_value (bus, "suspend-modem", g_variant_new ("b", TRUE));
+    else
+        g_message ("Network usage is medium: no modem suspend");
 
     if (self->priv->apps == NULL)
         return FALSE;
@@ -100,7 +141,10 @@ freeze_apps (Dozing *self)
 static gboolean
 unfreeze_apps (Dozing *self)
 {
+    Bus *bus = bus_get_default ();
     const gchar *app;
+
+    bus_set_value (bus, "suspend-modem", g_variant_new ("b", FALSE));
 
     if (self->priv->apps == NULL)
         return FALSE;
@@ -109,14 +153,7 @@ unfreeze_apps (Dozing *self)
     GFOREACH (self->priv->apps, app)
         write_to_file (app, "0");
 
-    self->priv->timeout_id = g_timeout_add_seconds (
-        get_maintenance (self),
-        (GSourceFunc) freeze_apps,
-        self
-    );
-
-    if (self->priv->type < DOZING_FULL)
-        self->priv->type += 1;
+    queue_next_freeze (self);
 
     return FALSE;
 }
@@ -124,7 +161,7 @@ unfreeze_apps (Dozing *self)
 static GList *
 get_apps (Dozing *self)
 {
-    g_autoptr(GDir) sys_dir = NULL;
+    g_autoptr (GDir) sys_dir = NULL;
     g_autofree gchar *dirname = g_strdup_printf(
         CGROUPS_APPS_FREEZE_DIR, getuid(), getuid()
 
@@ -159,6 +196,7 @@ dozing_dispose (GObject *dozing)
 {
     Dozing *self = DOZING (dozing);
 
+    g_clear_object (&self->priv->network_manager);
     g_clear_object (&self->priv->mpris);
 
     G_OBJECT_CLASS (dozing_parent_class)->dispose (dozing);
@@ -189,6 +227,7 @@ dozing_init (Dozing *self)
 {
     self->priv = dozing_get_instance_private (self);
 
+    self->priv->network_manager = NETWORK_MANAGER (network_manager_new ());
     self->priv->mpris = MPRIS (mpris_new ());
 
     self->priv->apps = NULL;
@@ -230,6 +269,8 @@ dozing_start (Dozing  *self) {
         (GSourceFunc) freeze_apps,
         self
     );
+
+    network_manager_start_modem_monitoring (self->priv->network_manager);
 }
 
 /**
@@ -241,12 +282,16 @@ dozing_start (Dozing  *self) {
  */
 void
 dozing_stop (Dozing  *self) {
+    Bus *bus = bus_get_default ();
     const gchar *app;
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
 
+    g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)
         write_to_file (app, "0");
+
+    bus_set_value (bus, "suspend-modem", g_variant_new ("b", FALSE));
 
     g_list_free_full (self->priv->apps, g_free);
     self->priv->apps = NULL;

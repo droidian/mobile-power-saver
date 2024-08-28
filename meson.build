@@ -1,5 +1,5 @@
 project('mps', 'c',
-          version: '0.4.0',
+          version: '0.5.0',
     meson_version: '>= 0.60.0',
   default_options: [ 'warning_level=2', 'werror=false', 'c_std=gnu11', ],
 )
@@ -20,9 +20,8 @@ systemd_user_dir = join_paths(get_option('prefix'), 'lib/systemd/user')
 bin_dir = join_paths(get_option('prefix'), get_option('bindir'))
 sbin_dir = join_paths(get_option('prefix'), get_option('sbindir'))
 
-
-binder_enabled = get_option('binder')
 wifi_enabled = get_option('wifi')
+mm_enabled = get_option('mm')
 
 config_h = configuration_data()
 config_h.set('APP_ID', '"org.adishatz.Mps"')
@@ -38,8 +37,8 @@ if wifi_enabled
 config_h.set('WIFI_ENABLED', 1)
 endif
 
-if binder_enabled
-config_h.set('BINDER_ENABLED', 1)
+if mm_enabled
+config_h.set('MM_ENABLED', 1)
 endif
 
 configure_file(output: 'config.h', configuration: config_h)

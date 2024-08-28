@@ -19,9 +19,14 @@ typedef enum {
 } PowerProfile;
 
 typedef enum {
-    BINDER_SERVICE_MANAGER_TYPE_AIDL,
-    BINDER_SERVICE_MANAGER_TYPE_HIDL
+    MM_MODEM_MODE_NONE = 0,
+    MM_MODEM_MODE_CS   = 1 << 0,
+    MM_MODEM_MODE_2G   = 1 << 1,
+    MM_MODEM_MODE_3G   = 1 << 2,
+    MM_MODEM_MODE_4G   = 1 << 3,
+    MM_MODEM_MODE_5G   = 1 << 4,
+    MM_MODEM_MODE_ANY  = 0xFFFFFFFF
+} MMModemMode;
 
-} BinderServiceManagerType;
 
 #endif
