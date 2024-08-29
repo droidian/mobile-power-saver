@@ -361,8 +361,8 @@ network_manager_stop_modem_monitoring  (NetworkManager *self)
     self->priv->end_timestamp = g_get_monotonic_time();
 
     GFOREACH (self->priv->modem_devices, network_device_proxy) {
-        g_autofree gchar *interface;
-        g_autofree gchar *filename;
+        g_autofree gchar *interface = NULL;
+        g_autofree gchar *filename = NULL;
 
         interface = get_hw_interface (self, network_device_proxy);
 
@@ -417,7 +417,7 @@ network_manager_get_bandwidth (NetworkManager *self)
     );
 
     g_debug (
-        "Network bandwidth: modem: %lu, wifi: %lu",
+        "Network bandwidth: modem: %" G_GUINT64_FORMAT ", wifi: %" G_GUINT64_FORMAT,
         bandwidth_modem,
         bandwidth_wifi
     );
