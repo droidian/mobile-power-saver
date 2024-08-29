@@ -377,8 +377,8 @@ network_manager_stop_modem_monitoring  (NetworkManager *self)
     }
 
     GFOREACH (self->priv->wifi_devices, network_device_proxy) {
-        g_autofree gchar *interface;
-        g_autofree gchar *filename;
+        g_autofree gchar *interface = NULL;
+        g_autofree gchar *filename = NULL;
 
         interface = get_hw_interface (self, network_device_proxy);
 
