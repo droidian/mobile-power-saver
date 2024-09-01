@@ -8,6 +8,9 @@ Mobile Power Saver enables power saving on mobile devices:
 
 ## Settings ##
 
+GNOME Control Center patches are available here:
+https://github.com/droidian/gnome-control-center/commits/droidian/panels/power
+
 ![Power Settings](https://adishatz.org/data/mps_battery.png)
 ![App Settings](https://adishatz.org/data/mps_app_suspend.png)
 
