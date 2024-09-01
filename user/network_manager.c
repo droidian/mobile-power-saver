@@ -188,16 +188,13 @@ on_network_manager_proxy_signal (GDBusProxy  *proxy,
                                  gpointer     user_data)
 {
     NetworkManager *self = user_data;
+    const gchar *object_path = NULL;
 
     if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
-        g_autofree gchar *object_path = NULL;
-
-        g_variant_get (parameters, "(o)", &object_path);
+        g_variant_get (parameters, "&o", &object_path);
         add_device (self, object_path);
     } else if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
-        const gchar *object_path = NULL;
-
-        g_variant_get (parameters, "(o)", &object_path);
+        g_variant_get (parameters, "&o", &object_path);
         del_device (self, object_path);
     }
 }
