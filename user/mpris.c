@@ -227,9 +227,9 @@ on_dbus_signal (GDBusProxy  *proxy,
     Mpris *self = MPRIS (user_data);
 
     if (g_strcmp0 (signal_name, "NameOwnerChanged") == 0) {
-        const gchar *name;
-        const gchar *old_owner;
-        const gchar *new_owner;
+        const gchar *name = NULL;
+        const gchar *old_owner = NULL;
+        const gchar *new_owner = NULL;
 
         g_variant_get (parameters,
             "(&s&s&s)",
