@@ -85,15 +85,12 @@ on_modem_ofono_manager_signal (GDBusProxy  *proxy,
                                gpointer     user_data)
 {
     ModemOfono *self = MODEM_OFONO (user_data);
+    const gchar *modem = NULL;
 
     if (g_strcmp0 (signal_name, "ModemAdded") == 0) {
-        const gchar *modem;
-
         g_variant_get (parameters, "(&oa{sv})", &modem, NULL);
         add_modem (self, modem);
     } else if (g_strcmp0 (signal_name, "ModemRemoved") == 0) {
-        const gchar *modem;
-
         g_variant_get (parameters, "(&o)", &modem);
         del_modem (self, modem);
     }
