@@ -8,8 +8,8 @@
 
 #include "utils.h"
 
-void write_to_file (const gchar *filename,
-                    const gchar *value)
+void write_to_file (const char *filename,
+                    const char *value)
 {
     FILE *file;
 

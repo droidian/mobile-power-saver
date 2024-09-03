@@ -94,7 +94,7 @@ static gboolean
 freeze_apps (Dozing *self)
 {
     Bus *bus = bus_get_default ();
-    const gchar *app;
+    const char *app;
     Bandwidth bandwidth;
 
     network_manager_stop_modem_monitoring (self->priv->network_manager);
@@ -142,7 +142,7 @@ static gboolean
 unfreeze_apps (Dozing *self)
 {
     Bus *bus = bus_get_default ();
-    const gchar *app;
+    const char *app;
 
     bus_set_value (bus, "suspend-modem", g_variant_new ("b", FALSE));
 
@@ -162,7 +162,7 @@ static GList *
 get_apps (Dozing *self)
 {
     g_autoptr (GDir) sys_dir = NULL;
-    g_autofree gchar *dirname = g_strdup_printf(
+    g_autofree char *dirname = g_strdup_printf(
         CGROUPS_APPS_FREEZE_DIR, getuid(), getuid()
 
     );
@@ -178,7 +178,7 @@ get_apps (Dozing *self)
     while ((app_dir = g_dir_read_name (sys_dir)) != NULL) {
         if (g_str_has_prefix (app_dir, "app-") &&
                 g_str_has_suffix (app_dir, ".scope")) {
-            gchar *app = g_build_filename (
+            char *app = g_build_filename (
                 dirname, app_dir, "cgroup.freeze", NULL
             );
 
@@ -283,7 +283,7 @@ dozing_start (Dozing  *self) {
 void
 dozing_stop (Dozing  *self) {
     Bus *bus = bus_get_default ();
-    const gchar *app;
+    const char *app;
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
 

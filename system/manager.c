@@ -60,7 +60,7 @@ G_DEFINE_TYPE_WITH_CODE (
     G_ADD_PRIVATE (Manager)
 )
 
-static const gchar *
+static const char *
 get_governor_from_power_profile (PowerProfile power_profile) {
     if (power_profile == POWER_PROFILE_POWER_SAVER)
         return "powersave";
@@ -132,7 +132,7 @@ on_power_saving_mode_changed (Bus         *bus,
                               gpointer     user_data)
 {
     Manager *self = MANAGER (user_data);
-    const gchar *governor = get_governor_from_power_profile (power_profile);
+    const char *governor = get_governor_from_power_profile (power_profile);
 
     cpufreq_set_governor (self->priv->cpufreq, governor);
     devfreq_set_governor (self->priv->devfreq, governor);
@@ -160,7 +160,7 @@ on_screen_off_suspend_processes_changed (Bus      *bus,
 {
     Manager *self = MANAGER (user_data);
     g_autoptr (GVariantIter) iter;
-    const gchar *process;
+    const char *process;
 
     g_list_free_full (
         self->priv->screen_off_suspend_processes, g_free
@@ -184,7 +184,7 @@ on_devfreq_blacklist_setted (Bus      *bus,
 {
     Manager *self = MANAGER (user_data);
     g_autoptr (GVariantIter) iter;
-    const gchar *device;
+    const char *device;
 
     g_variant_get (value, "as", &iter);
     while (g_variant_iter_loop (iter, "s", &device)) {
@@ -275,7 +275,7 @@ on_screen_off_suspend_services_changed (Bus      *bus,
 {
     Manager *self = MANAGER (user_data);
     g_autoptr (GVariantIter) iter;
-    gchar *service;
+    char *service;
 
     g_list_free_full (
         self->priv->screen_off_suspend_services,

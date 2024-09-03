@@ -12,4 +12,4 @@
         __glist_sub && (item = __glist_sub->data, TRUE); \
         __glist_sub = __glist_sub->next)
 
-void write_to_file (const gchar *filename, const gchar *value);
+void write_to_file (const char *filename, const char *value);

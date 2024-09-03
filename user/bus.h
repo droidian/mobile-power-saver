@@ -44,9 +44,9 @@ struct _BusClass {
 GType       bus_get_type       (void) G_GNUC_CONST;
 Bus        *bus_get_default    (void);
 GObject*    bus_new            (void);
-void        bus_set_value      (Bus         *self,
-                                const gchar *key,
-                                GVariant    *value);
+void        bus_set_value      (Bus        *self,
+                                const char *key,
+                                GVariant   *value);
 
 G_END_DECLS
 

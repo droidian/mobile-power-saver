@@ -49,7 +49,7 @@ on_modem_removed (MMManager *modem_manager,
 {
     ModemMM *self = MODEM_MM (user_data);
     MMModem *modem;
-    const gchar *path;
+    const char *path;
 
     path = mm_object_get_path(modem_object);
 

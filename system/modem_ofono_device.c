@@ -36,7 +36,7 @@ struct _ModemOfonoDevicePrivate {
     GDBusProxy *modem_ofono_device_modem_proxy;
     GDBusProxy *modem_ofono_device_radio_proxy;
 
-    gchar *device_path;
+    char *device_path;
 
     guint blacklist;
 };
@@ -49,15 +49,15 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-on_modem_proxy_signal (GDBusProxy  *proxy,
-                       const gchar *sender_name,
-                       const gchar *signal_name,
-                       GVariant    *parameters,
-                       gpointer     user_data);
+on_modem_proxy_signal (GDBusProxy *proxy,
+                       const char *sender_name,
+                       const char *signal_name,
+                       GVariant   *parameters,
+                       gpointer    user_data);
 
 static void
-set_technology_preference (ModemOfonoDevice       *self,
-                           const gchar *technology)
+set_technology_preference (ModemOfonoDevice *self,
+                           const char       *technology)
 {
     g_autoptr (GError) error = NULL;
     g_autoptr (GVariant) value = NULL;
@@ -109,7 +109,7 @@ init_radio (ModemOfonoDevice *self)
 
 static gboolean
 is_technology_blacklisted (ModemOfonoDevice *self,
-                           const gchar      *technology)
+                           const char       *technology)
 {
     if (g_strcmp0 (technology, "gsm") == 0) {
         if ((self->priv->blacklist & MM_MODEM_MODE_2G) == MM_MODEM_MODE_2G)
@@ -135,22 +135,22 @@ is_technology_blacklisted (ModemOfonoDevice *self,
 }
 
 static void
-on_modem_proxy_signal (GDBusProxy  *proxy,
-                       const gchar *sender_name,
-                       const gchar *signal_name,
-                       GVariant    *parameters,
-                       gpointer     user_data)
+on_modem_proxy_signal (GDBusProxy *proxy,
+                       const char *sender_name,
+                       const char *signal_name,
+                       GVariant   *parameters,
+                       gpointer    user_data)
 {
     ModemOfonoDevice *self = MODEM_OFONO_DEVICE (user_data);
 
     if (g_strcmp0 (signal_name, "PropertyChanged") == 0) {
-        const gchar *name;
+        const char *name;
         g_autoptr (GVariant) value = NULL;
 
         g_variant_get (parameters, "(&sv)", &name, &value);
         if (g_strcmp0 (name, "Interfaces") == 0) {
             g_autoptr (GVariantIter) inner_iter = NULL;
-            const gchar *inner_name = NULL;
+            const char *inner_name = NULL;
 
             g_variant_get (value, "as", &inner_iter);
             while (g_variant_iter_loop (inner_iter, "&s", &inner_name)) {
@@ -207,7 +207,7 @@ modem_ofono_device_constructed (GObject *modem_ofono_device)
     g_autoptr (GError) error = NULL;
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GVariant) property_value = NULL;
-    const gchar *property_name = NULL;
+    const char *property_name = NULL;
 
     self->priv->modem_ofono_device_modem_proxy = g_dbus_proxy_new_for_bus_sync (
         G_BUS_TYPE_SYSTEM,
@@ -338,7 +338,7 @@ modem_ofono_device_init (ModemOfonoDevice *self)
  *
  **/
 GObject *
-modem_ofono_device_new (const gchar *path)
+modem_ofono_device_new (const char *path)
 {
     GObject *modem_ofono_device;
 
@@ -359,7 +359,7 @@ modem_ofono_device_new (const gchar *path)
  * Returns: device path as string
  *
  **/
-const gchar*
+const char*
 modem_ofono_device_get_path (ModemOfonoDevice *self)
 {
     return self->priv->device_path;
@@ -381,9 +381,9 @@ modem_ofono_device_apply_powersave (ModemOfonoDevice *self,
     g_autoptr (GError) error = NULL;
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GVariantIter) iter = NULL;
-    const gchar *property_name = NULL;
+    const char *property_name = NULL;
     g_autoptr (GVariant) property_value = NULL;
-    g_autofree gchar *technology = NULL;
+    g_autofree char *technology = NULL;
 
     g_return_if_fail (self->priv->modem_ofono_device_radio_proxy != NULL);
 
@@ -406,7 +406,7 @@ modem_ofono_device_apply_powersave (ModemOfonoDevice *self,
     while (g_variant_iter_loop (iter, "{&sv}", &property_name, &property_value)) {
         if (g_strcmp0 (property_name, "AvailableTechnologies") == 0) {
             g_autoptr (GVariantIter) tech_iter;
-            const gchar *tech_value;
+            const char *tech_value;
 
             g_variant_get (property_value, "as", &tech_iter);
             while (g_variant_iter_loop (tech_iter, "&s", &tech_value, NULL)) {

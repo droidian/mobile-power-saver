@@ -44,16 +44,16 @@ struct _FreqDeviceClass {
 GType           freq_device_get_type            (void) G_GNUC_CONST;
 
 GObject*        freq_device_new                 (void);
-void            freq_device_set_sysfs_settings  (FreqDevice  *self,
-                                                 const gchar *directory,
-                                                 const gchar *governor_node);
-void            freq_device_set_name            (FreqDevice  *self,
-                                                 const gchar *device_name);
-const gchar*    freq_device_get_name            (FreqDevice  *self);
+void            freq_device_set_sysfs_settings  (FreqDevice *self,
+                                                 const char *directory,
+                                                 const char *governor_node);
+void            freq_device_set_name            (FreqDevice *self,
+                                                 const char *device_name);
+const char*    freq_device_get_name             (FreqDevice  *self);
 void            freq_device_set_powersave       (FreqDevice  *self,
                                                  gboolean     powersave);
-void            freq_device_set_governor        (FreqDevice  *self,
-                                                 const gchar *governor);
+void            freq_device_set_governor        (FreqDevice *self,
+                                                 const char *governor);
 G_END_DECLS
 
 #endif

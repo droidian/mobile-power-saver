@@ -116,12 +116,12 @@ services_freeze (Services *self,
                  GList    *services)
 {
     GList *paths = get_cgroups_paths (self);
-    const gchar *path;
-    const gchar *service;
+    const char *path;
+    const char *service;
 
     GFOREACH (paths, path) {
         GFOREACH_SUB (services, service) {
-            g_autofree gchar *filename = g_build_filename (
+            g_autofree char *filename = g_build_filename (
                 path, service, "cgroup.freeze", NULL
             );
             if (g_file_test (filename, G_FILE_TEST_EXISTS))
@@ -145,12 +145,12 @@ services_unfreeze (Services *self,
                    GList   *services)
 {
     GList *paths = get_cgroups_paths (self);
-    const gchar *path;
-    const gchar *service;
+    const char *path;
+    const char *service;
 
     GFOREACH (paths, path) {
         GFOREACH_SUB (services, service) {
-            g_autofree gchar *filename = g_build_filename (
+            g_autofree char *filename = g_build_filename (
                 path, service, "cgroup.freeze", NULL
             );
             if (g_file_test (filename, G_FILE_TEST_EXISTS))

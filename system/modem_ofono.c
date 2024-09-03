@@ -36,8 +36,8 @@ on_modem_ofono_device_ready (ModemOfonoDevice      *device,
                              gpointer  user_data);
 
 static void
-add_modem (ModemOfono  *self,
-           const gchar *path)
+add_modem (ModemOfono *self,
+           const char *path)
 {
     ModemOfonoDevice *device = MODEM_OFONO_DEVICE (modem_ofono_device_new (path));
 
@@ -51,8 +51,8 @@ add_modem (ModemOfono  *self,
 }
 
 static void
-del_modem (ModemOfono  *self,
-           const gchar *path)
+del_modem (ModemOfono *self,
+           const char *path)
 {
     ModemOfonoDevice *device;
 
@@ -78,14 +78,14 @@ on_modem_ofono_device_ready (ModemOfonoDevice *device,
 }
 
 static void
-on_modem_ofono_manager_signal (GDBusProxy  *proxy,
-                               const gchar *sender_name,
-                               const gchar *signal_name,
-                               GVariant    *parameters,
-                               gpointer     user_data)
+on_modem_ofono_manager_signal (GDBusProxy *proxy,
+                               const char *sender_name,
+                               const char *signal_name,
+                               GVariant   *parameters,
+                               gpointer    user_data)
 {
     ModemOfono *self = MODEM_OFONO (user_data);
-    const gchar *modem = NULL;
+    const char *modem = NULL;
 
     if (g_strcmp0 (signal_name, "ModemAdded") == 0) {
         g_variant_get (parameters, "(&oa{sv})", &modem, NULL);
@@ -177,7 +177,7 @@ modem_ofono_init (ModemOfono *self)
     g_autoptr (GVariantIter) iter = NULL;
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GError) error = NULL;
-    const gchar *modem;
+    const char *modem;
 
     self->priv = modem_ofono_get_instance_private (self);
 

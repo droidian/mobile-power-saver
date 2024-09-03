@@ -29,9 +29,9 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-on_setting_changed (GSettings   *settings,
-                    const gchar *key,
-                    gpointer     user_data)
+on_setting_changed (GSettings  *settings,
+                    const char *key,
+                    gpointer    user_data)
 {
     Settings *self = SETTINGS (user_data);
     g_autoptr (GVariant) value = g_settings_get_value (settings, key);
@@ -52,7 +52,7 @@ notify_settings (Settings *self)
         g_settings_schema_source_get_default (),
         APP_ID,
         TRUE);
-    gchar **keys = g_settings_schema_list_keys (schema);
+    char **keys = g_settings_schema_list_keys (schema);
     gint i;
 
     for (i = 0; keys[i] != NULL; i++) {
@@ -182,14 +182,14 @@ settings_free_default (void)
  * Returns: TRUE if application scope can be freezed
  */
 gboolean
-settings_can_freeze_app (Settings    *self,
-                         const gchar *app_scope)
+settings_can_freeze_app (Settings   *self,
+                         const char *app_scope)
 {
     g_autoptr (GVariant) value = g_settings_get_value (
         self->priv->settings, "screen-off-suspend-apps-blacklist"
     );
     g_autoptr (GVariantIter) iter;
-    const gchar *application;
+    const char *application;
 
     g_variant_get (value, "as", &iter);
     while (g_variant_iter_loop (iter, "s", &application)) {
@@ -215,7 +215,7 @@ settings_get_suspend_services (Settings *self)
         self->priv->settings, "screen-off-suspend-user-services"
     );
     g_autoptr (GVariantIter) iter;
-    const gchar *service;
+    const char *service;
     GList *services = NULL;
 
     g_variant_get (value, "as", &iter);

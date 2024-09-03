@@ -47,7 +47,7 @@ struct _BusPrivate {
 G_DEFINE_TYPE_WITH_CODE (Bus, bus, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Bus))
 
-static const gchar*
+static const char*
 get_power_profile_as_string (PowerProfile power_profile) {
     switch (power_profile) {
     case POWER_PROFILE_POWER_SAVER:
@@ -62,7 +62,7 @@ get_power_profile_as_string (PowerProfile power_profile) {
 }
 
 static PowerProfile
-get_power_profile_from_string (const gchar *name)
+get_power_profile_from_string (const char *name)
 {
     if (g_strcmp0 (name, "power-saver") == 0)
         return POWER_PROFILE_POWER_SAVER;
@@ -100,10 +100,10 @@ get_profiles_variant (void)
 
 static void
 handle_method_call (GDBusConnection       *connection,
-                    const gchar           *sender,
-                    const gchar           *object_path,
-                    const gchar           *interface_name,
-                    const gchar           *method_name,
+                    const char           *sender,
+                    const char           *object_path,
+                    const char           *interface_name,
+                    const char           *method_name,
                     GVariant              *parameters,
                     GDBusMethodInvocation *invocation,
                     gpointer               user_data)
@@ -129,7 +129,7 @@ handle_method_call (GDBusConnection       *connection,
     }
 
     if (g_strcmp0 (method_name, "Set") == 0) {
-        const gchar *setting;
+        const char *setting;
         g_autoptr (GVariant) value;
 
         g_variant_get (parameters, "(&sv)", &setting, &value);
@@ -212,10 +212,10 @@ handle_method_call (GDBusConnection       *connection,
 
 static GVariant *
 handle_get_property (GDBusConnection *connection,
-                     const gchar     *sender,
-                     const gchar     *object_path,
-                     const gchar     *interface_name,
-                     const gchar     *property_name,
+                     const char     *sender,
+                     const char     *object_path,
+                     const char     *interface_name,
+                     const char     *property_name,
                      GError         **error,
                      gpointer         user_data)
 {
@@ -238,10 +238,10 @@ handle_get_property (GDBusConnection *connection,
 
 static gboolean
 handle_set_property (GDBusConnection  *connection,
-                     const gchar      *sender,
-                     const gchar      *object_path,
-                     const gchar      *interface_name,
-                     const gchar      *property_name,
+                     const char       *sender,
+                     const char       *object_path,
+                     const char       *interface_name,
+                     const char       *property_name,
                      GVariant         *value,
                      GError          **error,
                      gpointer          user_data)
@@ -249,7 +249,7 @@ handle_set_property (GDBusConnection  *connection,
     Bus *self = user_data;
 
     if (g_strcmp0 (property_name, "ActiveProfile") == 0) {
-        const gchar *power_profile = g_variant_get_string (value, NULL);
+        const char *power_profile = g_variant_get_string (value, NULL);
 
         self->priv->power_profile = get_power_profile_from_string (
             power_profile
@@ -283,13 +283,13 @@ static const GDBusInterfaceVTable hadess_interface_vtable = {
 
 static void
 on_bus_acquired (GDBusConnection *connection,
-                 const gchar     *name,
+                 const char      *name,
                  gpointer         user_data)
 {
     Bus *self = user_data;
     guint registration_id;
     GDBusNodeInfo *introspection_data;
-    const gchar *dbus_path;
+    const char *dbus_path;
     const GDBusInterfaceVTable *vtable;
     gboolean is_adishatz = g_strcmp0 (name, ADISHATZ_DBUS_NAME) == 0;
 
@@ -323,23 +323,23 @@ on_bus_acquired (GDBusConnection *connection,
 
 static void
 on_name_acquired (GDBusConnection *connection,
-                  const gchar     *name,
+                  const char      *name,
                   gpointer         user_data)
 {}
 
 static void
 on_name_lost (GDBusConnection *connection,
-              const gchar     *name,
+              const char      *name,
               gpointer         user_data)
 {
     g_error ("Cannot own D-Bus name. Verify installation: %s\n", name);
 }
 
 static GDBusNodeInfo *
-bus_init_path (const gchar *dbus_name,
-               const gchar *xml,
-               guint       *owner_id,
-               gpointer     user_data)
+bus_init_path (const char *dbus_name,
+               const char *xml,
+               guint      *owner_id,
+               gpointer    user_data)
 {
     Bus *self = user_data;
     GBytes *bytes;
@@ -589,8 +589,8 @@ bus_free_default (void)
 }
 
 void
-bus_screen_state_changed (Bus     *self,
-                          gboolean enabled)
+bus_screen_state_changed (Bus      *self,
+                          gboolean  enabled)
 {
     g_dbus_connection_emit_signal (
         self->priv->adishatz_connection,

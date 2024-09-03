@@ -31,8 +31,8 @@ G_DEFINE_TYPE_WITH_CODE (Bus, bus, G_TYPE_OBJECT,
 
 static void
 on_mps_proxy_signal (GDBusProxy  *proxy,
-                     const gchar *sender_name,
-                     const gchar *signal_name,
+                     const char *sender_name,
+                     const char *signal_name,
                      GVariant    *parameters,
                      gpointer     user_data)
 {
@@ -145,9 +145,9 @@ bus_new (void)
  * @value: a setting value
  */
 void
-bus_set_value (Bus         *self,
-               const gchar *key,
-               GVariant    *value)
+bus_set_value (Bus        *self,
+               const char *key,
+               GVariant   *value)
 {
     g_autoptr (GError) error = NULL;
     g_autoptr (GVariant) result = NULL;
