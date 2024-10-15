@@ -28,10 +28,10 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-on_setting_changed (Settings    *settings,
-                    const gchar *key,
-                    GVariant    *value,
-                    gpointer     user_data)
+on_setting_changed (Settings   *settings,
+                    const char *key,
+                    GVariant   *value,
+                    gpointer    user_data)
 {
     Manager *self = MANAGER (user_data);
     Bus *bus = bus_get_default ();

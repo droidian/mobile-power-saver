@@ -50,7 +50,7 @@ on_network_manager_proxy_properties (GDBusProxy  *proxy,
 
 static void
 add_device (NetworkManager *self,
-            const gchar    *device_path)
+            const char     *device_path)
 {
     GDBusProxy *network_manager_proxy = NULL;
     g_autoptr (GVariant) value = NULL;
@@ -136,7 +136,7 @@ add_device (NetworkManager *self,
 
 static void
 del_device (NetworkManager *self,
-            const gchar    *device_path)
+            const char     *device_path)
 {
     GDBusProxy *network_wireless_proxy;
 
@@ -207,7 +207,7 @@ static void
 set_connection_type (NetworkManager *self,
                      GVariant       *value)
 {
-    g_autofree gchar *connection_type = NULL;
+    g_autofree char *connection_type = NULL;
 
     g_variant_get (value, "s", &connection_type);
     g_debug ("Connection type: %s", connection_type);
@@ -222,23 +222,20 @@ set_connection_type (NetworkManager *self,
 
 
 static void
-on_network_manager_proxy_signal (GDBusProxy  *proxy,
-                                 const gchar *sender_name,
-                                 const gchar *signal_name,
-                                 GVariant    *parameters,
-                                 gpointer     user_data)
+on_network_manager_proxy_signal (GDBusProxy *proxy,
+                                 const char *sender_name,
+                                 const char *signal_name,
+                                 GVariant   *parameters,
+                                 gpointer    user_data)
 {
     NetworkManager *self = user_data;
+    const char *object_path = NULL;
 
     if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
-        g_autofree gchar *object_path = NULL;
-
-        g_variant_get (parameters, "(o)", &object_path);
+        g_variant_get (parameters, "&o", &object_path);
         add_device (self, object_path);
     } else if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
-        const gchar *object_path = NULL;
-
-        g_variant_get (parameters, "(o)", &object_path);
+        g_variant_get (parameters, "&o", &object_path);
         del_device (self, object_path);
     }
 }
@@ -259,7 +256,7 @@ on_network_manager_proxy_properties (GDBusProxy  *proxy,
         if (g_strcmp0 (property, "PrimaryConnectionType") == 0) {
             set_connection_type (self, value);
         } else if (g_strcmp0 (property, "ActiveAccessPoint") == 0) {
-            const gchar *object_path = NULL;
+            const char *object_path = NULL;
 
             g_variant_get (value, "&o", &object_path);
             self->priv->access_point = g_strcmp0 (object_path, "/") != 0;
@@ -315,7 +312,7 @@ network_manager_init (NetworkManager *self)
     g_autoptr (GVariantIter) iter = NULL;
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GError) error = NULL;
-    const gchar *device_path;
+    const char *device_path;
 
     self->priv = network_manager_get_instance_private (self);
 

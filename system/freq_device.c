@@ -8,12 +8,12 @@
 #include "../common/utils.h"
 
 struct _FreqDevicePrivate {
-    gchar *sysfs_dir;
-    gchar *device_name;
-    gchar *governor_node;
+    char *sysfs_dir;
+    char *device_name;
+    char *governor_node;
 
-    gchar *default_governor;
-    gchar *current_governor;
+    char *default_governor;
+    char *current_governor;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -24,10 +24,10 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-set_governor (FreqDevice  *freq_device,
-              const gchar *governor)
+set_governor (FreqDevice *freq_device,
+              const char *governor)
 {
-    g_autofree gchar *filename = g_build_filename (
+    g_autofree char *filename = g_build_filename (
         freq_device->priv->sysfs_dir,
         freq_device->priv->device_name,
         freq_device->priv->governor_node,
@@ -112,9 +112,9 @@ freq_device_new (void)
  *
  **/
 void
-freq_device_set_sysfs_settings (FreqDevice  *self,
-                                const gchar *directory,
-                                const gchar *governor_node)
+freq_device_set_sysfs_settings (FreqDevice *self,
+                                const char *directory,
+                                const char *governor_node)
 {
     if (self->priv->sysfs_dir != NULL)
         g_free (self->priv->sysfs_dir);
@@ -133,12 +133,12 @@ freq_device_set_sysfs_settings (FreqDevice  *self,
  *
  **/
 void
-freq_device_set_name (FreqDevice  *self,
-                      const gchar *device_name)
+freq_device_set_name (FreqDevice *self,
+                      const char *device_name)
 {
-    g_autofree gchar *contents = NULL;
+    g_autofree char *contents = NULL;
 
-    g_autofree gchar *filename = g_build_filename (
+    g_autofree char *filename = g_build_filename (
         self->priv->sysfs_dir, device_name, self->priv->governor_node, NULL
     );
 
@@ -167,7 +167,7 @@ freq_device_set_name (FreqDevice  *self,
  * Returns: device name
  *
  **/
-const gchar*
+const char*
 freq_device_get_name (FreqDevice  *self)
 {
     return self->priv->device_name;
@@ -202,8 +202,8 @@ freq_device_set_powersave (FreqDevice *self,
  * @param governor: new governor to set
  */
 void
-freq_device_set_governor (FreqDevice  *self,
-                          const gchar *governor)
+freq_device_set_governor (FreqDevice *self,
+                          const char *governor)
 {
     if (self->priv->current_governor != NULL)
         g_free (self->priv->current_governor);

@@ -23,7 +23,7 @@ sigint_handler(int dummy) {
 }
 
 gint
-main (gint argc, gchar * argv[])
+main (gint argc, char * argv[])
 {
     GObject *manager;
     g_autoptr (GOptionContext) context = NULL;

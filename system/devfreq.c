@@ -37,7 +37,7 @@ detect_devices (Devfreq *self)
 
     while ((device_dir = g_dir_read_name (devfreq_dir)) != NULL) {
         DevfreqDevice *devfreq_device = DEVFREQ_DEVICE (devfreq_device_new ());
-        g_autofree gchar *filename = g_build_filename (
+        g_autofree char *filename = g_build_filename (
             DEVFREQ_DIR, device_dir, "governor", NULL
         );
 
@@ -116,8 +116,8 @@ devfreq_new (void)
  * @param device_name: name to blacklist
  */
 void
-devfreq_blacklist (Devfreq     *self,
-                   const gchar *device_name)
+devfreq_blacklist (Devfreq    *self,
+                   const char *device_name)
 {
     DevfreqDevice *devfreq_device;
 
@@ -159,8 +159,8 @@ devfreq_set_powersave (Devfreq  *self,
  * @param governor: new governor to set
  */
 void
-devfreq_set_governor (Devfreq     *self,
-                      const gchar *governor) {
+devfreq_set_governor (Devfreq    *self,
+                      const char *governor) {
     DevfreqDevice *devfreq_device;
 
     GFOREACH (self->priv->devfreq_devices, devfreq_device)

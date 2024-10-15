@@ -44,9 +44,9 @@ G_DEFINE_TYPE_WITH_CODE (
 
 static guint64
 get_bytes (NetworkManager *self,
-           const gchar    *path)
+           const char     *path)
 {
-    g_autofree gchar *contents = NULL;
+    g_autofree char *contents = NULL;
 
     if (g_file_get_contents (path, &contents, NULL, NULL))
         return g_ascii_strtoll (contents, NULL, 0);
@@ -54,14 +54,14 @@ get_bytes (NetworkManager *self,
     return 0;
 }
 
-static gchar*
+static char*
 get_hw_interface (NetworkManager *self,
                   GDBusProxy     *network_device_proxy)
 {
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GVariant) inner_value = NULL;
     g_autoptr (GError) error = NULL;
-    gchar *interface;
+    char *interface;
 
     value = g_dbus_proxy_call_sync (
         network_device_proxy,
@@ -92,7 +92,7 @@ get_hw_interface (NetworkManager *self,
 
 static void
 add_device (NetworkManager *self,
-            const gchar    *device_path)
+            const char     *device_path)
 {
     GDBusProxy *network_device_proxy = NULL;
     g_autoptr (GVariant) value = NULL;
@@ -156,13 +156,13 @@ add_device (NetworkManager *self,
 
 static void
 del_device_from_list (NetworkManager *self,
-                      const gchar    *device_path,
+                      const char     *device_path,
                       GList          *list)
 {
     GDBusProxy *network_device_proxy;
 
     GFOREACH (list, network_device_proxy) {
-        const gchar *object_path = g_dbus_proxy_get_object_path (
+        const char *object_path = g_dbus_proxy_get_object_path (
             network_device_proxy
         );
         if (g_strcmp0 (object_path, device_path) == 0) {
@@ -174,30 +174,27 @@ del_device_from_list (NetworkManager *self,
 
 static void
 del_device (NetworkManager *self,
-            const gchar    *device_path)
+            const char     *device_path)
 {
     del_device_from_list (self, device_path, self->priv->modem_devices);
     del_device_from_list (self, device_path, self->priv->wifi_devices);
 }
 
 static void
-on_network_manager_proxy_signal (GDBusProxy  *proxy,
-                                 const gchar *sender_name,
-                                 const gchar *signal_name,
-                                 GVariant    *parameters,
-                                 gpointer     user_data)
+on_network_manager_proxy_signal (GDBusProxy *proxy,
+                                 const char *sender_name,
+                                 const char *signal_name,
+                                 GVariant   *parameters,
+                                 gpointer    user_data)
 {
     NetworkManager *self = user_data;
+    const char *object_path = NULL;
 
     if (g_strcmp0 (signal_name, "DeviceAdded") == 0) {
-        g_autofree gchar *object_path = NULL;
-
-        g_variant_get (parameters, "(o)", &object_path);
+        g_variant_get (parameters, "&o", &object_path);
         add_device (self, object_path);
     } else if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
-        const gchar *object_path = NULL;
-
-        g_variant_get (parameters, "(o)", &object_path);
+        g_variant_get (parameters, "&o", &object_path);
         del_device (self, object_path);
     }
 }
@@ -239,7 +236,7 @@ network_manager_init (NetworkManager *self)
     g_autoptr (GVariantIter) iter = NULL;
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GError) error = NULL;
-    const gchar *device_path = NULL;
+    const char *device_path = NULL;
 
     self->priv = network_manager_get_instance_private (self);
     self->priv->modem_devices = NULL;
@@ -325,8 +322,8 @@ network_manager_start_modem_monitoring (NetworkManager *self)
     self->priv->start_timestamp = g_get_monotonic_time();
 
     GFOREACH (self->priv->modem_devices, network_device_proxy) {
-        g_autofree gchar *interface = get_hw_interface (self, network_device_proxy);
-        g_autofree gchar *filename = g_build_filename (
+        g_autofree char *interface = get_hw_interface (self, network_device_proxy);
+        g_autofree char *filename = g_build_filename (
             SYSDIR_PREFIX, interface, SYSDIR_SUFFIX, "rx_bytes", NULL
         );
 
@@ -334,8 +331,8 @@ network_manager_start_modem_monitoring (NetworkManager *self)
     }
 
     GFOREACH (self->priv->wifi_devices, network_device_proxy) {
-        g_autofree gchar *interface = get_hw_interface (self, network_device_proxy);
-        g_autofree gchar *filename = g_build_filename (
+        g_autofree char *interface = get_hw_interface (self, network_device_proxy);
+        g_autofree char *filename = g_build_filename (
             SYSDIR_PREFIX, interface, SYSDIR_SUFFIX, "rx_bytes", NULL
         );
 
@@ -361,8 +358,8 @@ network_manager_stop_modem_monitoring  (NetworkManager *self)
     self->priv->end_timestamp = g_get_monotonic_time();
 
     GFOREACH (self->priv->modem_devices, network_device_proxy) {
-        g_autofree gchar *interface = NULL;
-        g_autofree gchar *filename = NULL;
+        g_autofree char *interface = NULL;
+        g_autofree char *filename = NULL;
 
         interface = get_hw_interface (self, network_device_proxy);
 
@@ -377,8 +374,8 @@ network_manager_stop_modem_monitoring  (NetworkManager *self)
     }
 
     GFOREACH (self->priv->wifi_devices, network_device_proxy) {
-        g_autofree gchar *interface = NULL;
-        g_autofree gchar *filename = NULL;
+        g_autofree char *interface = NULL;
+        g_autofree char *filename = NULL;
 
         interface = get_hw_interface (self, network_device_proxy);
 

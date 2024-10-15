@@ -37,7 +37,7 @@ detect_devices (Cpufreq *self)
 
     while ((policy_dir = g_dir_read_name (policies_dir)) != NULL) {
         CpufreqDevice *cpufreq_device = CPUFREQ_DEVICE (cpufreq_device_new ());
-        g_autofree gchar *filename = g_build_filename (
+        g_autofree char *filename = g_build_filename (
             CPUFREQ_POLICIES_DIR, policy_dir, "scaling_governor", NULL
         );
 
@@ -132,8 +132,8 @@ cpufreq_set_powersave (Cpufreq  *cpufreq,
  * @param governor: new governor to set
  */
 void
-cpufreq_set_governor (Cpufreq     *cpufreq,
-                      const gchar *governor) {
+cpufreq_set_governor (Cpufreq    *cpufreq,
+                      const char *governor) {
     CpufreqDevice *cpufreq_device;
 
     GFOREACH (cpufreq->priv->cpufreq_devices, cpufreq_device)

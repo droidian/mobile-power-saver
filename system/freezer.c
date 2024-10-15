@@ -28,7 +28,7 @@ G_DEFINE_TYPE_WITH_CODE (
 
 struct Process {
     pid_t pid;
-    gchar *cmdline;
+    char *cmdline;
 };
 
 static void
@@ -42,11 +42,11 @@ process_free (gpointer user_data)
 
 // From https://gitlab.com/procps-ng/procps
 //
-static int read_unvectored(char *restrict const dst,
-                           unsigned             sz,
-                           const char          *whom,
-                           const char          *what,
-                           char                 sep)
+static int read_unvectored(char *restrict const  dst,
+                           unsigned              sz,
+                           const char           *whom,
+                           const char           *what,
+                           char                  sep)
 {
     char path[PROCPATHLEN];
     int fd, len;
@@ -90,7 +90,7 @@ static gboolean
 process_in_list (GList          *names,
                  struct Process *process)
 {
-    gchar *name;
+    char *name;
 
     if (g_strcmp0 (process->cmdline, "") == 0)
         return FALSE;
@@ -116,8 +116,8 @@ get_pids (Freezer *self)
     }
 
     while ((pid_dir = g_dir_read_name (proc_dir)) != NULL) {
-        g_autofree gchar *contents = NULL;
-        g_autofree gchar *directory = g_build_filename (
+        g_autofree char *contents = NULL;
+        g_autofree char *directory = g_build_filename (
             "/proc", pid_dir, NULL
         );
 

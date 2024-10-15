@@ -21,8 +21,8 @@
 
 struct Player {
     GDBusProxy *bus;
-    gchar      *name;
-    gchar      *desktop_id;
+    char      *name;
+    char      *desktop_id;
     gboolean   is_playing;
 };
 
@@ -36,10 +36,10 @@ G_DEFINE_TYPE_WITH_CODE (Mpris, mpris, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Mpris))
 
 static struct Player *
-get_player (GDBusProxy  *bus,
-            const gchar *name,
-            const gchar *desktop_id,
-            gboolean is_playing)
+get_player (GDBusProxy *bus,
+            const char *name,
+            const char *desktop_id,
+            gboolean    is_playing)
 {
     struct Player *player;
 
@@ -84,9 +84,9 @@ on_player_proxy_properties (GDBusProxy  *proxy,
 }
 
 static void
-add_player (Mpris       *self,
-            const gchar *name,
-            const gchar *desktop_id)
+add_player (Mpris      *self,
+            const char *name,
+            const char *desktop_id)
 {
     GDBusProxy *player_bus;
     struct Player *player;
@@ -133,12 +133,12 @@ add_player (Mpris       *self,
 }
 
 static void
-add_player_if_desktop_entry (Mpris       *self,
-                             const gchar *name)
+add_player_if_desktop_entry (Mpris      *self,
+                             const char *name)
 {
     g_autoptr (GDBusProxy) player = NULL;
     g_autoptr (GVariant) desktop_entry = NULL;
-    const gchar *desktop_id = NULL;
+    const char *desktop_id = NULL;
 
     if (!g_str_has_prefix (name, DBUS_MPRIS_PREFIX))
         return;
@@ -168,8 +168,8 @@ add_player_if_desktop_entry (Mpris       *self,
 }
 
 static void
-del_player (Mpris       *self,
-            const gchar *name)
+del_player (Mpris      *self,
+            const char *name)
 {
     struct Player *player;
 
@@ -195,7 +195,7 @@ add_players (Mpris *self)
     g_autoptr (GError) error = NULL;
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GVariantIter) iter;
-    const gchar *player;
+    const char *player;
 
     value = g_dbus_proxy_call_sync (
         self->priv->dbus_proxy,
@@ -218,18 +218,18 @@ add_players (Mpris *self)
 }
 
 static void
-on_dbus_signal (GDBusProxy  *proxy,
-                const gchar *sender_name,
-                const gchar *signal_name,
-                GVariant    *parameters,
-                gpointer     user_data)
+on_dbus_signal (GDBusProxy *proxy,
+                const char *sender_name,
+                const char *signal_name,
+                GVariant   *parameters,
+                gpointer    user_data)
 {
     Mpris *self = MPRIS (user_data);
 
     if (g_strcmp0 (signal_name, "NameOwnerChanged") == 0) {
-        const gchar *name;
-        const gchar *old_owner;
-        const gchar *new_owner;
+        const char *name = NULL;
+        const char *old_owner = NULL;
+        const char *new_owner = NULL;
 
         g_variant_get (parameters,
             "(&s&s&s)",
@@ -339,8 +339,8 @@ mpris_new (void)
  * Returns: TRUE if application scope can be freeezed
  */
 gboolean
-mpris_can_freeze (Mpris       *self,
-                  const gchar *app_scope)
+mpris_can_freeze (Mpris      *self,
+                  const char *app_scope)
 {
     struct Player *player;
 
