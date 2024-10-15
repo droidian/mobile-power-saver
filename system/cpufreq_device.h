@@ -46,6 +46,7 @@ struct _CpufreqDeviceClass {
 GType           cpufreq_device_get_type         (void) G_GNUC_CONST;
 
 GObject*        cpufreq_device_new              (void);
+gboolean        cpufreq_is_little               (CpufreqDevice *self);
 
 G_END_DECLS
 

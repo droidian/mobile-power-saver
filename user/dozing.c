@@ -96,6 +96,7 @@ freeze_apps (Dozing *self)
     Bus *bus = bus_get_default ();
     const char *app;
     gboolean data_used;
+    gboolean little_cluster_powersave = TRUE;
 
     network_manager_stop_modem_monitoring (self->priv->network_manager);
 
@@ -111,11 +112,17 @@ freeze_apps (Dozing *self)
 
     g_message("Freezing apps");
     GFOREACH (self->priv->apps, app) {
-        if (settings_can_freeze_app (settings_get_default (), app) &&
-                mpris_can_freeze (self->priv->mpris, app)) {
-            write_to_file (app, "1");
+        if (!mpris_can_freeze (self->priv->mpris, app)) {
+            little_cluster_powersave = FALSE;
+            continue;
         }
+        if (settings_can_freeze_app (settings_get_default (), app))
+            write_to_file (app, "1");
     }
+
+    bus_set_value (bus,
+                   "little-cluster-powersave",
+                   g_variant_new ("b", little_cluster_powersave));
 
     self->priv->timeout_id = g_timeout_add_seconds (
         get_sleep (self),

@@ -44,8 +44,9 @@ struct _CpufreqClass {
 GType           cpufreq_get_type            (void) G_GNUC_CONST;
 
 GObject*        cpufreq_new                 (void);
-void            cpufreq_set_powersave       (Cpufreq    *cpufreq,
-                                             gboolean    powersave);
+void            cpufreq_set_powersave       (Cpufreq  *cpufreq,
+                                             gboolean  powersave,
+                                             gboolean  little_cluster);
 void            cpufreq_set_governor        (Cpufreq    *cpufreq,
                                              const char *governor);
 

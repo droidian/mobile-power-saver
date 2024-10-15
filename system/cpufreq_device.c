@@ -56,7 +56,7 @@ cpufreq_device_init (CpufreqDevice *self)
  * cpufreq_device_new:
  *
  * Creates a new #CpufreqDevice
-
+ *
  * Returns: (transfer full): a new #CpufreqDevice
  *
  **/
@@ -68,4 +68,22 @@ cpufreq_device_new (void)
     cpufreq_device = g_object_new (TYPE_CPUFREQ_DEVICE, NULL);
 
     return cpufreq_device;
+}
+
+/**
+ * cpufreq_is_little:
+ *
+ * check #CpufreqDevice type
+ *
+ * @param #CpufreqDevice
+ *
+ * Returns: True if #CpufreqDevice is little cluster
+ *
+ **/
+gboolean
+cpufreq_is_little (CpufreqDevice *self)
+{
+    const char *devname = freq_device_get_name (FREQ_DEVICE (self));
+
+    return g_strcmp0 (devname, "policy0") == 0;
 }
