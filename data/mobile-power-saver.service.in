@@ -6,4 +6,4 @@ Type=exec
 ExecStart=@BIN_DIR@/mobile-power-saver
 
 [Install]
-WantedBy=gnome-session-initialized.target
+WantedBy=graphical-session.target
