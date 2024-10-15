@@ -112,7 +112,6 @@ freeze_apps (Dozing *self)
         return FALSE;
     }
 
-    /* Do not suspend modem */
     if (bandwidth == BANDWIDTH_LOW)
         bus_set_value (bus, "suspend-modem", g_variant_new ("b", TRUE));
     else

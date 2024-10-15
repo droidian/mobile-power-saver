@@ -19,6 +19,9 @@
 #define SYSDIR_PREFIX                         "/sys/class/net"
 #define SYSDIR_SUFFIX                         "statistics"
 
+#define DOWNLOAD_BANDWIDTH                    500000
+#define STREAM_BANDWIDTH                      1000
+
 struct _NetworkManagerPrivate {
     GDBusProxy *network_manager_proxy;
 
@@ -420,11 +423,11 @@ network_manager_get_bandwidth (NetworkManager *self)
     );
 
     /* Should match a file download */
-    if (bandwidth_modem > 1000000 || bandwidth_wifi > 1000000)
+    if (bandwidth_modem > DOWNLOAD_BANDWIDTH || bandwidth_wifi > DOWNLOAD_BANDWIDTH)
         return BANDWIDTH_HIGH;
 
     /* Should match an audio streaming */
-    if (bandwidth_modem > 1000 || bandwidth_wifi > 1000)
+    if (bandwidth_modem > STREAM_BANDWIDTH || bandwidth_wifi > STREAM_BANDWIDTH)
         return BANDWIDTH_MEDIUM;
 
     return BANDWIDTH_LOW;
