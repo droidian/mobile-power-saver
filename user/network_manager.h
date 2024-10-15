@@ -11,8 +11,7 @@
 typedef enum
 {
     BANDWIDTH_LOW,
-    BANDWIDTH_MEDIUM,
-    BANDWIDTH_HIGH
+    BANDWIDTH_MEDIUM
 } Bandwidth;
 
 #define TYPE_NETWORK_MANAGER \
@@ -53,8 +52,7 @@ GType           network_manager_get_type               (void) G_GNUC_CONST;
 GObject*        network_manager_new                    (void);
 void            network_manager_start_modem_monitoring (NetworkManager *self);
 void            network_manager_stop_modem_monitoring  (NetworkManager *self);
-Bandwidth       network_manager_get_bandwidth          (NetworkManager *self);
+gboolean        network_manager_data_used              (NetworkManager *self);
 G_END_DECLS
 
 #endif
-

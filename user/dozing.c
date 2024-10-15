@@ -95,39 +95,34 @@ freeze_apps (Dozing *self)
 {
     Bus *bus = bus_get_default ();
     const char *app;
-    Bandwidth bandwidth;
+    gboolean data_used;
+    gboolean little_cluster_powersave = TRUE;
 
     network_manager_stop_modem_monitoring (self->priv->network_manager);
 
-    bandwidth = network_manager_get_bandwidth (self->priv->network_manager);
+    data_used = network_manager_data_used (self->priv->network_manager);
 
-    /* Do not suspend any app */
-    if (bandwidth == BANDWIDTH_HIGH) {
-        g_message ("Network usage is high: no dozing");
-        self->priv->timeout_id = g_timeout_add_seconds (
-            DOZING_PRE_SLEEP,
-            (GSourceFunc) freeze_apps,
-            self
-        );
-        return FALSE;
-    }
-
-    /* Do not suspend modem */
-    if (bandwidth == BANDWIDTH_LOW)
+    if (!data_used)
         bus_set_value (bus, "suspend-modem", g_variant_new ("b", TRUE));
     else
-        g_message ("Network usage is medium: no modem suspend");
+        g_message ("Modem used: not suspending");
 
     if (self->priv->apps == NULL)
         return FALSE;
 
     g_message("Freezing apps");
     GFOREACH (self->priv->apps, app) {
-        if (settings_can_freeze_app (settings_get_default (), app) &&
-                mpris_can_freeze (self->priv->mpris, app)) {
-            write_to_file (app, "1");
+        if (!mpris_can_freeze (self->priv->mpris, app)) {
+            little_cluster_powersave = FALSE;
+            continue;
         }
+        if (settings_can_freeze_app (settings_get_default (), app))
+            write_to_file (app, "1");
     }
+
+    bus_set_value (bus,
+                   "little-cluster-powersave",
+                   g_variant_new ("b", little_cluster_powersave));
 
     self->priv->timeout_id = g_timeout_add_seconds (
         get_sleep (self),

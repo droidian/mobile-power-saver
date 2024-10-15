@@ -96,7 +96,6 @@ on_screen_state_changed (gpointer ignore,
 
     if (self->priv->screen_off_power_saving) {
         bus_screen_state_changed (bus_get_default (), screen_on);
-        cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
         devfreq_set_powersave (self->priv->devfreq, !screen_on);
         kernel_settings_set_powersave (self->priv->kernel_settings, !screen_on);
 #ifdef WIFI_ENABLED
@@ -105,6 +104,7 @@ on_screen_state_changed (gpointer ignore,
 #endif
 
         if (screen_on) {
+            cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
             freezer_resume_processes (
                 self->priv->freezer,
                 self->priv->screen_off_suspend_processes
@@ -114,6 +114,7 @@ on_screen_state_changed (gpointer ignore,
                 self->priv->screen_off_suspend_services
             );
         } else {
+            cpufreq_set_powersave (self->priv->cpufreq, TRUE, FALSE);
             freezer_suspend_processes (
                 self->priv->freezer,
                 self->priv->screen_off_suspend_processes
@@ -148,7 +149,7 @@ on_screen_off_power_saving_changed (Bus      *bus,
     self->priv->screen_off_power_saving = screen_off_power_saving;
 
     if (!self->priv->screen_off_power_saving) {
-        cpufreq_set_powersave (self->priv->cpufreq, FALSE);
+        cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
         devfreq_set_powersave (self->priv->devfreq, FALSE);
     }
 }
@@ -227,9 +228,9 @@ on_radio_power_saving_blacklist_changed (Bus      *bus,
 }
 
 static void
-on_suspend_modem_changed (NetworkManager *network_manager,
-                          gboolean        enabled,
-                          gpointer        user_data)
+on_suspend_modem_changed (Bus      *bus,
+                          gboolean  enabled,
+                          gpointer  user_data)
 {
     Manager *self = MANAGER (user_data);
     ModemClass *klass;
@@ -247,6 +248,16 @@ on_suspend_modem_changed (NetworkManager *network_manager,
 
     if (updated && self->priv->radio_power_saving)
         klass->apply_powersave (self->priv->modem);
+}
+
+static void
+on_little_cluster_powersave_changed (Bus      *bus,
+                                     gboolean  enabled,
+                                     gpointer  user_data)
+{
+    Manager *self = MANAGER (user_data);
+
+    cpufreq_set_powersave (self->priv->cpufreq, TRUE, enabled);
 }
 
 static void
@@ -413,6 +424,12 @@ manager_init (Manager *self)
         bus_get_default (),
         "suspend-modem-changed",
         G_CALLBACK (on_suspend_modem_changed),
+        self
+    );
+    g_signal_connect (
+        bus_get_default (),
+        "little-cluster-powersave-changed",
+        G_CALLBACK (on_little_cluster_powersave_changed),
         self
     );
     g_signal_connect (

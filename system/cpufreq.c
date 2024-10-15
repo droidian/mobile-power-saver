@@ -113,14 +113,17 @@ cpufreq_new (void)
  *
  * @param #Cpufreq
  * @param powersave: True to enable powersave
+ * @param little_cluster: if TRUE, apply to little cluster too
  */
 void
 cpufreq_set_powersave (Cpufreq  *cpufreq,
-                       gboolean  powersave) {
+                       gboolean  powersave,
+                       gboolean    little_cluster) {
     CpufreqDevice *cpufreq_device;
 
     GFOREACH (cpufreq->priv->cpufreq_devices, cpufreq_device)
-        freq_device_set_powersave (FREQ_DEVICE (cpufreq_device), powersave);
+        if (little_cluster || !cpufreq_is_little (cpufreq_device))
+            freq_device_set_powersave (FREQ_DEVICE (cpufreq_device), powersave);
 }
 
 /**
