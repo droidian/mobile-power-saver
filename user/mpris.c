@@ -157,14 +157,19 @@ add_player_if_desktop_entry (Mpris      *self,
     g_return_if_fail (player != NULL);
 
     desktop_entry = g_dbus_proxy_get_cached_property (player, "DesktopEntry");
-
-    if (desktop_entry == NULL)
+    if (desktop_entry != NULL) {
+        desktop_id = g_variant_get_string (desktop_entry, NULL);
+        if (desktop_id != NULL && strlen (desktop_id) > 0)
+            add_player (self, name, desktop_id);
         return;
+    }
 
-    desktop_id = g_variant_get_string (desktop_entry, NULL);
-
-    if (desktop_id != NULL && strlen (desktop_id) > 0)
-         add_player (self, name, desktop_id);
+    desktop_entry = g_dbus_proxy_get_cached_property (player, "Identity");
+    if (desktop_entry != NULL) {
+        desktop_id = g_variant_get_string (desktop_entry, NULL);
+        if (desktop_id != NULL && strlen (desktop_id) > 0)
+            add_player (self, name, desktop_id);
+    }
 }
 
 static void
@@ -345,6 +350,7 @@ mpris_can_freeze (Mpris      *self,
     struct Player *player;
 
     GFOREACH (self->priv->players, player) {
+        g_warning("%s, %s", app_scope, player->desktop_id);
         if (g_strrstr (app_scope, player->desktop_id) != NULL)
             return !player->is_playing;
     }
