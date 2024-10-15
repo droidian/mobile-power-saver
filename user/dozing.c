@@ -95,27 +95,16 @@ freeze_apps (Dozing *self)
 {
     Bus *bus = bus_get_default ();
     const char *app;
-    Bandwidth bandwidth;
+    gboolean data_used;
 
     network_manager_stop_modem_monitoring (self->priv->network_manager);
 
-    bandwidth = network_manager_get_bandwidth (self->priv->network_manager);
+    data_used = network_manager_data_used (self->priv->network_manager);
 
-    /* Do not suspend any app */
-    if (bandwidth == BANDWIDTH_HIGH) {
-        g_message ("Network usage is high: no dozing");
-        self->priv->timeout_id = g_timeout_add_seconds (
-            DOZING_PRE_SLEEP,
-            (GSourceFunc) freeze_apps,
-            self
-        );
-        return FALSE;
-    }
-
-    if (bandwidth == BANDWIDTH_LOW)
+    if (!data_used)
         bus_set_value (bus, "suspend-modem", g_variant_new ("b", TRUE));
     else
-        g_message ("Network usage is medium: no modem suspend");
+        g_message ("Modem used: not suspending");
 
     if (self->priv->apps == NULL)
         return FALSE;

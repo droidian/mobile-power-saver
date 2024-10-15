@@ -19,23 +19,18 @@
 #define SYSDIR_PREFIX                         "/sys/class/net"
 #define SYSDIR_SUFFIX                         "statistics"
 
-#define DOWNLOAD_BANDWIDTH                    500000
-#define STREAM_BANDWIDTH                      1000
+#define MEDIUM_BANDWIDTH                      100000
 
 struct _NetworkManagerPrivate {
     GDBusProxy *network_manager_proxy;
 
     GList *modem_devices;
-    GList *wifi_devices;
 
     gint64 start_timestamp;
     gint64 end_timestamp;
 
     guint64  start_modem_rx;
     guint64  end_modem_rx;
-
-    guint64  start_wifi_rx;
-    guint64  end_wifi_rx;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -148,10 +143,6 @@ add_device (NetworkManager *self,
         self->priv->modem_devices = g_list_append (
             self->priv->modem_devices, network_device_proxy
         );
-    } else if (device_type == 2) { /* MM_DEVICE_TYPE_WIFI */
-        self->priv->wifi_devices = g_list_append (
-            self->priv->wifi_devices, network_device_proxy
-        );
     } else {
         g_clear_object (&network_device_proxy);
     }
@@ -180,7 +171,6 @@ del_device (NetworkManager *self,
             const char     *device_path)
 {
     del_device_from_list (self, device_path, self->priv->modem_devices);
-    del_device_from_list (self, device_path, self->priv->wifi_devices);
 }
 
 static void
@@ -218,7 +208,6 @@ network_manager_finalize (GObject *network_manager)
     NetworkManager *self = NETWORK_MANAGER (network_manager);
 
     g_list_free (self->priv->modem_devices);
-    g_list_free (self->priv->wifi_devices);
 
     G_OBJECT_CLASS (network_manager_parent_class)->finalize (network_manager);
 }
@@ -243,7 +232,6 @@ network_manager_init (NetworkManager *self)
 
     self->priv = network_manager_get_instance_private (self);
     self->priv->modem_devices = NULL;
-    self->priv->wifi_devices = NULL;
 
     self->priv->network_manager_proxy = g_dbus_proxy_new_for_bus_sync (
         G_BUS_TYPE_SYSTEM,
@@ -321,7 +309,6 @@ network_manager_start_modem_monitoring (NetworkManager *self)
     GDBusProxy *network_device_proxy;
 
     self->priv->start_modem_rx = 0;
-    self->priv->start_wifi_rx = 0;
     self->priv->start_timestamp = g_get_monotonic_time();
 
     GFOREACH (self->priv->modem_devices, network_device_proxy) {
@@ -331,15 +318,6 @@ network_manager_start_modem_monitoring (NetworkManager *self)
         );
 
         self->priv->start_modem_rx += get_bytes (self, filename);
-    }
-
-    GFOREACH (self->priv->wifi_devices, network_device_proxy) {
-        g_autofree char *interface = get_hw_interface (self, network_device_proxy);
-        g_autofree char *filename = g_build_filename (
-            SYSDIR_PREFIX, interface, SYSDIR_SUFFIX, "rx_bytes", NULL
-        );
-
-        self->priv->start_wifi_rx += get_bytes (self, filename);
     }
 }
 
@@ -357,7 +335,6 @@ network_manager_stop_modem_monitoring  (NetworkManager *self)
     GDBusProxy *network_device_proxy;
 
     self->priv->end_modem_rx = 0;
-    self->priv->end_wifi_rx = 0;
     self->priv->end_timestamp = g_get_monotonic_time();
 
     GFOREACH (self->priv->modem_devices, network_device_proxy) {
@@ -375,60 +352,29 @@ network_manager_stop_modem_monitoring  (NetworkManager *self)
 
         self->priv->end_modem_rx += get_bytes (self, filename);
     }
-
-    GFOREACH (self->priv->wifi_devices, network_device_proxy) {
-        g_autofree char *interface = NULL;
-        g_autofree char *filename = NULL;
-
-        interface = get_hw_interface (self, network_device_proxy);
-
-        if (interface == NULL)
-            continue;
-
-        filename = g_build_filename (
-            SYSDIR_PREFIX, interface, SYSDIR_SUFFIX, "rx_bytes", NULL
-        );
-
-        self->priv->end_wifi_rx += get_bytes (self, filename);
-    }
 }
 
 /**
- * network_manager_get_bandwidth:
+ * network_manager_data_used:
  *
- * Get network bandwidth usage
+ * Get network data usage
  *
  * @param #NetworkManager
  *
- * Returns: #ModemUsage
+ * Returns: TRUE if date in use
  */
-Bandwidth
-network_manager_get_bandwidth (NetworkManager *self)
+gboolean
+network_manager_data_used (NetworkManager *self)
 {
     guint64 bandwidth_modem = (
         (self->priv->end_modem_rx - self->priv->start_modem_rx) *
         1000000 /
         (self->priv->end_timestamp - self->priv->start_timestamp)
     );
-    guint64 bandwidth_wifi = (
-        (self->priv->end_wifi_rx - self->priv->start_wifi_rx) *
-        1000000 /
-        (self->priv->end_timestamp - self->priv->start_timestamp)
-    );
 
     g_debug (
-        "Network bandwidth: modem: %" G_GUINT64_FORMAT ", wifi: %" G_GUINT64_FORMAT,
-        bandwidth_modem,
-        bandwidth_wifi
+        "Network bandwidth: modem: %" G_GUINT64_FORMAT, bandwidth_modem
     );
 
-    /* Should match a file download */
-    if (bandwidth_modem > DOWNLOAD_BANDWIDTH || bandwidth_wifi > DOWNLOAD_BANDWIDTH)
-        return BANDWIDTH_HIGH;
-
-    /* Should match an audio streaming */
-    if (bandwidth_modem > STREAM_BANDWIDTH || bandwidth_wifi > STREAM_BANDWIDTH)
-        return BANDWIDTH_MEDIUM;
-
-    return BANDWIDTH_LOW;
+    return bandwidth_modem > MEDIUM_BANDWIDTH;
 }
