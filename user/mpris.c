@@ -350,7 +350,6 @@ mpris_can_freeze (Mpris      *self,
     struct Player *player;
 
     GFOREACH (self->priv->players, player) {
-        g_warning("%s, %s", app_scope, player->desktop_id);
         if (g_strrstr (app_scope, player->desktop_id) != NULL)
             return !player->is_playing;
     }
