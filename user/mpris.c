@@ -21,9 +21,9 @@
 
 struct Player {
     GDBusProxy *bus;
-    char      *name;
-    char      *desktop_id;
-    gboolean   is_playing;
+    char       *name;
+    char       *desktop_id;
+    gboolean    is_playing;
 };
 
 struct _MprisPrivate {
