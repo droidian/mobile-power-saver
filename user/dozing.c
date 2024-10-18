@@ -102,7 +102,7 @@ freeze_apps (Dozing *self)
 
     data_used = network_manager_data_used (self->priv->network_manager);
 
-    if (self->priv->apps == NULL) {
+    if (self->priv->apps != NULL) {
         g_message("Freezing apps");
         GFOREACH (self->priv->apps, app) {
             if (!mpris_can_freeze (self->priv->mpris, app)) {

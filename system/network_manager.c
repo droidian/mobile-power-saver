@@ -402,7 +402,8 @@ network_manager_check_wifi (NetworkManager *self)
     g_autoptr (GVariant) value = NULL;
 
     value = get_connection_type (self);
-    set_connection_type (self, value);
+    if (value != NULL)
+        set_connection_type (self, value);
 }
 
 /**
