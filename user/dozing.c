@@ -96,33 +96,32 @@ freeze_apps (Dozing *self)
     Bus *bus = bus_get_default ();
     const char *app;
     gboolean data_used;
-    gboolean little_cluster_powersave = TRUE;
+    gboolean apps_active = FALSE;
 
     network_manager_stop_modem_monitoring (self->priv->network_manager);
 
     data_used = network_manager_data_used (self->priv->network_manager);
 
-    if (!data_used)
-        bus_set_value (bus, "suspend-modem", g_variant_new ("b", TRUE));
-    else
-        g_message ("Modem used: not suspending");
-
-    if (self->priv->apps == NULL)
-        return FALSE;
-
-    g_message("Freezing apps");
-    GFOREACH (self->priv->apps, app) {
-        if (!mpris_can_freeze (self->priv->mpris, app)) {
-            little_cluster_powersave = FALSE;
-            continue;
+    if (self->priv->apps == NULL) {
+        g_message("Freezing apps");
+        GFOREACH (self->priv->apps, app) {
+            if (!mpris_can_freeze (self->priv->mpris, app)) {
+                apps_active = TRUE;
+                continue;
+            }
+            if (settings_can_freeze_app (settings_get_default (), app))
+                write_to_file (app, "1");
         }
-        if (settings_can_freeze_app (settings_get_default (), app))
-            write_to_file (app, "1");
     }
 
-    bus_set_value (bus,
-                   "little-cluster-powersave",
-                   g_variant_new ("b", little_cluster_powersave));
+    if (data_used || apps_active) {
+        g_message ("Phone active: no modem suspend");
+    } else {
+        bus_set_value (bus, "suspend-modem", g_variant_new ("b", TRUE));
+        bus_set_value (bus,
+                       "little-cluster-powersave",
+                       g_variant_new ("b", TRUE));
+    }
 
     self->priv->timeout_id = g_timeout_add_seconds (
         get_sleep (self),
