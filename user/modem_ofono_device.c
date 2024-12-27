@@ -7,6 +7,7 @@
 
 #include <gio/gio.h>
 
+#include "dozing.h"
 #include "network_manager.h"
 #include "modem_ofono_device.h"
 #include "../common/define.h"
@@ -16,6 +17,7 @@
 #define OFONO_MODEM_DBUS_INTERFACE                "org.ofono.Modem"
 #define OFONO_RADIO_SETTINGS_DBUS_INTERFACE       "org.ofono.RadioSettings"
 #define OFONO_NETWORK_REGISTRATION_DBUS_INTERFACE "org.ofono.NetworkRegistration"
+#define OFONO_VOICE_CALL_MANAGER_DBUS_INTERFACE   "org.ofono.VoiceCallManager"
 
 #define POWERSAVING_MIN_STRENGTH 5
 
@@ -38,6 +40,7 @@ struct _ModemOfonoDevicePrivate {
     GDBusProxy *modem_ofono_device_modem_proxy;
     GDBusProxy *modem_ofono_device_radio_proxy;
     GDBusProxy *modem_ofono_device_network_proxy;
+    GDBusProxy *modem_ofono_voice_call_proxy;
 
     char *device_path;
 
@@ -130,6 +133,29 @@ init_radio (ModemOfonoDevice *self)
 
     g_signal_connect (
         self->priv->modem_ofono_device_network_proxy,
+        "g-signal",
+        G_CALLBACK (on_proxy_signal),
+        self
+    );
+
+    self->priv->modem_ofono_voice_call_proxy = g_dbus_proxy_new_for_bus_sync (
+        G_BUS_TYPE_SYSTEM,
+        0,
+        NULL,
+        OFONO_DBUS_NAME,
+        self->priv->device_path,
+        OFONO_VOICE_CALL_MANAGER_DBUS_INTERFACE,
+        NULL,
+        &error
+    );
+
+    if (error != NULL) {
+        g_warning ("Can't connect to OFono voice call: %s", error->message);
+        return;
+    }
+
+    g_signal_connect (
+        self->priv->modem_ofono_voice_call_proxy,
         "g-signal",
         G_CALLBACK (on_proxy_signal),
         self
@@ -232,7 +258,9 @@ on_proxy_signal (GDBusProxy *proxy,
 {
     ModemOfonoDevice *self = MODEM_OFONO_DEVICE (user_data);
 
-    if (g_strcmp0 (signal_name, "PropertyChanged") == 0) {
+    if (g_strcmp0 (signal_name, "CallAdded") == 0) {
+        dozing_stop (dozing_get_default());
+    } else if (g_strcmp0 (signal_name, "PropertyChanged") == 0) {
         const char *name;
         g_autoptr (GVariant) value = NULL;
 
@@ -380,6 +408,7 @@ modem_ofono_device_dispose (GObject *modem_ofono_device)
     g_clear_object (&self->priv->modem_ofono_device_modem_proxy);
     g_clear_object (&self->priv->modem_ofono_device_radio_proxy);
     g_clear_object (&self->priv->modem_ofono_device_network_proxy);
+    g_clear_object (&self->priv->modem_ofono_voice_call_proxy);
 
     G_OBJECT_CLASS (modem_ofono_device_parent_class)->dispose (modem_ofono_device);
 }
@@ -440,6 +469,7 @@ modem_ofono_device_init (ModemOfonoDevice *self)
     self->priv->modem_ofono_device_modem_proxy = NULL;
     self->priv->modem_ofono_device_radio_proxy = NULL;
     self->priv->modem_ofono_device_network_proxy = NULL;
+    self->priv->modem_ofono_voice_call_proxy = NULL;
 
     /* 2G is deprecated in many countries */
     self->priv->blacklist = MM_MODEM_MODE_CS | MM_MODEM_MODE_2G;

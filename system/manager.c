@@ -15,13 +15,6 @@
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
-#include "modem.h"
-#ifdef MM_ENABLED
-#include "modem_mm.h"
-#else
-#include "modem_ofono.h"
-#endif
-#include "network_manager.h"
 
 #ifdef WIFI_ENABLED
 #include "wifi.h"
@@ -31,16 +24,12 @@
 #include "../common/services.h"
 #include "../common/utils.h"
 
-#define APPLY_DELAY 500
-
 struct _ManagerPrivate {
     Cpufreq *cpufreq;
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
     Processes *processes;
     Services *services;
-    NetworkManager *network_manager;
-    Modem  *modem;
 #ifdef WIFI_ENABLED
     WiFi *wifi;
 #endif
@@ -57,8 +46,6 @@ struct _ManagerPrivate {
     char *cgroups_user_dir;
 
     gboolean radio_power_saving;
-
-    guint apply_timeout_id;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -172,24 +159,6 @@ set_cgroups_user_dir (Manager  *self,
     g_variant_get (value, "s", &self->priv->cgroups_user_dir);
 }
 
-static gboolean
-on_apply_timeout (gpointer user_data)
-{
-    Manager *self = MANAGER (user_data);
-    ModemClass *klass;
-
-    klass = MODEM_GET_CLASS (self->priv->modem);
-
-    self->priv->apply_timeout_id = 0;
-
-    if (self->priv->radio_power_saving)
-        klass->apply_powersave (self->priv->modem);
-    else
-        klass->reset_powersave (self->priv->modem);
-
-    return FALSE;
-}
-
 static void
 on_bus_setting_changed (Bus      *bus,
                         GVariant *value,
@@ -248,32 +217,8 @@ on_bus_setting_changed (Bus      *bus,
         gboolean enabled = g_variant_get_boolean (inner_value);
 
         cpufreq_set_powersave (self->priv->cpufreq, TRUE, enabled);
-    } else if (g_strcmp0 (setting, "suspend-modem") == 0) {
-        ModemClass *klass;
-        gboolean enabled = g_variant_get_boolean (inner_value);
-        gboolean updated;
-
-        if (!self->priv->radio_power_saving ||
-                /* Here we assume AP set with screen on/dozing off */
-                network_manager_has_ap (self->priv->network_manager))
-            return;
-
-        klass = MODEM_GET_CLASS (self->priv->modem);
-
-        updated = modem_set_powersave (
-            self->priv->modem, enabled, MODEM_POWERSAVE_DOZING
-        );
-        if (updated && self->priv->radio_power_saving)
-            klass->apply_powersave (self->priv->modem);
-
     } else if (g_strcmp0 (setting, "radio-power-saving") == 0) {
-        gboolean radio_power_saving = g_variant_get_boolean (inner_value);
-
-        self->priv->radio_power_saving = radio_power_saving;
-        g_clear_handle_id (&self->priv->apply_timeout_id, g_source_remove);
-        self->priv->apply_timeout_id = g_timeout_add (
-            APPLY_DELAY, (GSourceFunc) on_apply_timeout, self
-        );
+        self->priv->radio_power_saving = g_variant_get_boolean (inner_value);
     } else if (g_strcmp0 (setting, "dozing") == 0) {
         gboolean dozing = g_variant_get_boolean (inner_value);
 
@@ -347,25 +292,6 @@ on_bus_setting_changed (Bus      *bus,
 }
 
 static void
-on_connection_type_wifi (NetworkManager *network_manager,
-                         gboolean        enabled,
-                         gpointer        user_data)
-{
-    Manager *self = MANAGER (user_data);
-    ModemClass *klass;
-    gboolean updated;
-
-    klass = MODEM_GET_CLASS (self->priv->modem);
-
-    updated = modem_set_powersave (
-        self->priv->modem, enabled, MODEM_POWERSAVE_WIFI
-    );
-
-    if (updated && self->priv->radio_power_saving)
-        klass->apply_powersave (self->priv->modem);
-}
-
-static void
 manager_dispose (GObject *manager)
 {
     Manager *self = MANAGER (manager);
@@ -385,21 +311,16 @@ manager_dispose (GObject *manager)
         self->priv->suspend_bluetooth_services
     );
 
-    self->priv->radio_power_saving = FALSE;
-    on_apply_timeout (self);
+    wifi_set_powersave (self->priv->wifi, FALSE);
 
     g_clear_object (&self->priv->cpufreq);
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
     g_clear_object (&self->priv->processes);
-    g_clear_object (&self->priv->network_manager);
-    g_clear_object (&self->priv->modem);
     g_clear_object (&self->priv->services);
 #ifdef WIFI_ENABLED
     g_clear_object (&self->priv->wifi);
 #endif
-
-    g_clear_handle_id (&self->priv->apply_timeout_id, g_source_remove);
 
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
@@ -426,8 +347,6 @@ manager_finalize (GObject *manager)
         g_free (self->priv->cgroups_user_dir);
     }
 
-    g_clear_handle_id (&self->priv->apply_timeout_id, g_source_remove);
-
     G_OBJECT_CLASS (manager_parent_class)->finalize (manager);
 }
 
@@ -451,12 +370,6 @@ manager_init (Manager *self)
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
     self->priv->processes = PROCESSES (processes_new ());
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
-    self->priv->network_manager = NETWORK_MANAGER (network_manager_new ());
-#ifdef MM_ENABLED
-    self->priv->modem = MODEM (modem_mm_new ());
-#else
-    self->priv->modem = MODEM (modem_ofono_new ());
-#endif
 #ifdef WIFI_ENABLED
     self->priv->wifi = WIFI (wifi_new ());
 #endif
@@ -472,8 +385,6 @@ manager_init (Manager *self)
     self->priv->cpuset_background_processes = NULL;
     self->priv->suspend_bluetooth_services = NULL;
 
-    self->priv->apply_timeout_id = 0;
-
     g_signal_connect (
         logind_get_default (),
         "screen-state-changed",
@@ -487,15 +398,6 @@ manager_init (Manager *self)
         G_CALLBACK (on_bus_setting_changed),
         self
     );
-
-    g_signal_connect (
-        self->priv->network_manager,
-        "connection-type-wifi",
-        G_CALLBACK (on_connection_type_wifi),
-        self
-    );
-
-    network_manager_check_wifi (self->priv->network_manager);
 }
 
 /**

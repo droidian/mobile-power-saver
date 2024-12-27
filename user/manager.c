@@ -15,9 +15,7 @@
 #include "settings.h"
 
 struct _ManagerPrivate {
-    Dozing *dozing;
     Bluetooth *bluetooth;
-    Mpris *mpris;
 
     gboolean screen_off_power_saving;
     gboolean bluetooth_power_saving;
@@ -59,9 +57,9 @@ on_screen_state_changed (Bus      *bus,
 
     if (self->priv->screen_off_power_saving) {
         if (screen_on) {
-            dozing_stop (self->priv->dozing);
+            dozing_stop (dozing_get_default ());
         } else {
-            dozing_start (self->priv->dozing);
+            dozing_start (dozing_get_default ());
         }
 
         if (self->priv->bluetooth_power_saving) {
@@ -73,12 +71,7 @@ on_screen_state_changed (Bus      *bus,
 static void
 manager_dispose (GObject *manager)
 {
-    Manager *self = MANAGER (manager);
-
-    dozing_stop (self->priv->dozing);
-
-    g_clear_object (&self->priv->dozing);
-    g_clear_object (&self->priv->mpris);
+    dozing_stop (dozing_get_default ());
 
     G_OBJECT_CLASS (manager_parent_class)->dispose (manager);
 }
@@ -104,8 +97,6 @@ manager_init (Manager *self)
 {
     self->priv = manager_get_instance_private (self);
 
-    self->priv->mpris = MPRIS (mpris_new ());
-    self->priv->dozing = DOZING (dozing_new (self->priv->mpris));
     self->priv->bluetooth = BLUETOOTH (bluetooth_new ());
 
     self->priv->screen_off_power_saving = TRUE;

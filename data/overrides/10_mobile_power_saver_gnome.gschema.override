@@ -1,3 +1,3 @@
 [org.adishatz.Mps]
 bluetooth-power-saving-blacklist=['io.gitlab.azymohliad.WatchMate']
-suspend-apps-blacklist=['org.gnome.Calls', 'sm.puri.Chatty', 'org.gnome.clocks', 'org.kop316.antispam', 'io.gitlab.azymohliad.WatchMate']
+suspend-apps-blacklist=['sm.puri.Chatty', 'org.gnome.clocks', 'io.gitlab.azymohliad.WatchMate']
