@@ -46,6 +46,7 @@ GType           settings_get_type                       (void) G_GNUC_CONST;
 Settings       *settings_get_default                    (void);
 void            settings_free_default                   (void);
 GObject*        settings_new                            (void);
+gboolean        settings_get_radio_powersaving          (Settings *self);
 gboolean        settings_can_bluetooth_powersave        (Settings   *self,
                                                          const char *app_scope);
 gboolean        settings_can_freeze_app                 (Settings   *self,

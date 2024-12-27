@@ -172,6 +172,21 @@ settings_free_default (void)
 }
 
 /**
+ * settings_get_radio_powersaving:
+ *
+ * Check if radio powersaving is enabled
+ *
+ * @self: a #Settings
+ *
+ * Returns: TRUE if radio powersaving is enabled
+ */
+gboolean
+settings_get_radio_powersaving (Settings *self)
+{
+    return g_settings_get_boolean (self->priv->settings, "radio-power-saving");
+}
+
+/**
  * settings_can_bluetooth_powersave:
  *
  * Check if an application scope allows Bluetooth power saving
