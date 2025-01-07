@@ -1,6 +1,6 @@
 [org.adishatz.Mps]
 suspend-services=true
 suspend-user-services-blacklist=['dbus.service', 'sm.puri.Phosh.service', 'mobi.phosh.Shell.service', 'gnome-session-manager@phosh.service', 'pulseaudio.service', 'mobile-power-saver.service', 'org.gnome.SettingsDaemon.Power.service', 'dconf.service', 'battery-input-manager.service', 'audiosystem-passthrough.service']
-suspend-system-services-blacklist=['dbus.service', 'systemd-resolved.service', 'systemd-udevd.service', 'systemd-journald.service', 'systemd-logind.service', 'ofono.service', 'NetworkManager.service', 'ModemManager.service', 'phosh.service', 'ssh.service']
+suspend-system-services-blacklist=['dbus.service', 'systemd-resolved.service', 'systemd-timesyncd.service', 'systemd-udevd.service', 'systemd-journald.service', 'systemd-logind.service', 'ofono.service', 'NetworkManager.service', 'ModemManager.service', 'phosh.service', 'ssh.service']
 suspend-bluetooth-services=['bluebinder.service', 'bluetooth.service']
 cpuset-topapp=['mobi.phosh.Shell.service']
