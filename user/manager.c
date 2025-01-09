@@ -102,6 +102,9 @@ manager_init (Manager *self)
     self->priv->screen_off_power_saving = TRUE;
     self->priv->bluetooth_power_saving = TRUE;
 
+    /* We need to init dozing soon to check AP state */
+    dozing_get_default ();
+
     g_signal_connect (
         bus_get_default (),
         "screen-state-changed",

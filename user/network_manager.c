@@ -260,6 +260,7 @@ on_network_manager_proxy_properties (GDBusProxy  *proxy,
 
             g_variant_get (value, "&o", &object_path);
             self->priv->access_point = g_strcmp0 (object_path, "/") != 0;
+            g_message ("Access point state: %b", self->priv->access_point);
         }
         g_variant_unref (value);
     }
