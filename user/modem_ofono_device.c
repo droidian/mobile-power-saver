@@ -48,6 +48,7 @@ struct _ModemOfonoDevicePrivate {
 
     gboolean powersaving_enabled;
     gboolean powersaving_suspended;
+    guint cell_id;
 
     guint timeout_id;
 };
@@ -293,8 +294,14 @@ on_proxy_signal (GDBusProxy *proxy,
             }
         } else if (self->priv->powersaving_suspended &&
                 g_strcmp0 (name, "CellId") == 0) {
-            self->priv->powersaving_suspended = FALSE;
-            apply_powersave (self, TRUE);
+            guint cell_id;
+
+            g_variant_get (value, "u", &cell_id);
+            if (cell_id != self->priv->cell_id) {
+                self->priv->cell_id = cell_id;
+                self->priv->powersaving_suspended = FALSE;
+                apply_powersave (self, TRUE);
+            }
         }
     }
 }
@@ -476,6 +483,7 @@ modem_ofono_device_init (ModemOfonoDevice *self)
 
     self->priv->powersaving_enabled = FALSE;
     self->priv->powersaving_suspended = FALSE;
+    self->priv->cell_id = 0;
 
     self->priv->timeout_id = 0;
 }
