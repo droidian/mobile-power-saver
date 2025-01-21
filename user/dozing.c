@@ -18,6 +18,7 @@
 #include "modem_ofono.h"
 #endif
 #include "network_manager.h"
+#include "network_manager_modem.h"
 #include "settings.h"
 #include "../common/services.h"
 #include "../common/utils.h"
@@ -54,6 +55,7 @@ struct _DozingPrivate {
     Mpris *mpris;
     Modem  *modem;
     NetworkManager *network_manager;
+    NetworkManagerModem *network_manager_modem;
     Services *services;
 
     guint type;
@@ -179,7 +181,11 @@ freeze_apps (Dozing *self)
 {
     Bus *bus = bus_get_default ();
     const char *app;
+    gboolean data_used;
     gboolean apps_active = FALSE;
+
+    network_manager_modem_stop_monitoring (self->priv->network_manager_modem);
+    data_used = network_manager_modem_data_used (self->priv->network_manager_modem);
 
     if (self->priv->apps != NULL) {
         g_message("Freezing apps");
@@ -194,14 +200,19 @@ freeze_apps (Dozing *self)
     }
 
     if (apps_active) {
-        g_message ("Phone active: Keep little cluster active");
+        g_message ("Active apps: Keep little cluster active");
     } else {
         bus_set_value (bus,
                        "little-cluster-powersave",
                        g_variant_new ("b", TRUE));
     }
 
-    powersave_modem (self, TRUE);
+    if (data_used) {
+        g_message ("Active modem: Keep data alive");
+    } else {
+        powersave_modem (self, TRUE);
+    }
+
     freeze_services (self);
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
@@ -326,6 +337,9 @@ dozing_init (Dozing *self)
     self->priv = dozing_get_instance_private (self);
 
     self->priv->network_manager = NETWORK_MANAGER (network_manager_new ());
+    self->priv->network_manager_modem = NETWORK_MANAGER_MODEM (
+        network_manager_modem_new ()
+    );
 #ifdef MM_ENABLED
     self->priv->modem = MODEM (modem_mm_new ());
 #else
@@ -418,6 +432,8 @@ dozing_start (Dozing  *self)
         (GSourceFunc) freeze_apps,
         self
     );
+
+    network_manager_modem_start_monitoring (self->priv->network_manager_modem);
 }
 
 /**
