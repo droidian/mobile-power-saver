@@ -184,8 +184,12 @@ freeze_apps (Dozing *self)
     gboolean data_used;
     gboolean apps_active = FALSE;
 
-    network_manager_modem_stop_monitoring (self->priv->network_manager_modem);
-    data_used = network_manager_modem_data_used (self->priv->network_manager_modem);
+    network_manager_modem_stop_monitoring (
+        self->priv->network_manager_modem
+    );
+    data_used = network_manager_modem_data_used (
+        self->priv->network_manager_modem
+    );
 
     if (self->priv->apps != NULL) {
         g_message("Freezing apps");
@@ -232,6 +236,10 @@ unfreeze_apps (Dozing *self)
 
     powersave_modem (self, FALSE);
     unfreeze_services (self);
+
+    network_manager_modem_start_monitoring (
+        self->priv->network_manager_modem
+    );
 
     g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)
@@ -452,6 +460,10 @@ dozing_stop (Dozing  *self)
 
     powersave_modem (self, FALSE);
     unfreeze_services (self);
+
+    network_manager_modem_stop_monitoring (
+        self->priv->network_manager_modem
+    );
 
     g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)
