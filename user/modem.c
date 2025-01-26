@@ -7,7 +7,6 @@
 
 #include <gio/gio.h>
 
-#include "network_manager.h"
 #include "modem.h"
 #include "../common/define.h"
 #include "../common/utils.h"
@@ -71,62 +70,4 @@ modem_new (void)
     modem = g_object_new (TYPE_MODEM, NULL);
 
     return modem;
-}
-
-/**
- * modem_set_powersave:
- *
- * Set modem devices to powersave
- *
- * @param #Modem
- * @param powersave: True to enable powersave
- * @param modem_powersave: #ModemPowersave flags
- *
- * Returns: TRUE if new settings should be applied
- */
-gboolean
-modem_set_powersave (Modem          *self,
-                     gboolean        powersave,
-                     ModemPowersave  modem_powersave)
-{
-    ModemPowersave modem_powersave_tmp = self->priv->modem_powersave;
-    gboolean current_powersave = (
-        self->priv->modem_powersave & MODEM_POWERSAVE_ENABLED
-    ) == MODEM_POWERSAVE_ENABLED;
-
-    if (powersave) {
-        modem_powersave_tmp |= modem_powersave;
-    } else {
-        modem_powersave_tmp &= ~modem_powersave;
-    }
-
-    if (modem_powersave_tmp == self->priv->modem_powersave ||
-            current_powersave == powersave)
-        return FALSE;
-
-    self->priv->modem_powersave = modem_powersave_tmp;
-    if (powersave)
-        self->priv->modem_powersave |= MODEM_POWERSAVE_ENABLED;
-    else if (self->priv->modem_powersave == MODEM_POWERSAVE_ENABLED)
-        self->priv->modem_powersave &= ~MODEM_POWERSAVE_ENABLED;
-
-    g_debug("Modem powersave: %d", self->priv->modem_powersave);
-
-    return TRUE;
-}
-
-/**
- * modem_get_powersave:
- *
- * Get modem devices powersaving flags
- *
- * @param #Modem
- *
- * Returns: #ModemPowersave
- */
-ModemPowersave
-modem_get_powersave (Modem *self)
-{
-    return self->priv->modem_powersave;
-
 }

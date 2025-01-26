@@ -47,17 +47,11 @@ struct _Modem {
 
 struct _ModemClass {
     GObjectClass parent_class;
-    void (*apply_powersave) (Modem *self);
-    void (*reset_powersave) (Modem *self);
 };
 
 GType           modem_get_type        (void) G_GNUC_CONST;
 
 GObject*        modem_new             (void);
-gboolean        modem_set_powersave   (Modem          *self,
-                                       gboolean        powersave,
-                                       ModemPowersave  modem_powersave);
-ModemPowersave  modem_get_powersave   (Modem          *self);
 
 G_END_DECLS
 

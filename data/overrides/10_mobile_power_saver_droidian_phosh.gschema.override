@@ -4,3 +4,4 @@ suspend-user-services-blacklist=['dbus.service', 'sm.puri.Phosh.service', 'mobi.
 suspend-system-services-blacklist=['dbus.service', 'systemd-resolved.service', 'systemd-timesyncd.service', 'systemd-udevd.service', 'systemd-journald.service', 'systemd-logind.service', 'ofono.service', 'NetworkManager.service', 'ModemManager.service', 'NetworkManager-dispatcher.service', 'wpa_supplicant.service', 'phosh.service', 'ssh.service']
 suspend-bluetooth-services=['bluebinder.service', 'bluetooth.service']
 cpuset-topapp=['mobi.phosh.Shell.service']
+cpuset-background-processes=['qcrild', 'ofonod', 'ofono2mm']

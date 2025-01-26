@@ -17,8 +17,7 @@
 #else
 #include "modem_ofono.h"
 #endif
-#include "network_manager.h"
-#include "network_manager_modem.h"
+
 #include "settings.h"
 #include "../common/services.h"
 #include "../common/utils.h"
@@ -54,16 +53,10 @@ struct _DozingPrivate {
     GList *apps;
     Mpris *mpris;
     Modem  *modem;
-    NetworkManager *network_manager;
-    NetworkManagerModem *network_manager_modem;
     Services *services;
 
     guint type;
     guint timeout_id;
-
-    gboolean radio_power_saving;
-
-    guint modem_timeout_id;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -109,27 +102,6 @@ queue_next_freeze (Dozing *self)
 
     if (self->priv->type < DOZING_FULL)
         self->priv->type += 1;
-}
-
-static void
-powersave_modem (Dozing   *self,
-                 gboolean  enabled)
-{
-    ModemClass *klass;
-    gboolean updated;
-
-    if (!self->priv->radio_power_saving ||
-            /* Here we assume AP set with screen on/dozing off */
-            network_manager_has_ap (self->priv->network_manager))
-        return;
-
-    klass = MODEM_GET_CLASS (self->priv->modem);
-
-    updated = modem_set_powersave (
-        self->priv->modem, enabled, MODEM_POWERSAVE_DOZING
-    );
-    if (updated && self->priv->radio_power_saving)
-        klass->apply_powersave (self->priv->modem);
 }
 
 static void
@@ -181,15 +153,7 @@ freeze_apps (Dozing *self)
 {
     Bus *bus = bus_get_default ();
     const char *app;
-    gboolean data_used;
     gboolean apps_active = FALSE;
-
-    network_manager_modem_stop_monitoring (
-        self->priv->network_manager_modem
-    );
-    data_used = network_manager_modem_data_used (
-        self->priv->network_manager_modem
-    );
 
     if (self->priv->apps != NULL) {
         g_message("Freezing apps");
@@ -211,12 +175,6 @@ freeze_apps (Dozing *self)
                        g_variant_new ("b", TRUE));
     }
 
-    if (data_used) {
-        g_message ("Active modem: Keep data alive");
-    } else {
-        powersave_modem (self, TRUE);
-    }
-
     freeze_services (self);
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
@@ -234,12 +192,7 @@ unfreeze_apps (Dozing *self)
 {
     const char *app;
 
-    powersave_modem (self, FALSE);
     unfreeze_services (self);
-
-    network_manager_modem_start_monitoring (
-        self->priv->network_manager_modem
-    );
 
     g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)
@@ -250,66 +203,11 @@ unfreeze_apps (Dozing *self)
     return FALSE;
 }
 
-static gboolean
-on_modem_timeout (gpointer user_data)
-{
-    Dozing *self = DOZING (user_data);
-    ModemClass *klass;
-
-    klass = MODEM_GET_CLASS (self->priv->modem);
-
-    self->priv->modem_timeout_id = 0;
-
-    if (self->priv->radio_power_saving)
-        klass->apply_powersave (self->priv->modem);
-    else
-        klass->reset_powersave (self->priv->modem);
-
-    return FALSE;
-}
-
-static void
-on_setting_changed (Settings   *settings,
-                    const char *key,
-                    GVariant   *value,
-                    gpointer    user_data)
-{
-    Dozing *self = DOZING (user_data);
-
-    if (g_strcmp0 (key, "radio-power-saving") == 0) {
-        self->priv->radio_power_saving = g_variant_get_boolean (value);
-        g_clear_handle_id (&self->priv->modem_timeout_id, g_source_remove);
-        self->priv->modem_timeout_id = g_timeout_add (
-            MODEM_APPLY_DELAY, (GSourceFunc) on_modem_timeout, self
-        );
-    }
-}
-
-static void
-on_connection_type_wifi (NetworkManager *network_manager,
-                         gboolean        enabled,
-                         gpointer        user_data)
-{
-    Dozing *self = DOZING (user_data);
-    ModemClass *klass;
-    gboolean updated;
-
-    klass = MODEM_GET_CLASS (self->priv->modem);
-
-    updated = modem_set_powersave (
-        self->priv->modem, enabled, MODEM_POWERSAVE_WIFI
-    );
-
-    if (updated && self->priv->radio_power_saving)
-        klass->apply_powersave (self->priv->modem);
-}
-
 static void
 dozing_dispose (GObject *dozing)
 {
     Dozing *self = DOZING (dozing);
 
-    g_clear_object (&self->priv->network_manager);
     g_clear_object (&self->priv->modem);
     g_clear_object (&self->priv->mpris);
     g_clear_object (&self->priv->services);
@@ -324,7 +222,6 @@ dozing_finalize (GObject *dozing)
 
     g_list_free_full (self->priv->apps, g_free);
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
-    g_clear_handle_id (&self->priv->modem_timeout_id, g_source_remove);
 
     G_OBJECT_CLASS (dozing_parent_class)->finalize (dozing);
 }
@@ -344,10 +241,6 @@ dozing_init (Dozing *self)
 {
     self->priv = dozing_get_instance_private (self);
 
-    self->priv->network_manager = NETWORK_MANAGER (network_manager_new ());
-    self->priv->network_manager_modem = NETWORK_MANAGER_MODEM (
-        network_manager_modem_new ()
-    );
 #ifdef MM_ENABLED
     self->priv->modem = MODEM (modem_mm_new ());
 #else
@@ -359,29 +252,7 @@ dozing_init (Dozing *self)
     self->priv->apps = NULL;
     self->priv->type = DOZING_LIGHT;
 
-    self->priv->radio_power_saving = settings_get_radio_powersaving (
-        settings_get_default()
-    );
-
     self->priv->timeout_id = 0;
-    self->priv->modem_timeout_id = 0;
-
-
-    g_signal_connect (
-        settings_get_default (),
-        "setting-changed",
-        G_CALLBACK (on_setting_changed),
-        self
-    );
-
-    g_signal_connect (
-        self->priv->network_manager,
-        "connection-type-wifi",
-        G_CALLBACK (on_connection_type_wifi),
-        self
-    );
-
-    network_manager_check_wifi (self->priv->network_manager);
 }
 
 /**
@@ -440,8 +311,6 @@ dozing_start (Dozing  *self)
         (GSourceFunc) freeze_apps,
         self
     );
-
-    network_manager_modem_start_monitoring (self->priv->network_manager_modem);
 }
 
 /**
@@ -458,12 +327,7 @@ dozing_stop (Dozing  *self)
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
 
-    powersave_modem (self, FALSE);
     unfreeze_services (self);
-
-    network_manager_modem_stop_monitoring (
-        self->priv->network_manager_modem
-    );
 
     g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)

@@ -12,6 +12,9 @@
 #include "modem_mm.h"
 #include "../common/utils.h"
 
+// TODO: Was working in the past but need to handle calls now powersaving
+// has been removed
+
 struct _ModemMMPrivate {
     GDBusConnection *connection;
     MMManager *manager;
@@ -63,69 +66,6 @@ on_modem_removed (MMManager *modem_manager,
 }
 
 static void
-modem_mm_set_powersave (Modem    *self,
-                        gboolean  powersave)
-{
-    ModemMM *this = MODEM_MM (self);
-    MMModem *modem;
-
-    GFOREACH (this->priv->modems, modem) {
-        MMModemModeCombination *modes = NULL;
-        guint n_modes;
-
-        if (mm_modem_get_supported_modes (modem, &modes, &n_modes)) {
-            guint allowed, preferred;
-            g_autoptr (GError) error = NULL;
-
-            allowed = modes[0].allowed;
-            preferred = modes[0].preferred;
-
-            if (powersave) {
-                gint i = n_modes - 1;
-                guint previous_flags = 0;
-                while (i != 0) {
-                    guint flags = modes[i].allowed & ~previous_flags;
-                    if ((flags & this->priv->blacklist) == 0) {
-                        allowed = modes[i].allowed;
-                        preferred = modes[i].preferred;
-                        break;
-                    }
-                    previous_flags = modes[i].allowed;
-                    i -= 1;
-                }
-            }
-
-            g_message ("Modem mode: %u %u", allowed, preferred);
-
-            mm_modem_set_current_modes_sync (
-                modem, allowed, preferred, NULL, &error
-            );
-            if (error != NULL) {
-                g_warning ("Can't set modem mode: %s", error->message);
-            }
-
-            g_free (modes);
-        }
-    }
-}
-
-static void
-modem_mm_apply_powersave (Modem *self)
-{
-    gboolean powersave = (
-        modem_get_powersave (MODEM (self)) & MODEM_POWERSAVE_ENABLED
-    ) == MODEM_POWERSAVE_ENABLED;
-
-    modem_mm_set_powersave (self, powersave);
-}
-
-static void
-modem_mm_reset_powersave (Modem *self)
-{
-    modem_mm_set_powersave (self, FALSE);
-}
-
-static void
 modem_mm_dispose (GObject *modem_mm)
 {
     ModemMM *self = MODEM_MM (modem_mm);
@@ -157,8 +97,6 @@ modem_mm_class_init (ModemMMClass *klass)
     object_class->finalize = modem_mm_finalize;
 
     modem_class = MODEM_CLASS (klass);
-    modem_class->apply_powersave = modem_mm_apply_powersave;
-    modem_class->reset_powersave = modem_mm_reset_powersave;
 }
 
 static void
