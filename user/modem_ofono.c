@@ -7,7 +7,6 @@
 
 #include <gio/gio.h>
 
-#include "network_manager.h"
 #include "modem_ofono.h"
 #include "modem_ofono_device.h"
 #include "../common/utils.h"
@@ -32,22 +31,12 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-on_modem_ofono_device_ready (ModemOfonoDevice      *device,
-                             gpointer  user_data);
-
-static void
 add_modem (ModemOfono *self,
            const char *path)
 {
     ModemOfonoDevice *device = MODEM_OFONO_DEVICE (modem_ofono_device_new (path));
 
     self->priv->modems = g_list_append (self->priv->modems, device);
-    g_signal_connect (
-        device,
-        "device-ready",
-        G_CALLBACK (on_modem_ofono_device_ready),
-        self
-    );
 }
 
 static void
@@ -66,18 +55,6 @@ del_modem (ModemOfono *self,
 }
 
 static void
-on_modem_ofono_device_ready (ModemOfonoDevice *device,
-                             gpointer          user_data)
-{
-    ModemOfono *self = MODEM_OFONO (user_data);
-    gboolean powersave = (
-        modem_get_powersave (MODEM (self)) & MODEM_POWERSAVE_ENABLED
-    ) == MODEM_POWERSAVE_ENABLED;
-
-    modem_ofono_device_apply_powersave (device, powersave);
-}
-
-static void
 on_modem_ofono_manager_signal (GDBusProxy *proxy,
                                const char *sender_name,
                                const char *signal_name,
@@ -93,31 +70,6 @@ on_modem_ofono_manager_signal (GDBusProxy *proxy,
     } else if (g_strcmp0 (signal_name, "ModemRemoved") == 0) {
         g_variant_get (parameters, "(&o)", &modem);
         del_modem (self, modem);
-    }
-}
-
-static void
-modem_ofono_apply_powersave (Modem *self)
-{
-    ModemOfono *this = MODEM_OFONO (self);
-    ModemOfonoDevice *device;
-    gboolean powersave = (
-        modem_get_powersave (MODEM (self)) & MODEM_POWERSAVE_ENABLED
-    ) == MODEM_POWERSAVE_ENABLED;
-
-    GFOREACH (this->priv->modems, device) {
-        modem_ofono_device_apply_powersave (device, powersave);
-    }
-}
-
-static void
-modem_ofono_reset_powersave (Modem *self)
-{
-    ModemOfono *this = MODEM_OFONO (self);
-    ModemOfonoDevice *device;
-
-    GFOREACH (this->priv->modems, device) {
-        modem_ofono_device_apply_powersave (device, FALSE);
     }
 }
 
@@ -152,8 +104,6 @@ modem_ofono_class_init (ModemOfonoClass *klass)
     object_class->finalize = modem_ofono_finalize;
 
     modem_class = MODEM_CLASS (klass);
-    modem_class->apply_powersave = modem_ofono_apply_powersave;
-    modem_class->reset_powersave = modem_ofono_reset_powersave;
 }
 
 static void

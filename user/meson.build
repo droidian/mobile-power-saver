@@ -6,8 +6,6 @@ mps_sources = [
   'manager.c',
   'mpris.c',
   'modem.c',
-  'network_manager.c',
-  'network_manager_modem.c',
   'settings.c',
   '../common/services.c',
   '../common/utils.c'
