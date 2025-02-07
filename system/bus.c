@@ -157,6 +157,12 @@ handle_method_call (GDBusConnection       *connection,
             NULL,
             NULL
         );
+
+        g_dbus_method_invocation_return_value (
+            invocation, NULL
+        );
+
+        return;
     }
 }
 
