@@ -54,6 +54,10 @@ on_mps_proxy_signal (GDBusProxy  *proxy,
     } else if (g_strcmp0 (signal_name, "StopDozing") == 0) {
         Dozing *dozing = dozing_get_default ();
 
+        bus_set_value (self,
+                       "little-cluster-powersave",
+                       g_variant_new ("b", FALSE));
+
         dozing_stop (dozing);
         dozing_start (dozing);
     }
