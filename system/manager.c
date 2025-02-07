@@ -216,7 +216,7 @@ on_bus_setting_changed (Bus      *bus,
     } else if (g_strcmp0 (setting, "little-cluster-powersave") == 0) {
         gboolean enabled = g_variant_get_boolean (inner_value);
 
-        cpufreq_set_powersave (self->priv->cpufreq, TRUE, enabled);
+        cpufreq_set_powersave (self->priv->cpufreq, enabled, TRUE);
     } else if (g_strcmp0 (setting, "radio-power-saving") == 0) {
         self->priv->radio_power_saving = g_variant_get_boolean (inner_value);
     } else if (g_strcmp0 (setting, "dozing") == 0) {
