@@ -17,6 +17,14 @@
         <arg direction='in' name='value' type='v'/>
       </method>
 
+    <!--
+        StopDozing:
+
+        Ask Mps to stop dozing for a short period (less than 30 seconds)
+      -->
+      <method name='StopDozing'>
+      </method>
+
       <!--
         ScreenStateChanged:
 
@@ -24,6 +32,14 @@
       -->
       <signal name='ScreenStateChanged'>
         <arg type='b' name='enabled'/>
+      </signal>
+
+    <!--
+        StopDozing:
+
+        Signal emitted when StopDozing method has been called.
+      -->
+      <signal name='StopDozing'>
       </signal>
 
    </interface>

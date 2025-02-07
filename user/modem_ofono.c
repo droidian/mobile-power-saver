@@ -97,13 +97,10 @@ static void
 modem_ofono_class_init (ModemOfonoClass *klass)
 {
     GObjectClass *object_class;
-    ModemClass *modem_class;
 
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = modem_ofono_dispose;
     object_class->finalize = modem_ofono_finalize;
-
-    modem_class = MODEM_CLASS (klass);
 }
 
 static void
