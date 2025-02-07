@@ -22,7 +22,7 @@
 #include "../common/services.h"
 #include "../common/utils.h"
 
-#define DOZING_PRE_SLEEP          60
+#define DOZING_PRE_SLEEP          30
 #define DOZING_LIGHT_SLEEP        300
 #define DOZING_LIGHT_MAINTENANCE  20
 #define DOZING_MEDIUM_SLEEP       600

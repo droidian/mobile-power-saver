@@ -147,6 +147,16 @@ handle_method_call (GDBusConnection       *connection,
         );
 
         return;
+    } else if (g_strcmp0 (method_name, "StopDozing") == 0) {
+        g_dbus_connection_emit_signal (
+            self->priv->adishatz_connection,
+            NULL,
+            ADISHATZ_DBUS_PATH,
+            ADISHATZ_DBUS_NAME,
+            "StopDozing",
+            NULL,
+            NULL
+        );
     }
 }
 
