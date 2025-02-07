@@ -55,6 +55,7 @@ on_mps_proxy_signal (GDBusProxy  *proxy,
         Dozing *dozing = dozing_get_default ();
 
         dozing_stop (dozing);
+        dozing_start (dozing);
     }
 }
 
