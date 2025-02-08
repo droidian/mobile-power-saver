@@ -105,6 +105,32 @@ queue_next_freeze (Dozing *self)
 }
 
 static void
+set_services_state (Dozing   *self,
+                    gboolean  freeze)
+{
+    GList *blacklist = settings_get_suspend_services_blacklist (
+        settings_get_default ()
+    );
+    GList *bluetooth = settings_get_suspend_bluetooth_services (
+        settings_get_default ()
+    );
+    const char *service;
+
+    GFOREACH (bluetooth, service) {
+        blacklist = g_list_prepend (blacklist, g_strdup (service));
+    }
+    g_list_free (bluetooth);
+
+    if (freeze) {
+        services_freeze_all (self->priv->services, blacklist);
+    } else {
+        services_unfreeze_all (self->priv->services, blacklist);
+    }
+
+    g_list_free_full (blacklist, g_free);
+}
+
+static void
 freeze_services (Dozing *self)
 {
     Bus *bus = bus_get_default ();
@@ -116,22 +142,7 @@ freeze_services (Dozing *self)
                    g_variant_new ("b", TRUE));
 
     if (settings_suspend_services (settings_get_default ())) {
-        GList *blacklist = settings_get_suspend_services_blacklist (
-            settings_get_default ()
-        );
-        GList *bluetooth = settings_get_suspend_bluetooth_services (
-            settings_get_default ()
-        );
-        const char *service;
-
-        GFOREACH (bluetooth, service) {
-            blacklist = g_list_prepend (blacklist, g_strdup (service));
-        }
-        g_list_free (bluetooth);
-
-        services_freeze_all (self->priv->services, blacklist);
-
-        g_list_free_full (blacklist, g_free);
+        set_services_state (self, TRUE);
     }
 }
 
@@ -147,13 +158,7 @@ unfreeze_services (Dozing *self)
                    g_variant_new ("b", FALSE));
 
     if (settings_suspend_services (settings_get_default ())) {
-        GList *blacklist = settings_get_suspend_services_blacklist (
-            settings_get_default ()
-        );
-
-        services_unfreeze_all (self->priv->services, blacklist);
-
-        g_list_free_full (blacklist, g_free);
+        set_services_state (self, FALSE);
     }
 }
 
