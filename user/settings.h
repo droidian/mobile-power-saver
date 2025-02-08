@@ -53,6 +53,7 @@ gboolean        settings_can_freeze_app                 (Settings   *self,
                                                          const char *app_scope);
 gboolean        settings_suspend_services               (Settings   *self);
 GList          *settings_get_suspend_services_blacklist (Settings   *self);
+GList          *settings_get_suspend_bluetooth_services (Settings   *self);
 
 G_END_DECLS
 
