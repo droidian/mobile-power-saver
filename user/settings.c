@@ -285,3 +285,29 @@ settings_get_suspend_services_blacklist (Settings *self)
     }
     return services;
 }
+
+/**
+ * settings_get_suspend_bluetooth_services
+ *
+ * Get services to suspend if bluetooth unused
+ *
+ * @self: a #Settings
+ *
+ * Return value: (transfer full): services list.
+ */
+GList *
+settings_get_suspend_bluetooth_services (Settings *self)
+{
+    g_autoptr (GVariant) value = g_settings_get_value (
+        self->priv->settings, "suspend-user-bluetooth-services"
+    );
+    g_autoptr (GVariantIter) iter;
+    const char *service;
+    GList *services = NULL;
+
+    g_variant_get (value, "as", &iter);
+    while (g_variant_iter_loop (iter, "s", &service)) {
+        services = g_list_append (services, g_strdup (service));
+    }
+    return services;
+}

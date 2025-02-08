@@ -11,6 +11,7 @@
 #include "bus.h"
 #include "settings.h"
 #include "../common/define.h"
+#include "../common/services.h"
 #include "../common/utils.h"
 
 #define BLUEZ_DBUS_NAME               "org.bluez"
@@ -19,13 +20,15 @@
 #define BLUEZ_DBUS_DEVICE_INTERFACE   "org.bluez.Device1"
 
 struct _BluetoothPrivate {
+    Services *services;
+
     GDBusObjectManager *object_manager;
     GDBusProxy *bluez_proxy;
 
     GList *connections;
+    GList *connected;
 
     gboolean powered;
-    gboolean connected;
     gboolean powersaving;
 };
 
@@ -46,6 +49,72 @@ on_bluez_proxy_properties (GDBusProxy  *proxy,
                            char       **invalidated_properties,
                            gpointer     user_data);
 
+static void
+set_powersave (Bluetooth *self,
+               gboolean   powersave)
+{
+    g_autoptr (GDBusProxy) proxy = NULL;
+    g_autoptr (GError) error = NULL;
+
+    proxy = g_dbus_proxy_new_for_bus_sync (
+        G_BUS_TYPE_SYSTEM,
+        0,
+        NULL,
+        BLUEZ_DBUS_NAME,
+        BLUEZ_DBUS_PATH,
+        DBUS_PROPERTIES_INTERFACE,
+        NULL,
+        &error
+    );
+
+    if (error != NULL) {
+        g_warning ("Can't contact Bluez: %s", error->message);
+        return;
+    }
+
+    self->priv->powersaving = powersave;
+    g_dbus_proxy_call_sync (
+        proxy,
+        "Set",
+        g_variant_new (
+            "(ssv)",
+            BLUEZ_DBUS_ADAPTER_INTERFACE,
+            "Powered",
+            g_variant_new ("b", !powersave)
+        ),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &error
+    );
+
+    if (error != NULL) {
+        g_warning ("Can't set device powered state: %s", error->message);
+    }
+}
+
+static void
+set_services_powersave (Bluetooth *self,
+                        gboolean   powersave)
+{
+    Bus *bus = bus_get_default ();
+    GList *services = settings_get_suspend_bluetooth_services (
+        settings_get_default ()
+    );
+
+    bus_set_value (bus,
+       "suspend-bluetooth",
+       g_variant_new ("b", powersave)
+    );
+
+    if (powersave) {
+        services_freeze (self->priv->services, services);
+    } else {
+        services_unfreeze (self->priv->services, services);
+    }
+
+    g_list_free_full (services, g_free);
+}
 static gboolean
 can_powersave (Bluetooth *self)
 {
@@ -99,8 +168,9 @@ on_bluez_object_added (GDBusObjectManager *object_manager,
     gboolean connected;
     gboolean paired;
 
-    if (!g_regex_match (regex, path, G_REGEX_MATCH_DEFAULT, NULL))
+    if (!g_regex_match (regex, path, G_REGEX_MATCH_DEFAULT, NULL)) {
         return;
+    }
 
     proxy = g_dbus_proxy_new_for_bus_sync (
         G_BUS_TYPE_SYSTEM,
@@ -133,8 +203,12 @@ on_bluez_object_added (GDBusObjectManager *object_manager,
     value = g_dbus_proxy_get_cached_property (proxy, "Connected");
     g_variant_get (value, "b", &connected);
 
-    if (connected)
-        self->priv->connected = TRUE;
+    if (connected) {
+        g_message ("Connected bluetooth devices: %s", path);
+        self->priv->connected = g_list_append (
+            self->priv->connected, g_strdup (path)
+        );
+    }
 
     g_signal_connect (
         proxy,
@@ -163,6 +237,9 @@ on_bluez_object_removed (GDBusObjectManager *object_manager,
             self->priv->connections = g_list_remove (
                 self->priv->connections, proxy
             );
+            self->priv->connected = g_list_remove (
+                self->priv->connected, object_path
+            );
             g_clear_object (&proxy);
             break;
         }
@@ -186,7 +263,29 @@ on_bluez_proxy_properties (GDBusProxy  *proxy,
             if (!self->priv->powersaving)
                 g_variant_get (value, "b", &self->priv->powered);
         } else if (g_strcmp0 (property, "Connected") == 0) {
-            g_variant_get (value, "b", &self->priv->connected);
+            gboolean connected;
+            const char *path = g_dbus_proxy_get_object_path (proxy);
+
+            g_variant_get (value, "b", &connected);
+
+            if (connected) {
+                g_message ("Connected bluetooth devices: %s", path);
+                self->priv->connected = g_list_append (
+                    self->priv->connected, g_strdup (path)
+                );
+            } else {
+                const char *object_path;
+
+                GFOREACH (self->priv->connected, object_path) {
+                    if (g_strcmp0 (object_path, path) == 0) {
+                        g_message ("Disconnected bluetooth devices: %s", path);
+                        self->priv->connected = g_list_remove (
+                            self->priv->connected, object_path
+                        );
+                        break;
+                    }
+                }
+            }
         }
         g_variant_unref (value);
     }
@@ -199,6 +298,7 @@ bluetooth_dispose (GObject *bluetooth)
 
     g_clear_object (&self->priv->object_manager);
     g_clear_object (&self->priv->bluez_proxy);
+    g_clear_object (&self->priv->services);
 
     G_OBJECT_CLASS (bluetooth_parent_class)->dispose (bluetooth);
 }
@@ -206,6 +306,10 @@ bluetooth_dispose (GObject *bluetooth)
 static void
 bluetooth_finalize (GObject *bluetooth)
 {
+    Bluetooth *self = BLUETOOTH (bluetooth);
+
+    g_list_free_full (self->priv->connected, g_free);
+
     G_OBJECT_CLASS (bluetooth_parent_class)->finalize (bluetooth);
 }
 
@@ -227,10 +331,12 @@ bluetooth_init (Bluetooth *self)
 
     self->priv = bluetooth_get_instance_private (self);
 
-    self->priv->connected = FALSE;
+    self->priv->connected = NULL;
     self->priv->powered = FALSE;
     self->priv->powersaving = FALSE;
     self->priv->connections = NULL;
+
+    self->priv->services = SERVICES (services_new (G_BUS_TYPE_SESSION));
 
     self->priv->bluez_proxy = g_dbus_proxy_new_for_bus_sync (
         G_BUS_TYPE_SYSTEM,
@@ -322,56 +428,21 @@ void
 bluetooth_set_powersave (Bluetooth *self,
                          gboolean   powersave)
 {
-    Bus *bus = bus_get_default ();
-    g_autoptr (GDBusProxy) proxy = NULL;
-    g_autoptr (GError) error = NULL;
+    /* Safely always unset powersave */
+    if (!powersave) {
+        g_message ("Set Bluetooth powersave: 0");
+        set_services_powersave (self, FALSE);
+        set_powersave (self, FALSE);
+        return;
+    }
 
-    if (!self->priv->powered || self->priv->connected)
+    if (!self->priv->powered || g_list_length (self->priv->connected) > 0)
         return;
 
     if (!can_powersave (self))
         return;
 
-    g_debug ("Set Bluetooth powersave: %b", powersave);
-
-    proxy = g_dbus_proxy_new_for_bus_sync (
-        G_BUS_TYPE_SYSTEM,
-        0,
-        NULL,
-        BLUEZ_DBUS_NAME,
-        BLUEZ_DBUS_PATH,
-        DBUS_PROPERTIES_INTERFACE,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        g_warning ("Can't contact Bluez: %s", error->message);
-        return;
-    }
-
-    self->priv->powersaving = powersave;
-    g_dbus_proxy_call_sync (
-        proxy,
-        "Set",
-        g_variant_new (
-            "(ssv)",
-            BLUEZ_DBUS_ADAPTER_INTERFACE,
-            "Powered",
-            g_variant_new ("b", !powersave)
-        ),
-        G_DBUS_CALL_FLAGS_NONE,
-        -1,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        g_warning ("Can't set device powered state: %s", error->message);
-        return;
-    }
-
-    bus_set_value (bus,
-                   "suspend-bluetooth",
-                   g_variant_new ("b", powersave));
+    g_message ("Set Bluetooth powersave: 1");
+    set_powersave (self, TRUE);
+    set_services_powersave (self, TRUE);
 }
