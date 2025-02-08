@@ -26,9 +26,9 @@ struct _BluetoothPrivate {
     GDBusProxy *bluez_proxy;
 
     GList *connections;
+    GList *connected;
 
     gboolean powered;
-    gboolean connected;
     gboolean powersaving;
 };
 
@@ -102,8 +102,9 @@ on_bluez_object_added (GDBusObjectManager *object_manager,
     gboolean connected;
     gboolean paired;
 
-    if (!g_regex_match (regex, path, G_REGEX_MATCH_DEFAULT, NULL))
+    if (!g_regex_match (regex, path, G_REGEX_MATCH_DEFAULT, NULL)) {
         return;
+    }
 
     proxy = g_dbus_proxy_new_for_bus_sync (
         G_BUS_TYPE_SYSTEM,
@@ -136,8 +137,12 @@ on_bluez_object_added (GDBusObjectManager *object_manager,
     value = g_dbus_proxy_get_cached_property (proxy, "Connected");
     g_variant_get (value, "b", &connected);
 
-    if (connected)
-        self->priv->connected = TRUE;
+    if (connected) {
+        g_message ("Connected bluetooth devices: %s", path);
+        self->priv->connected = g_list_append (
+            self->priv->connected, g_strdup (path)
+        );
+    }
 
     g_signal_connect (
         proxy,
@@ -166,6 +171,9 @@ on_bluez_object_removed (GDBusObjectManager *object_manager,
             self->priv->connections = g_list_remove (
                 self->priv->connections, proxy
             );
+            self->priv->connected = g_list_remove (
+                self->priv->connected, object_path
+            );
             g_clear_object (&proxy);
             break;
         }
@@ -189,7 +197,29 @@ on_bluez_proxy_properties (GDBusProxy  *proxy,
             if (!self->priv->powersaving)
                 g_variant_get (value, "b", &self->priv->powered);
         } else if (g_strcmp0 (property, "Connected") == 0) {
-            g_variant_get (value, "b", &self->priv->connected);
+            gboolean connected;
+            const char *path = g_dbus_proxy_get_object_path (proxy);
+
+            g_variant_get (value, "b", &connected);
+
+            if (connected) {
+                g_message ("Connected bluetooth devices: %s", path);
+                self->priv->connected = g_list_append (
+                    self->priv->connected, g_strdup (path)
+                );
+            } else {
+                const char *object_path;
+
+                GFOREACH (self->priv->connected, object_path) {
+                    if (g_strcmp0 (object_path, path) == 0) {
+                        g_message ("Disconnected bluetooth devices: %s", path);
+                        self->priv->connected = g_list_remove (
+                            self->priv->connected, object_path
+                        );
+                        break;
+                    }
+                }
+            }
         }
         g_variant_unref (value);
     }
@@ -210,6 +240,10 @@ bluetooth_dispose (GObject *bluetooth)
 static void
 bluetooth_finalize (GObject *bluetooth)
 {
+    Bluetooth *self = BLUETOOTH (bluetooth);
+
+    g_list_free_full (self->priv->connected, g_free);
+
     G_OBJECT_CLASS (bluetooth_parent_class)->finalize (bluetooth);
 }
 
@@ -231,7 +265,7 @@ bluetooth_init (Bluetooth *self)
 
     self->priv = bluetooth_get_instance_private (self);
 
-    self->priv->connected = FALSE;
+    self->priv->connected = NULL;
     self->priv->powered = FALSE;
     self->priv->powersaving = FALSE;
     self->priv->connections = NULL;
@@ -332,7 +366,7 @@ bluetooth_set_powersave (Bluetooth *self,
     g_autoptr (GDBusProxy) proxy = NULL;
     g_autoptr (GError) error = NULL;
 
-    if (!self->priv->powered || self->priv->connected)
+    if (!self->priv->powered || g_list_length (self->priv->connected) > 0)
         return;
 
     if (!can_powersave (self))
