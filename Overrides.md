@@ -62,7 +62,8 @@ This configuration enables service suspension but exempts critical user and syst
 suspend-services=true
 suspend-user-services-blacklist=['dbus.service', 'sm.puri.Phosh.service', 'pulseaudio.service']
 suspend-system-services-blacklist=['dbus.service', 'systemd-resolved.service', 'NetworkManager.service']
-suspend-bluetooth-services=['bluebinder.service', 'bluetooth.service']
+suspend-system-bluetooth-services=['bluebinder.service', 'bluetooth.service']
+suspend-user-bluetooth-services=['mpris-proxy.service']
 cpuset-topapp=['sm.puri.Phosh.service']
 ```
 

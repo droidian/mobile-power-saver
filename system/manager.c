@@ -277,7 +277,7 @@ on_bus_setting_changed (Bus      *bus,
         self->priv->suspend_processes = get_list_from_variant (
             inner_value
         );
-    } else if (g_strcmp0 (setting, "suspend-bluetooth-services") == 0) {
+    } else if (g_strcmp0 (setting, "suspend-system-bluetooth-services") == 0) {
         g_list_free_full (
             self->priv->suspend_bluetooth_services, g_free
         );

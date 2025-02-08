@@ -11,6 +11,7 @@
 #include "bus.h"
 #include "settings.h"
 #include "../common/define.h"
+#include "../common/services.h"
 #include "../common/utils.h"
 
 #define BLUEZ_DBUS_NAME               "org.bluez"
@@ -19,6 +20,8 @@
 #define BLUEZ_DBUS_DEVICE_INTERFACE   "org.bluez.Device1"
 
 struct _BluetoothPrivate {
+    Services *services;
+
     GDBusObjectManager *object_manager;
     GDBusProxy *bluez_proxy;
 
@@ -199,6 +202,7 @@ bluetooth_dispose (GObject *bluetooth)
 
     g_clear_object (&self->priv->object_manager);
     g_clear_object (&self->priv->bluez_proxy);
+    g_clear_object (&self->priv->services);
 
     G_OBJECT_CLASS (bluetooth_parent_class)->dispose (bluetooth);
 }
@@ -231,6 +235,8 @@ bluetooth_init (Bluetooth *self)
     self->priv->powered = FALSE;
     self->priv->powersaving = FALSE;
     self->priv->connections = NULL;
+
+    self->priv->services = SERVICES (services_new (G_BUS_TYPE_SESSION));
 
     self->priv->bluez_proxy = g_dbus_proxy_new_for_bus_sync (
         G_BUS_TYPE_SYSTEM,
@@ -374,4 +380,14 @@ bluetooth_set_powersave (Bluetooth *self,
     bus_set_value (bus,
                    "suspend-bluetooth",
                    g_variant_new ("b", powersave));
+
+    if (powersave) {
+        GList *services = settings_get_suspend_bluetooth_services (
+            settings_get_default ()
+        );
+
+        services_freeze (self->priv->services, services);
+
+        g_list_free_full (services, g_free);
+    }
 }

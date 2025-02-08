@@ -119,6 +119,15 @@ freeze_services (Dozing *self)
         GList *blacklist = settings_get_suspend_services_blacklist (
             settings_get_default ()
         );
+        GList *bluetooth = settings_get_suspend_bluetooth_services (
+            settings_get_default ()
+        );
+        const char *service;
+
+        GFOREACH (bluetooth, service) {
+            blacklist = g_list_prepend (blacklist, g_strdup (service));
+        }
+        g_list_free (bluetooth);
 
         services_freeze_all (self->priv->services, blacklist);
 
