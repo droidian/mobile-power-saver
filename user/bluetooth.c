@@ -434,7 +434,7 @@ bluetooth_set_powersave (Bluetooth *self,
     if (!can_powersave (self))
         return;
 
-    g_debug ("Set Bluetooth powersave: %b", powersave);
+    g_message ("Set Bluetooth powersave: %b", powersave);
 
     if (powersave) {
         set_powersave (self, TRUE);
