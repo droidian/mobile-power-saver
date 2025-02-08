@@ -49,6 +49,72 @@ on_bluez_proxy_properties (GDBusProxy  *proxy,
                            char       **invalidated_properties,
                            gpointer     user_data);
 
+static void
+set_powersave (Bluetooth *self,
+               gboolean   powersave)
+{
+    g_autoptr (GDBusProxy) proxy = NULL;
+    g_autoptr (GError) error = NULL;
+
+    proxy = g_dbus_proxy_new_for_bus_sync (
+        G_BUS_TYPE_SYSTEM,
+        0,
+        NULL,
+        BLUEZ_DBUS_NAME,
+        BLUEZ_DBUS_PATH,
+        DBUS_PROPERTIES_INTERFACE,
+        NULL,
+        &error
+    );
+
+    if (error != NULL) {
+        g_warning ("Can't contact Bluez: %s", error->message);
+        return;
+    }
+
+    self->priv->powersaving = powersave;
+    g_dbus_proxy_call_sync (
+        proxy,
+        "Set",
+        g_variant_new (
+            "(ssv)",
+            BLUEZ_DBUS_ADAPTER_INTERFACE,
+            "Powered",
+            g_variant_new ("b", !powersave)
+        ),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &error
+    );
+
+    if (error != NULL) {
+        g_warning ("Can't set device powered state: %s", error->message);
+    }
+}
+
+static void
+set_services_powersave (Bluetooth *self,
+                        gboolean   powersave)
+{
+    Bus *bus = bus_get_default ();
+    GList *services = settings_get_suspend_bluetooth_services (
+        settings_get_default ()
+    );
+
+    bus_set_value (bus,
+       "suspend-bluetooth",
+       g_variant_new ("b", powersave)
+    );
+
+    if (powersave) {
+        services_freeze (self->priv->services, services);
+    } else {
+        services_unfreeze (self->priv->services, services);
+    }
+
+    g_list_free_full (services, g_free);
+}
 static gboolean
 can_powersave (Bluetooth *self)
 {
@@ -362,10 +428,6 @@ void
 bluetooth_set_powersave (Bluetooth *self,
                          gboolean   powersave)
 {
-    Bus *bus = bus_get_default ();
-    g_autoptr (GDBusProxy) proxy = NULL;
-    g_autoptr (GError) error = NULL;
-
     if (!self->priv->powered || g_list_length (self->priv->connected) > 0)
         return;
 
@@ -374,54 +436,11 @@ bluetooth_set_powersave (Bluetooth *self,
 
     g_debug ("Set Bluetooth powersave: %b", powersave);
 
-    proxy = g_dbus_proxy_new_for_bus_sync (
-        G_BUS_TYPE_SYSTEM,
-        0,
-        NULL,
-        BLUEZ_DBUS_NAME,
-        BLUEZ_DBUS_PATH,
-        DBUS_PROPERTIES_INTERFACE,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        g_warning ("Can't contact Bluez: %s", error->message);
-        return;
-    }
-
-    self->priv->powersaving = powersave;
-    g_dbus_proxy_call_sync (
-        proxy,
-        "Set",
-        g_variant_new (
-            "(ssv)",
-            BLUEZ_DBUS_ADAPTER_INTERFACE,
-            "Powered",
-            g_variant_new ("b", !powersave)
-        ),
-        G_DBUS_CALL_FLAGS_NONE,
-        -1,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        g_warning ("Can't set device powered state: %s", error->message);
-        return;
-    }
-
-    bus_set_value (bus,
-                   "suspend-bluetooth",
-                   g_variant_new ("b", powersave));
-
     if (powersave) {
-        GList *services = settings_get_suspend_bluetooth_services (
-            settings_get_default ()
-        );
-
-        services_freeze (self->priv->services, services);
-
-        g_list_free_full (services, g_free);
+        set_powersave (self, TRUE);
+        set_services_powersave (self, TRUE);
+    } else {
+        set_services_powersave (self, FALSE);
+        set_powersave (self, FALSE);
     }
 }

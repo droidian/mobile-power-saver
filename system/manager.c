@@ -36,7 +36,6 @@ struct _ManagerPrivate {
 
     gboolean screen_off_power_saving;
     gboolean suspend_services;
-    gboolean suspend_bluetooth;
 
     GList *suspend_processes;
     GList *cpuset_background_processes;
@@ -239,20 +238,10 @@ on_bus_setting_changed (Bus      *bus,
                     self->priv->services,
                     blacklist
                 );
-                if (self->priv->suspend_bluetooth) {
-                    services_freeze (
-                        self->priv->services,
-                        self->priv->suspend_bluetooth_services
-                    );
-                }
             } else {
                 services_unfreeze_all (
                     self->priv->services,
                     blacklist
-                );
-                services_unfreeze (
-                    self->priv->services,
-                    self->priv->suspend_bluetooth_services
                 );
             }
 
@@ -285,7 +274,19 @@ on_bus_setting_changed (Bus      *bus,
             inner_value
         );
     } else if (g_strcmp0 (setting, "suspend-bluetooth") == 0) {
-        self->priv->suspend_bluetooth = g_variant_get_boolean (inner_value);
+        gboolean suspend_bluetooth = g_variant_get_boolean (inner_value);
+
+        if (suspend_bluetooth) {
+            services_freeze (
+                self->priv->services,
+                self->priv->suspend_bluetooth_services
+            );
+        } else {
+            services_unfreeze (
+                self->priv->services,
+                self->priv->suspend_bluetooth_services
+            );
+        }
     } else if (g_strcmp0 (setting, "suspend-services") == 0) {
         self->priv->suspend_services = g_variant_get_boolean (inner_value);
     }
@@ -376,7 +377,6 @@ manager_init (Manager *self)
 
     self->priv->screen_off_power_saving = TRUE;
     self->priv->suspend_services = FALSE;
-    self->priv->suspend_bluetooth = FALSE;
 
     self->priv->radio_power_saving = FALSE;
     self->priv->suspend_processes = NULL;
