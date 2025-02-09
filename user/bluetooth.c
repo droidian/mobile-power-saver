@@ -204,7 +204,7 @@ on_bluez_object_added (GDBusObjectManager *object_manager,
     g_variant_get (value, "b", &connected);
 
     if (connected) {
-        g_message ("Connected bluetooth devices: %s", path);
+        g_message ("Connected bluetooth device: %s", path);
         self->priv->connected = g_list_append (
             self->priv->connected, g_strdup (path)
         );
@@ -269,7 +269,7 @@ on_bluez_proxy_properties (GDBusProxy  *proxy,
             g_variant_get (value, "b", &connected);
 
             if (connected) {
-                g_message ("Connected bluetooth devices: %s", path);
+                g_message ("Connected bluetooth device: %s", path);
                 self->priv->connected = g_list_append (
                     self->priv->connected, g_strdup (path)
                 );
@@ -278,7 +278,7 @@ on_bluez_proxy_properties (GDBusProxy  *proxy,
 
                 GFOREACH (self->priv->connected, object_path) {
                     if (g_strcmp0 (object_path, path) == 0) {
-                        g_message ("Disconnected bluetooth devices: %s", path);
+                        g_message ("Disconnected bluetooth device: %s", path);
                         self->priv->connected = g_list_remove (
                             self->priv->connected, object_path
                         );
