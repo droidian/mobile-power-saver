@@ -47,14 +47,14 @@ kernel_settings_init (KernelSettings *self)
 {
     self->priv = kernel_settings_get_instance_private (self);
 
-    /* Disable Adreno bus control */
+    /* Splits the memory bus usage between different components to optimize power consumption */
     write_to_file (
-        "/sys/class/kgsl/kgsl-3d0/bus_split", "0"
+        "/sys/class/kgsl/kgsl-3d0/bus_split", "1"
     );
 
-    /* Disable Adreno NAP */
+    /* Do not isable Adreno NAP */
     write_to_file (
-        "/sys/class/kgsl/kgsl-3d0/force_no_nap", "1"
+        "/sys/class/kgsl/kgsl-3d0/force_no_nap", "0"
     );
 
     /* Do not keep bus on when screen is off */
@@ -140,6 +140,36 @@ kernel_settings_init (KernelSettings *self)
     write_to_file (
         "/proc/sys/vm/stat_interval", "120"
     );
+
+    /* Enable LPM predictions */
+    write_to_file (
+        "/sys/module/lpm_levels/parameters/lpm_prediction", "Y"
+    );
+
+    /* Enable LPM IPI predictions */
+    write_to_file (
+        "/sys/module/lpm_levels/parameters/lpm_ipi_prediction", "Y"
+    );
+
+    /* Disable IPv6 Router Advertisements */
+    write_to_file (
+        "/proc/sys/net/ipv6/conf/all/accept_ra", "0"
+    );
+
+    /* Disable IPv6 Duplicate Address Detection */
+    write_to_file (
+        "/proc/sys/net/ipv6/conf/all/accept_dad", "0"
+    );
+
+    /* Reduce IPv6 Neighbor Discovery Frequency */
+    write_to_file (
+        "/proc/sys/net/ipv6/neigh/default/gc_stale_time", "120"
+    );
+
+    /* Disable IPv4 Source Address Selection */
+    write_to_file (
+        "/proc/sys/net/ipv4/ip_nonlocal_bind", "0"
+    );
 }
 
 /**
@@ -211,9 +241,54 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
             "/proc/sys/vm/laptop_mode", "5"
         );
 
-        /* Disable LPM predictions */
+        /* Hysteresis for Low Power Mode */
         write_to_file (
-            "/sys/module/lpm_levels/parameters/lpm_prediction", "N"
+            "/sys/module/lpm_levels/parameters/bias_hyst", "15"
+        );
+
+        /* qcom service locator */
+        write_to_file (
+            "/sys/module/service_locator/parameters/enable", "0"
+        );
+
+        /* Jiffies Until First Frequency Quanta Sampling */
+        write_to_file (
+            "/sys/module/rcutree/parameters/jiffies_till_first_fqs", "1000"
+        );
+
+        /* Jiffies Till Next Frequency Quanta Sampling */
+        write_to_file (
+            "/sys/module/rcutree/parameters/jiffies_till_next_fqs", "1000"
+        );
+
+        /* Priority of RCPU Kernel Threads */
+        write_to_file (
+            "/sys/module/rcutree/parameters/kthread_prio", "1000"
+        );
+
+        /* Whether RCPU stall detection is suppressed for CPUs */
+        write_to_file (
+            "/sys/module/rcupdate/parameters/rcu_cpu_stall_suppress", "1"
+        );
+
+        /* Determines how frequently the kernel polls block devices  */
+        write_to_file (
+            "/sys/module/block/parameters/events_dfl_poll_msecs", "60000"
+        );
+
+        /* Prevents frequent kernel network wakeups */
+        write_to_file (
+            "/proc/sys/net/ipv4/tcp_fastopen", "0"
+        );
+
+        /* Reduce TCP Retransmission Timeouts */
+        write_to_file (
+            "/proc/sys/net/ipv4/tcp_retries2", "60"
+        );
+
+        /* Reduce TCP Time-Wait */
+        write_to_file (
+            "/proc/sys/net/ipv4/tcp_fin_timeout", "5"
         );
     } else {
         /* https://lwn.net/Articles/706374/ */
@@ -254,9 +329,64 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
             "/proc/sys/vm/laptop_mode", "0"
         );
 
-        /* Enable LPM predictions */
+        /* Hysteresis for Low Power Mode */
         write_to_file (
-            "/sys/module/lpm_levels/parameters/lpm_prediction", "Y"
+            "/sys/module/lpm_levels/parameters/bias_hyst", "0"
+        );
+
+        /* qcom service locator */
+        write_to_file (
+            "/sys/module/service_locator/parameters/enable", "1"
+        );
+
+        /* maximum number of RCU grace periods that can be processed in a batch */
+        write_to_file (
+            "/sys/module/rcutree/parameters/blimit", "10"
+        );
+
+        /* delay before the first grace period is started after initialization */
+        write_to_file (
+            "/sys/module/rcutree/parameters/gp_init_delay", "0"
+        );
+
+        /* Jiffies Until First Frequency Quanta Sampling */
+        write_to_file (
+            "/sys/module/rcutree/parameters/jiffies_till_first_fqs", "1"
+        );
+
+        /* Jiffies Till Next Frequency Quanta Sampling */
+        write_to_file (
+            "/sys/module/rcutree/parameters/jiffies_till_next_fqs", "1"
+        );
+
+        /* Priority of RCPU Kernel Threads */
+        write_to_file (
+            "/sys/module/rcutree/parameters/kthread_prio", "1"
+        );
+
+        /* Whether RCPU stall detection is suppressed for CPUs */
+        write_to_file (
+            "/sys/module/rcupdate/parameters/rcu_cpu_stall_suppress", "0"
+        );
+
+        /* Determines how frequently the kernel polls block devices  */
+        write_to_file (
+            "/sys/module/block/parameters/events_dfl_poll_msecs", "2000"
+        );
+
+        /* Restore frequent kernel network wakeups */
+        write_to_file (
+            "/proc/sys/net/ipv4/tcp_fastopen", "1027"
+        );
+
+        /* Restore TCP Retransmission Timeouts */
+        write_to_file (
+            "/proc/sys/net/ipv4/tcp_retries2", "15"
+        );
+
+        /* Restore TCP Time-Wait */
+        write_to_file (
+            "/proc/sys/net/ipv4/tcp_fin_timeout", "60"
         );
     }
 }
