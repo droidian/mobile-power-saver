@@ -15,12 +15,17 @@ void write_to_file (const char *filename,
 {
     FILE *file;
 
-    if (!g_file_test (filename, G_FILE_TEST_EXISTS))
+    if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
+        g_debug ("File doesn't exist: %s", filename);
         return;
+    }
 
     file = fopen(filename, "w");
 
-    g_return_if_fail (file != NULL);
+    if (file == NULL) {
+        g_debug ("Can't write to file: %s", filename);
+        return;
+    }
 
     fprintf (file, "%s", value);
     fclose (file);
