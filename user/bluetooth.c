@@ -435,12 +435,6 @@ bluetooth_set_powersave (Bluetooth *self,
                          gboolean   powersave)
 {
     /* Safely always unset powersave */
-    if (!powersave) {
-        g_message ("Set Bluetooth powersave: 0");
-        set_services_powersave (self, FALSE);
-        set_powersave (self, FALSE);
-        return;
-    }
 
     if (!self->priv->powered || g_list_length (self->priv->connected) > 0)
         return;
@@ -448,7 +442,12 @@ bluetooth_set_powersave (Bluetooth *self,
     if (!can_powersave (self))
         return;
 
-    g_message ("Set Bluetooth powersave: 1");
-    set_powersave (self, TRUE);
-    set_services_powersave (self, TRUE);
+    g_message ("Set Bluetooth powersave: %b", powersave);
+    if (powersave) {
+        set_powersave (self, TRUE);
+        set_services_powersave (self, TRUE);
+    } else {
+        set_services_powersave (self, FALSE);
+        set_powersave (self, FALSE);
+    }
 }
