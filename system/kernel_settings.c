@@ -339,16 +339,6 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
             "/sys/module/service_locator/parameters/enable", "1"
         );
 
-        /* maximum number of RCU grace periods that can be processed in a batch */
-        write_to_file (
-            "/sys/module/rcutree/parameters/blimit", "10"
-        );
-
-        /* delay before the first grace period is started after initialization */
-        write_to_file (
-            "/sys/module/rcutree/parameters/gp_init_delay", "0"
-        );
-
         /* Jiffies Until First Frequency Quanta Sampling */
         write_to_file (
             "/sys/module/rcutree/parameters/jiffies_till_first_fqs", "1"
