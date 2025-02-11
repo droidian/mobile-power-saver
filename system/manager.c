@@ -375,7 +375,7 @@ manager_init (Manager *self)
     self->priv->wifi = WIFI (wifi_new ());
 #endif
 
-    self->priv->screen_off_power_saving = TRUE;
+    self->priv->screen_off_power_saving = FALSE;
     self->priv->suspend_services = FALSE;
 
     self->priv->radio_power_saving = FALSE;
