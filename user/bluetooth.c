@@ -103,7 +103,7 @@ set_services_powersave (Bluetooth *self,
     );
 
     bus_set_value (bus,
-       "suspend-bluetooth",
+       "suspend-bluetooth-services",
        g_variant_new ("b", powersave)
     );
 
