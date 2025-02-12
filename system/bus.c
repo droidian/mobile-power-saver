@@ -17,7 +17,6 @@
 /* signals */
 enum
 {
-    SCREEN_OFF_POWER_SAVING_CHANGED,
     BUS_SETTING_CHANGED,
     LAST_SIGNAL
 };
@@ -126,27 +125,16 @@ handle_method_call (GDBusConnection       *connection,
         g_autoptr (GVariant) value;
 
         g_variant_get (parameters, "(&sv)", &setting, &value);
-        if (g_strcmp0 (setting, "screen-off-power-saving") == 0) {
-            g_signal_emit(
-                self,
-                signals[SCREEN_OFF_POWER_SAVING_CHANGED],
-                0,
-                g_variant_get_boolean (value)
-            );
-        } else {
-            g_signal_emit(
-                self,
-                signals[BUS_SETTING_CHANGED],
-                0,
-                g_variant_new ("(&sv)", setting, g_steal_pointer (&value))
-            );
-        }
+        g_signal_emit(
+            self,
+            signals[BUS_SETTING_CHANGED],
+            0,
+            g_variant_new ("(&sv)", setting, g_steal_pointer (&value))
+        );
 
         g_dbus_method_invocation_return_value (
             invocation, NULL
         );
-
-        return;
     } else if (g_strcmp0 (method_name, "StopDozing") == 0) {
         g_dbus_connection_emit_signal (
             self->priv->adishatz_connection,
@@ -161,8 +149,6 @@ handle_method_call (GDBusConnection       *connection,
         g_dbus_method_invocation_return_value (
             invocation, NULL
         );
-
-        return;
     }
 }
 
@@ -367,18 +353,6 @@ bus_class_init (BusClass *klass)
     object_class = G_OBJECT_CLASS (klass);
     object_class->dispose = bus_dispose;
     object_class->finalize = bus_finalize;
-
-    signals[SCREEN_OFF_POWER_SAVING_CHANGED] = g_signal_new (
-        "screen-off-power-saving-changed",
-        G_OBJECT_CLASS_TYPE (object_class),
-        G_SIGNAL_RUN_LAST,
-        0,
-        NULL, NULL, NULL,
-        G_TYPE_NONE,
-        1,
-        G_TYPE_BOOLEAN
-    );
-
 
     signals[BUS_SETTING_CHANGED] = g_signal_new (
         "bus-setting-changed",

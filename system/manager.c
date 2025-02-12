@@ -273,7 +273,7 @@ on_bus_setting_changed (Bus      *bus,
         self->priv->suspend_bluetooth_services = get_list_from_variant (
             inner_value
         );
-    } else if (g_strcmp0 (setting, "suspend-bluetooth") == 0) {
+    } else if (g_strcmp0 (setting, "suspend-bluetooth-services") == 0) {
         gboolean suspend_bluetooth = g_variant_get_boolean (inner_value);
 
         if (suspend_bluetooth) {
@@ -375,7 +375,7 @@ manager_init (Manager *self)
     self->priv->wifi = WIFI (wifi_new ());
 #endif
 
-    self->priv->screen_off_power_saving = TRUE;
+    self->priv->screen_off_power_saving = FALSE;
     self->priv->suspend_services = FALSE;
 
     self->priv->radio_power_saving = FALSE;

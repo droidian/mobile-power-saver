@@ -103,7 +103,7 @@ set_services_powersave (Bluetooth *self,
     );
 
     bus_set_value (bus,
-       "suspend-bluetooth",
+       "suspend-bluetooth-services",
        g_variant_new ("b", powersave)
     );
 
@@ -434,21 +434,21 @@ void
 bluetooth_set_powersave (Bluetooth *self,
                          gboolean   powersave)
 {
-    /* Safely always unset powersave */
-    if (!powersave) {
-        g_message ("Set Bluetooth powersave: 0");
+    gboolean do_powersave;
+
+    if (!self->priv->powered)
+        return;
+
+    do_powersave = powersave &&
+                   can_powersave (self) &&
+                   g_list_length (self->priv->connected) == 0;
+
+    g_message ("Set Bluetooth powersave: %b", do_powersave);
+    if (do_powersave) {
+        set_powersave (self, TRUE);
+        set_services_powersave (self, TRUE);
+    } else {
         set_services_powersave (self, FALSE);
         set_powersave (self, FALSE);
-        return;
     }
-
-    if (!self->priv->powered || g_list_length (self->priv->connected) > 0)
-        return;
-
-    if (!can_powersave (self))
-        return;
-
-    g_message ("Set Bluetooth powersave: 1");
-    set_powersave (self, TRUE);
-    set_services_powersave (self, TRUE);
 }
