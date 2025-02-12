@@ -74,6 +74,12 @@
       <description>When screen is turned off, move radio devices to lower data mode.</description>
     </key>
 
+    <key name="blank-screen-on-call-accepted" type="b">
+      <default>false</default>
+      <summary>Turn off the screen when a call is accepted</summary>
+      <description>When a call is accepted, the phone screen will turn off automatically.</description>
+    </key>
+
     <key name="devfreq-blacklist" type="as">
       <default>[]</default>
       <summary>[MAINTAINER ONLY] Do not set these devfreq devices to powersave</summary>

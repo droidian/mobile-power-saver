@@ -54,6 +54,7 @@ gboolean        settings_can_freeze_app                 (Settings   *self,
 gboolean        settings_suspend_services               (Settings   *self);
 GList          *settings_get_suspend_services_blacklist (Settings   *self);
 GList          *settings_get_suspend_bluetooth_services (Settings   *self);
+gboolean        settings_get_blank_screen_on_call       (Settings   *self);
 
 G_END_DECLS
 
