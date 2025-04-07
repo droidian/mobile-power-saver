@@ -7,6 +7,7 @@
 
 #include <gio/gio.h>
 
+#include "network_manager.h"
 #include "modem.h"
 #include "../common/define.h"
 #include "../common/utils.h"
@@ -25,6 +26,22 @@ G_DEFINE_TYPE_WITH_CODE (
     G_TYPE_OBJECT,
     G_ADD_PRIVATE (Modem)
 )
+
+static void
+powersave_state_message (Modem *self) {
+
+    if ((self->priv->modem_powersave & MODEM_POWERSAVE_ENABLED) ==
+                                                    MODEM_POWERSAVE_ENABLED) {
+        if ((self->priv->modem_powersave | MODEM_POWERSAVE_WIFI) ==
+                                                    MODEM_POWERSAVE_WIFI) {
+            g_message ("Modem powersave: WiFi");
+        } else {
+            g_message ("Modem powersave: Dozing");
+        }
+    } else {
+        g_message ("Modem powersave: Disabled");
+    }
+}
 
 static void
 modem_dispose (GObject *modem)
@@ -70,4 +87,76 @@ modem_new (void)
     modem = g_object_new (TYPE_MODEM, NULL);
 
     return modem;
+}
+
+/**
+ * modem_set_powersave:
+ *
+ * Set modem devices to powersave
+ *
+ * @param #Modem
+ * @param powersave: True to enable powersave
+ * @param modem_powersave: #ModemPowersave flags
+ *
+ * Returns: TRUE if new settings should be applied
+ */
+gboolean
+modem_set_powersave (Modem          *self,
+                     gboolean        powersave,
+                     ModemPowersave  modem_powersave)
+{
+    ModemPowersave modem_powersave_tmp = self->priv->modem_powersave;
+    gboolean current_powersave = (
+        self->priv->modem_powersave & MODEM_POWERSAVE_ENABLED
+    ) == MODEM_POWERSAVE_ENABLED;
+
+    g_debug ("modem_set_powersave: %b: %d", powersave, modem_powersave);
+
+    if (powersave) {
+        modem_powersave_tmp |= modem_powersave;
+    } else {
+        modem_powersave_tmp &= ~modem_powersave;
+    }
+
+    /* Nothing changed, do not update */
+    if (modem_powersave_tmp == self->priv->modem_powersave &&
+            current_powersave == powersave)
+        return FALSE;
+
+    self->priv->modem_powersave = modem_powersave_tmp;
+
+    /* Dozing disabled but WiFi enabled:
+     * If we are connected to a WiFi network and device is leaving dozing,
+     * powersaving may already be suspended (low signal).
+     */
+    if ((modem_powersave & MODEM_POWERSAVE_DOZING) == MODEM_POWERSAVE_DOZING &&
+        (modem_powersave_tmp & MODEM_POWERSAVE_WIFI) == MODEM_POWERSAVE_WIFI &&
+            powersave != current_powersave) {
+        return FALSE;
+    }
+
+    if (powersave)
+        self->priv->modem_powersave |= MODEM_POWERSAVE_ENABLED;
+    else if (self->priv->modem_powersave == MODEM_POWERSAVE_ENABLED)
+        self->priv->modem_powersave &= ~MODEM_POWERSAVE_ENABLED;
+
+    powersave_state_message (self);
+
+    return TRUE;
+}
+
+/**
+ * modem_get_powersave:
+ *
+ * Get modem devices powersaving flags
+ *
+ * @param #Modem
+ *
+ * Returns: #ModemPowersave
+ */
+ModemPowersave
+modem_get_powersave (Modem *self)
+{
+    return self->priv->modem_powersave;
+
 }
