@@ -205,56 +205,6 @@ get_connection_type (NetworkManager *self)
     return inner_value;
 }
 
-static GVariant *
-get_access_point_bandwidth (NetworkManager *self,
-                            const char     *access_point)
-{
-    g_autoptr (GDBusProxy) properties_bus_proxy;
-    g_autoptr (GVariant) value = NULL;
-    g_autoptr (GError) error = NULL;
-    GVariant *inner_value = NULL;
-
-    properties_bus_proxy = g_dbus_proxy_new_for_bus_sync (
-        G_BUS_TYPE_SYSTEM,
-        0,
-        NULL,
-        NETWORK_MANAGER_DBUS_NAME,
-        access_point,
-        DBUS_PROPERTIES_INTERFACE,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        g_warning (
-            "Can't read properties from access point: %s", error->message
-        );
-        return NULL;
-    }
-
-    value = g_dbus_proxy_call_sync (
-        properties_bus_proxy,
-        "Get",
-        g_variant_new ("(ss)",
-                       NETWORK_MANAGER_DBUS_AP,
-                       "Bandwidth"
-        ),
-        G_DBUS_CALL_FLAGS_NONE,
-        -1,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        /* No error message, this happens everytime we changed AP */
-        return NULL;
-    }
-
-    g_variant_get (value, "(v)", &inner_value);
-
-    return inner_value;
-}
-
 static void
 set_connection_type (NetworkManager *self,
                      GVariant       *value)
@@ -324,20 +274,8 @@ on_network_manager_proxy_properties (GDBusProxy  *proxy,
 
             g_variant_get (value, "&o", &object_path);
 
-            if (g_strcmp0 (object_path, "/") != 0) {
-                g_autoptr (GVariant) bandwidth;
-
-                /* Really? I'm missing something on how to detect AP */
-                bandwidth = get_access_point_bandwidth (self, object_path);
-                if (bandwidth != NULL) {
-                    gboolean access_point = g_variant_get_uint32 (bandwidth) == 0;
-
-                    if (self->priv->access_point != access_point) {
-                        self->priv->access_point = access_point;
-                        g_message ("Access point state: %b", access_point);
-                    }
-                }
-            }
+            self->priv->access_point = g_strcmp0 (object_path, "/") != 0;
+            g_debug ("Access point: %b", self->priv->access_point);
         }
         g_variant_unref (value);
     }
