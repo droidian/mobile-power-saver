@@ -15,9 +15,20 @@
 #include <gio/gio.h>
 
 #include "wifi.h"
+#include "../common/define.h"
 #include "../common/utils.h"
 
+#define WPA_DBUS_NAME       "fi.w1.wpa_supplicant1"
+#define WPA_DBUS_PATH       "/fi/w1/wpa_supplicant1/Interfaces/0"
+#define WPA_DBUS_INTERFACE  "fi.w1.wpa_supplicant1.Interface"
+
+#define WPA_DEFAULT_SCAN_INTERVAL 5
+#define WPA_POWERSAVE_SCAN_INTERVAL 300
+
+
 struct _WiFiPrivate {
+    GDBusProxy *wpa_proxy;
+
     struct nl_sock *socket;
 
     gint ifindex;
@@ -117,6 +128,10 @@ init_wifi_interfaces(WiFi *self)
 static void
 wifi_dispose (GObject *wifi)
 {
+    WiFi *self = WIFI (wifi);
+
+    g_clear_object (&self->priv->wpa_proxy);
+
     G_OBJECT_CLASS (wifi_parent_class)->dispose (wifi);
 }
 
@@ -143,7 +158,24 @@ wifi_class_init (WiFiClass *klass)
 static void
 wifi_init (WiFi *self)
 {
+    g_autoptr (GError) error = NULL;
+
     self->priv = wifi_get_instance_private (self);
+
+    self->priv->wpa_proxy = g_dbus_proxy_new_for_bus_sync (
+        G_BUS_TYPE_SYSTEM,
+        0,
+        NULL,
+        WPA_DBUS_NAME,
+        WPA_DBUS_PATH,
+        DBUS_PROPERTIES_INTERFACE,
+        NULL,
+        &error
+    );
+
+    if (error != NULL)
+        g_error ("Can't contact wpa_supplicant: %s", error->message);
+
     self->priv->ifindex = -1;
 
     self->priv->socket = nl_socket_alloc ();
@@ -192,7 +224,33 @@ void
 wifi_set_powersave (WiFi     *self,
                     gboolean  powersave)
 {
+    g_autoptr (GError) error = NULL;
     struct nl_msg *msg  = NULL;
+    guint interval;
+
+    if (powersave)
+        interval = WPA_POWERSAVE_SCAN_INTERVAL;
+    else
+        interval = WPA_DEFAULT_SCAN_INTERVAL;
+
+    g_dbus_proxy_call_sync (
+        self->priv->wpa_proxy,
+        "Set",
+        g_variant_new (
+            "(ssv)",
+            WPA_DBUS_INTERFACE,
+            "ScanInterval",
+            g_variant_new ("i", interval)
+        ),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &error
+    );
+
+    if (error != NULL) {
+        g_warning ("Can't set wpa scan interval: %s", error->message);
+    }
 
     g_return_if_fail (self->priv->socket != NULL);
 
