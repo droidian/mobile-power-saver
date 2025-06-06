@@ -358,7 +358,9 @@ on_proxy_signal (GDBusProxy *proxy,
         } else if (g_strcmp0 (name, "State") == 0) {
             const char *state = g_variant_get_string(value, FALSE);
 
-            if (g_strcmp0 (state, "active") == 0) {
+            if (g_strcmp0 (state, "active") == 0 ||
+                    g_strcmp0 (state, "alerting") == 0 ||
+                    g_strcmp0 (state, "disconnected") == 0) {
                 g_timeout_add (
                     500,
                     (GSourceFunc) blank_screen,
