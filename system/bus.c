@@ -5,6 +5,7 @@
 #include <gio/gio.h>
 
 #include "bus.h"
+#include "config.h"
 #include "../common/define.h"
 #include "../common/utils.h"
 
@@ -174,6 +175,9 @@ handle_get_property (GDBusConnection *connection,
     /* On mobile devices, we use in kernel mitigation methods */
     if (g_strcmp0 (property_name, "PerformanceDegraded") == 0)
         return g_variant_new_boolean (FALSE);
+
+    if (g_strcmp0 (property_name, "Version") == 0)
+        return g_variant_new_string (PACKAGE_VERSION);
 
     return NULL;
 }
