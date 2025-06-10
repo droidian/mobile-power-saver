@@ -30,7 +30,7 @@ install_data(
   install_dir: dbus_conf_dir
 )
 install_data(
-  'net.hadess.PowerProfiles.conf',
+  'org.freedesktop.UPower.PowerProfiles.conf',
   install_dir: dbus_conf_dir
 )
 
