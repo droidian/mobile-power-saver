@@ -4,7 +4,7 @@
 <node>
 
   <!--
-      net.hadess.PowerProfiles:
+      org.freedesktop.UPower.PowerProfiles:
       @short_description: Power Profiles daemon
 
       The power-profiles-daemon API is meant to be used by parts of the OS or
@@ -21,9 +21,9 @@
       existing projects is explained <ulink href=" https://gitlab.freedesktop.org/hadess/power-profiles-daemon/-/blob/master/README.md">
       in the project's README file</ulink>.
 
-      The object path will be "/net/hadess/PowerProfiles".
+      The object path will be "org.freedesktop.UPower.PowerProfiles".
   -->
-  <interface name="net.hadess.PowerProfiles">
+  <interface name="org.freedesktop.UPower.PowerProfiles">
 
     <!--
         HoldProfile:
@@ -39,7 +39,7 @@
         When conflicting profiles are requested to be held, the 'power-saver' profile
         will be activated in preference to the 'performance' profile.
 
-        Those holds will be automatically cancelled if the user manually switches
+        Those holds will be automatically canceled if the user manually switches
         to another profile, and the "ProfileReleased" signal will be emitted.
     -->
     <method name="HoldProfile">
@@ -56,6 +56,18 @@
     -->
     <method name="ReleaseProfile">
       <arg name="cookie" type="u" direction="in"/>
+    </method>
+
+    <!--
+        SetActionEnabled:
+
+        This sets a particular action to be enabled or disabled. The daemon
+        will only allow the action to be executed on power state changes if
+        it is enabled.
+    -->
+    <method name="SetActionEnabled">
+      <arg name="action" type="s" direction="in"/>
+      <arg name="enabled" type="b" direction="in"/>
     </method>
 
     <!--
@@ -90,7 +102,7 @@
         This will be set if the performance power profile is running in degraded
         mode, with the value being used to identify the reason for that degradation.
         As new reasons can be added, it is recommended that front-ends show a generic
-        reason if they do not recognise the value. Possible values are:
+        reason if they do not recognize the value. Possible values are:
         - "lap-detected" (the computer is sitting on the user's lap)
         - "high-operating-temperature" (the computer is close to overheating)
         - "" (the empty string, if not performance is not degraded)
@@ -127,6 +139,17 @@
     <property name="Actions" type="as" access="read"/>
 
     <!--
+        ActionsInfo:
+
+        An array of key-pair values representing each action. The key named
+        "Description" (s) is a human-readable description of the action.
+        The key named "Action" (s) is the name of the action.
+        The key named "Enabled" (b) is a boolean indicating whether the action
+        is enabled or not.
+    -->
+    <property name="ActionsInfo" type="aa{sv}" access="read"/>
+
+    <!--
       ActiveProfileHolds:
 
       A list of dictionaries representing the current profile holds.
@@ -135,6 +158,21 @@
       passed to the HoldProfile() method.
     -->
     <property name="ActiveProfileHolds" type="aa{sv}" access="read"/>
+
+    <!--
+        Version:
+
+        The version of the power-profiles-daemon software.
+    -->
+    <property name="Version" type="s" access="read"/>
+
+    <!--
+        BatteryAware:
+
+        Whether the daemon is using upower to detect battery and AC
+        adapter changes.
+    -->
+    <property name="BatteryAware" type="b" access="readwrite"/>
 
   </interface>
 </node>
