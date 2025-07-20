@@ -188,28 +188,6 @@ on_bluez_object_added (GDBusObjectManager *object_manager,
         return;
     }
 
-    value = g_dbus_proxy_get_cached_property (proxy, "Paired");
-    if (!value) {
-        g_warning ("Paired property not available.");
-        return;
-    }
-
-    g_variant_get (value, "b", &paired);
-
-    if (!paired)
-        return;
-
-    g_variant_unref (value);
-    value = g_dbus_proxy_get_cached_property (proxy, "Connected");
-    g_variant_get (value, "b", &connected);
-
-    if (connected) {
-        g_message ("Connected bluetooth device: %s", path);
-        self->priv->connected = g_list_append (
-            self->priv->connected, g_strdup (path)
-        );
-    }
-
     g_signal_connect (
         proxy,
         "g-properties-changed",
@@ -263,10 +241,8 @@ on_bluez_proxy_properties (GDBusProxy  *proxy,
             if (!self->priv->powersaving)
                 g_variant_get (value, "b", &self->priv->powered);
         } else if (g_strcmp0 (property, "Connected") == 0) {
-            gboolean connected;
+            gboolean connected = g_variant_get_boolean (value);
             const char *path = g_dbus_proxy_get_object_path (proxy);
-
-            g_variant_get (value, "b", &connected);
 
             if (connected) {
                 g_message ("Connected bluetooth device: %s", path);
