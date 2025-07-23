@@ -165,8 +165,6 @@ on_bluez_object_added (GDBusObjectManager *object_manager,
     );
     g_autoptr (GVariant) value = NULL;
     g_autoptr (GError) error = NULL;
-    gboolean connected;
-    gboolean paired;
 
     if (!g_regex_match (regex, path, G_REGEX_MATCH_DEFAULT, NULL)) {
         return;

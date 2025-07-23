@@ -10,7 +10,6 @@
 #include "dozing.h"
 #include "modem_ofono_device.h"
 #include "network_manager.h"
-#include "settings.h"
 #include "../common/define.h"
 #include "../common/utils.h"
 
@@ -19,11 +18,6 @@
 #define OFONO_RADIO_SETTINGS_DBUS_INTERFACE       "org.ofono.RadioSettings"
 #define OFONO_NETWORK_REGISTRATION_DBUS_INTERFACE "org.ofono.NetworkRegistration"
 #define OFONO_VOICE_CALL_MANAGER_DBUS_INTERFACE   "org.ofono.VoiceCallManager"
-#define OFONO_VOICE_CALL_DBUS_INTERFACE           "org.ofono.VoiceCall"
-
-#define SCREEN_SAVER_NAME                         "org.gnome.ScreenSaver"
-#define SCREEN_SAVER_PATH                         "/org/gnome/ScreenSaver"
-#define SCREEN_SAVER_INTERFACE                    "org.gnome.ScreenSaver"
 
 #define POWERSAVING_MIN_STRENGTH 5
 #define POWERSAVING_CELLID_DELTA 1000 * 1000 * 5
@@ -48,8 +42,6 @@ struct _ModemOfonoDevicePrivate {
     GDBusProxy *modem_ofono_device_radio_proxy;
     GDBusProxy *modem_ofono_device_network_proxy;
     GDBusProxy *modem_ofono_voice_call_manager_proxy;
-    GDBusProxy *modem_ofono_voice_call_proxy;
-    GDBusProxy *screen_saver;
 
     char *device_path;
 
@@ -103,24 +95,6 @@ set_technology_preference (ModemOfonoDevice *self,
     }
 }
 
-static gboolean
-blank_screen (ModemOfonoDevice *self)
-{
-    if (settings_get_blank_screen_on_call (settings_get_default ())) {
-        g_dbus_proxy_call_sync (
-            self->priv->screen_saver,
-            "SetActive",
-            g_variant_new ("(b)", TRUE),
-            G_DBUS_CALL_FLAGS_NONE,
-           -1,
-            NULL,
-            NULL
-        );
-    }
-
-    return FALSE;
-}
-
 static void
 init_radio (ModemOfonoDevice *self)
 {
@@ -166,41 +140,6 @@ init_radio (ModemOfonoDevice *self)
     );
 
     g_signal_emit_by_name(self, "device-ready", NULL);
-}
-
-static void
-init_voice_call_interface (ModemOfonoDevice *self,
-                           GVariant         *parameters)
-{
-    const char *object_path;
-    g_autoptr (GError) error = NULL;
-
-    g_variant_get (parameters, "(&oa{sv})", &object_path, NULL);
-
-    g_clear_object (&self->priv->modem_ofono_voice_call_proxy);
-
-    self->priv->modem_ofono_voice_call_proxy = g_dbus_proxy_new_for_bus_sync (
-        G_BUS_TYPE_SYSTEM,
-        0,
-        NULL,
-        OFONO_DBUS_NAME,
-        object_path,
-        OFONO_VOICE_CALL_DBUS_INTERFACE,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        g_warning ("Can't connect to OFono voice call: %s", error->message);
-        return;
-    }
-
-    g_signal_connect (
-        self->priv->modem_ofono_voice_call_proxy,
-        "g-signal",
-        G_CALLBACK (on_proxy_signal),
-        self
-    );
 }
 
 static void
@@ -324,7 +263,6 @@ on_proxy_signal (GDBusProxy *proxy,
 
     if (g_strcmp0 (signal_name, "CallAdded") == 0) {
         dozing_stop (dozing_get_default());
-        init_voice_call_interface (self, parameters);
     } else if (g_strcmp0 (signal_name, "PropertyChanged") == 0) {
         const char *name;
         g_autoptr (GVariant) value = NULL;
@@ -354,18 +292,6 @@ on_proxy_signal (GDBusProxy *proxy,
             if (strength < POWERSAVING_MIN_STRENGTH) {
                 g_message ("Low signal, disabling modem powersave");
                 apply_powersave (self, FALSE);
-            }
-        } else if (g_strcmp0 (name, "State") == 0) {
-            const char *state = g_variant_get_string(value, FALSE);
-
-            if (g_strcmp0 (state, "active") == 0 ||
-                    g_strcmp0 (state, "alerting") == 0 ||
-                    g_strcmp0 (state, "disconnected") == 0) {
-                g_timeout_add (
-                    500,
-                    (GSourceFunc) blank_screen,
-                    self
-                );
             }
         }
     }
@@ -481,9 +407,6 @@ modem_ofono_device_dispose (GObject *modem_ofono_device)
     g_clear_object (&self->priv->modem_ofono_device_radio_proxy);
     g_clear_object (&self->priv->modem_ofono_device_network_proxy);
     g_clear_object (&self->priv->modem_ofono_voice_call_manager_proxy);
-    g_clear_object (&self->priv->modem_ofono_voice_call_proxy);
-
-    g_clear_object (&self->priv->screen_saver);
 
     G_OBJECT_CLASS (modem_ofono_device_parent_class)->dispose (modem_ofono_device);
 }
@@ -547,7 +470,6 @@ modem_ofono_device_init (ModemOfonoDevice *self)
     self->priv->modem_ofono_device_radio_proxy = NULL;
     self->priv->modem_ofono_device_network_proxy = NULL;
     self->priv->modem_ofono_voice_call_manager_proxy = NULL;
-    self->priv->modem_ofono_voice_call_proxy = NULL;
 
     /* 2G is deprecated in many countries */
     self->priv->blacklist = MM_MODEM_MODE_CS | MM_MODEM_MODE_2G;
@@ -556,24 +478,6 @@ modem_ofono_device_init (ModemOfonoDevice *self)
     self->priv->powersaving_applied = FALSE;
 
     self->priv->timeout_id = 0;
-
-
-    self->priv->screen_saver = g_dbus_proxy_new_for_bus_sync (
-        G_BUS_TYPE_SESSION,
-        0,
-        NULL,
-        SCREEN_SAVER_NAME,
-        SCREEN_SAVER_PATH,
-        SCREEN_SAVER_INTERFACE,
-        NULL,
-        &error
-    );
-
-    if (error != NULL) {
-        g_warning (
-            "Can't connect to screensaver interface: %s", error->message
-        );
-    }
 }
 
 /**

@@ -311,20 +311,3 @@ settings_get_suspend_bluetooth_services (Settings *self)
     }
     return services;
 }
-
-/**
- * settings_get_blank_screen_on_call:
- *
- * Check if screen should be turned off when a call is accepted
- *
- * @self: a #Settings
- *
- * Returns: TRUE if services should be suspended
- */
-gboolean
-settings_get_blank_screen_on_call (Settings   *self)
-{
-    return g_settings_get_boolean (
-        self->priv->settings, "blank-screen-on-call-accepted"
-    );
-}
