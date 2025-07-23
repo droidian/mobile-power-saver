@@ -2,6 +2,6 @@
 <gresources>
 	<gresource prefix="/org/adishatz/Mps">
 		<file preprocess="xml-stripblanks">org.adishatz.Mps.xml</file>
-	  <file preprocess="xml-stripblanks">net.hadess.PowerProfiles.xml</file>
+	  <file preprocess="xml-stripblanks">org.freedesktop.UPower.PowerProfiles.xml</file>
 	</gresource>
 </gresources>

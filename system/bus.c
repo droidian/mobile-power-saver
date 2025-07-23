@@ -5,14 +5,15 @@
 #include <gio/gio.h>
 
 #include "bus.h"
+#include "config.h"
 #include "../common/define.h"
 #include "../common/utils.h"
 
 #define ADISHATZ_DBUS_NAME "org.adishatz.Mps"
 #define ADISHATZ_DBUS_PATH "/org/adishatz/Mps"
 
-#define HADESS_DBUS_NAME "net.hadess.PowerProfiles"
-#define HADESS_DBUS_PATH "/net/hadess/PowerProfiles"
+#define UPOWERPP_DBUS_NAME "org.freedesktop.UPower.PowerProfiles"
+#define UPOWERPP_DBUS_PATH "/org/freedesktop/UPower/PowerProfiles"
 
 /* signals */
 enum
@@ -25,13 +26,13 @@ static guint signals[LAST_SIGNAL];
 
 struct _BusPrivate {
     GDBusConnection *adishatz_connection;
-    GDBusConnection *hadess_connection;
+    GDBusConnection *upowerpp_connection;
 
     GDBusNodeInfo *adishatz_introspection_data;
-    GDBusNodeInfo *hadess_introspection_data;
+    GDBusNodeInfo *upowerpp_introspection_data;
 
     guint adishatz_owner_id;
-    guint hadess_owner_id;
+    guint upowerpp_owner_id;
 
     PowerProfile power_profile;
 };
@@ -175,6 +176,9 @@ handle_get_property (GDBusConnection *connection,
     if (g_strcmp0 (property_name, "PerformanceDegraded") == 0)
         return g_variant_new_boolean (FALSE);
 
+    if (g_strcmp0 (property_name, "Version") == 0)
+        return g_variant_new_string (PACKAGE_VERSION);
+
     return NULL;
 }
 
@@ -212,7 +216,7 @@ static const GDBusInterfaceVTable adishatz_interface_vtable = {
     handle_set_property
 };
 
-static const GDBusInterfaceVTable hadess_interface_vtable = {
+static const GDBusInterfaceVTable upowerpp_interface_vtable = {
     handle_method_call,
     handle_get_property,
     handle_set_property
@@ -235,9 +239,9 @@ on_bus_acquired (GDBusConnection *connection,
         introspection_data = self->priv->adishatz_introspection_data;
         vtable = &adishatz_interface_vtable;
     } else {
-        dbus_path = HADESS_DBUS_PATH;
-        introspection_data = self->priv->hadess_introspection_data;
-        vtable = &hadess_interface_vtable;
+        dbus_path = UPOWERPP_DBUS_PATH;
+        introspection_data = self->priv->upowerpp_introspection_data;
+        vtable = &upowerpp_interface_vtable;
     }
 
     registration_id = g_dbus_connection_register_object (
@@ -253,7 +257,7 @@ on_bus_acquired (GDBusConnection *connection,
     if (is_adishatz)
         self->priv->adishatz_connection = g_object_ref (connection);
     else
-        self->priv->hadess_connection = g_object_ref (connection);
+        self->priv->upowerpp_connection = g_object_ref (connection);
 
     g_assert (registration_id > 0);
 }
@@ -323,18 +327,18 @@ bus_dispose (GObject *bus)
         g_bus_unown_name (self->priv->adishatz_owner_id);
     }
 
-    if (self->priv->hadess_owner_id != 0) {
-        g_bus_unown_name (self->priv->hadess_owner_id);
+    if (self->priv->upowerpp_owner_id != 0) {
+        g_bus_unown_name (self->priv->upowerpp_owner_id);
     }
 
     g_clear_pointer (
       &self->priv->adishatz_introspection_data, g_dbus_node_info_unref
     );
     g_clear_pointer (
-      &self->priv->hadess_introspection_data, g_dbus_node_info_unref
+      &self->priv->upowerpp_introspection_data, g_dbus_node_info_unref
     );
     g_clear_object (&self->priv->adishatz_connection);
-    g_clear_object (&self->priv->hadess_connection);
+    g_clear_object (&self->priv->upowerpp_connection);
 
     G_OBJECT_CLASS (bus_parent_class)->dispose (bus);
 }
@@ -378,16 +382,16 @@ bus_init (Bus *self)
         self
     );
 
-    self->priv->hadess_introspection_data = bus_init_path (
-        HADESS_DBUS_NAME,
-        "/org/adishatz/Mps/net.hadess.PowerProfiles.xml",
-        &self->priv->hadess_owner_id,
+    self->priv->upowerpp_introspection_data = bus_init_path (
+        UPOWERPP_DBUS_NAME,
+        "/org/adishatz/Mps/org.freedesktop.UPower.PowerProfiles.xml",
+        &self->priv->upowerpp_owner_id,
         self
     );
 
     self->priv->power_profile = POWER_PROFILE_BALANCED;
     self->priv->adishatz_connection = NULL;
-    self->priv->hadess_connection = NULL;
+    self->priv->upowerpp_connection = NULL;
 }
 
 /**
