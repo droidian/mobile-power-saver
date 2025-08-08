@@ -5,4 +5,4 @@ suspend-system-services-blacklist=['dbus.service', 'systemd-resolved.service', '
 suspend-system-bluetooth-services=['bluebinder.service', 'bluetooth.service']
 suspend-user-bluetooth-services=['mpris-proxy.service', 'obex.service']
 cpuset-topapp=['mobi.phosh.Shell.service']
-cpuset-background-processes=['qcrild', 'ofonod', 'ofono2mm']
+cpuset-background-processes=['qcrild', 'ofonod', 'ofono2mm', 'batterysecret', 'sscrpcd', 'ipacm-diag', 'sensors.qti', 'vendor.qti.hardware.sensorscalibrate@1.0-service', 'android.hardware.sensors@1.0-service', 'rmt_storage', 'tftp_server']
