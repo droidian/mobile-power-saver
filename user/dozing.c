@@ -25,28 +25,26 @@
 
 #define DOZING_PRE_SLEEP          30
 #define DOZING_LIGHT_SLEEP        300
-#define DOZING_LIGHT_MAINTENANCE  20
+#define DOZING_LIGHT_MAINTENANCE  30
 #define DOZING_MEDIUM_SLEEP       600
-#define DOZING_MEDIUM_MAINTENANCE 40
+#define DOZING_MEDIUM_MAINTENANCE 45
 #define DOZING_FULL_SLEEP         1200
 #define DOZING_FULL_MAINTENANCE   60
 #define MODEM_APPLY_DELAY 500
 
 enum DozingType {
-    DOZING_LIGHT,
     DOZING_LIGHT_1,
     DOZING_LIGHT_2,
     DOZING_LIGHT_3,
     DOZING_LIGHT_4,
     DOZING_LIGHT_5,
-    DOZING_LIGHT_6, /* 30 minutes */
-    DOZING_MEDIUM,
+    DOZING_LIGHT_6, /* ~= 30 minutes */
     DOZING_MEDIUM_1,
     DOZING_MEDIUM_2,
     DOZING_MEDIUM_3,
     DOZING_MEDIUM_4,
     DOZING_MEDIUM_5,
-    DOZING_MEDIUM_6, /* 1 hour */
+    DOZING_MEDIUM_6, /* ~= 1 hour */
     DOZING_FULL
 };
 
@@ -79,7 +77,7 @@ static gboolean unfreeze_apps (Dozing *self);
 static guint
 get_maintenance (Dozing *self)
 {
-    if (self->priv->type < DOZING_MEDIUM)
+    if (self->priv->type < DOZING_MEDIUM_1)
         return DOZING_LIGHT_MAINTENANCE;
     else if (self->priv->type < DOZING_FULL)
         return DOZING_MEDIUM_MAINTENANCE;
@@ -90,7 +88,7 @@ get_maintenance (Dozing *self)
 static guint
 get_sleep (Dozing *self)
 {
-    if (self->priv->type < DOZING_MEDIUM)
+    if (self->priv->type < DOZING_MEDIUM_1)
         return DOZING_LIGHT_SLEEP;
     else if (self->priv->type < DOZING_FULL)
         return DOZING_MEDIUM_SLEEP;
@@ -371,7 +369,7 @@ dozing_init (Dozing *self)
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SESSION));
 
     self->priv->apps = NULL;
-    self->priv->type = DOZING_LIGHT;
+    self->priv->type = DOZING_LIGHT_1;
 
     self->priv->radio_power_saving = settings_get_radio_powersaving (
         settings_get_default()
@@ -448,7 +446,7 @@ dozing_start (Dozing  *self)
 
     self->priv->apps = get_applications();
 
-    self->priv->type = DOZING_LIGHT;
+    self->priv->type = DOZING_LIGHT_1;
     self->priv->timeout_id = g_timeout_add_seconds (
         DOZING_PRE_SLEEP,
         (GSourceFunc) freeze_apps,
