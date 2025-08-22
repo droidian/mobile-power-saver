@@ -53,9 +53,9 @@ void            processes_resume                       (Processes  *self,
 void            processes_set_cpuset                   (Processes  *self,
                                                         GList      *processes,
                                                         CpuSet     cpuset);
-void            processes_set_services_cpuset          (Processes  *self,
+void            processes_set_cgroup_cpuset            (Processes  *self,
                                                         const char *cgroup_path,
-                                                        GList      *services,
+                                                        GList      *items,
                                                         CpuSet      cpuset);
 void            processes_cpuset_set_blacklist         (Processes  *self,
                                                         GList      *blacklist);

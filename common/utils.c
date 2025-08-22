@@ -97,6 +97,38 @@ GList *get_cgroup_services (const char *path)
     return services;
 }
 
+GList *get_cgroup_apps (const char *path)
+{
+    g_autoptr (GDir) sys_dir = NULL;
+
+    const char *cgroup_dir;
+    GList *apps = NULL;
+
+    sys_dir = g_dir_open (path, 0, NULL);
+    if (sys_dir == NULL) {
+        g_warning ("Can't find cgroup: %s", path);
+        return NULL;
+    }
+
+    while ((cgroup_dir = g_dir_read_name (sys_dir)) != NULL) {
+        g_autofree char *cgroup = NULL;
+
+        if (g_str_has_suffix (cgroup_dir, ".scope")) {
+            cgroup = g_build_filename (
+                path, cgroup_dir, "cgroup.procs", NULL
+            );
+
+            if (!g_file_test (cgroup, G_FILE_TEST_EXISTS)) {
+                g_warning ("cgroup not found: %s", cgroup);
+                continue;
+            }
+
+            apps = g_list_prepend (apps, g_strdup (cgroup_dir));
+        }
+    }
+    return apps;
+}
+
 GList*
 get_cgroup_slices (const char *path)
 {

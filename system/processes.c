@@ -304,24 +304,25 @@ void  processes_set_cpuset (Processes *self,
 }
 
 /**
- * processes_set_services_cpuset:
+ * processes_set_cgroup_cpuset:
  *
  * Move service to background cpuset
  *
  * @param #Processes
- * @param cgrousp: cgroup list
+ * @param cgroup_path: cgroup path
+ * @param items: items in cgroup
  * @param #CpuSet
  *
  */
-void  processes_set_services_cpuset (Processes  *self,
-                                     const char *cgroup_path,
-                                     GList      *services,
-                                     CpuSet      cpuset) {
-    const char *service;
+void  processes_set_cgroup_cpuset (Processes  *self,
+                                   const char *cgroup_path,
+                                   GList      *items,
+                                   CpuSet      cpuset) {
+    const char *item;
 
-    g_return_if_fail (services != NULL);
+    g_return_if_fail (items != NULL);
 
-    GFOREACH (services, service) {
+    GFOREACH (items, item) {
         GList *pids = NULL;
         pid_t *pid;
         const char *name;
@@ -330,7 +331,7 @@ void  processes_set_services_cpuset (Processes  *self,
         GList *slices = NULL;
 
         GFOREACH_SUB (self->priv->cpuset_blacklist, name) {
-            if (g_strrstr (service, name) != NULL) {
+            if (g_strrstr (item, name) != NULL) {
                 goto end_loop;
             }
         }
@@ -338,7 +339,7 @@ void  processes_set_services_cpuset (Processes  *self,
         slices = get_cgroup_slices (cgroup_path);
         GFOREACH_SUB (slices, name) {
             cgroup_procs = g_build_filename (
-                name, service, "cgroup.procs", NULL
+                name, item, "cgroup.procs", NULL
             );
             if (g_file_test (cgroup_procs, G_FILE_TEST_EXISTS))
                 break;
@@ -351,7 +352,7 @@ void  processes_set_services_cpuset (Processes  *self,
 
         if (cpuset == CPUSET_FOREGROUND) {
             GFOREACH_SUB (self->priv->cpuset_topapp, name) {
-                if (g_strcmp0 (service, name) == 0) {
+                if (g_strcmp0 (item, name) == 0) {
                     cpuset_path = get_cpuset_path (CPUSET_TOPAPP);
                     break;
                 }

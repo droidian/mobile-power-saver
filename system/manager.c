@@ -72,12 +72,18 @@ on_screen_state_changed (Logind logind,
     GList *system_services = get_cgroup_services (CGROUPS_SYSTEM_SERVICES_DIR);
     GList *user_slices = get_cgroup_slices (self->priv->cgroups_user_dir);
     GList *user_services = NULL;
+    GList *user_apps = NULL;
     const char *slice;
 
     GFOREACH (user_slices, slice) {
         GList *services = get_cgroup_services (slice);
 
         user_services = g_list_concat (user_services, services);
+    }
+    GFOREACH (user_slices, slice) {
+        GList *apps = get_cgroup_apps (slice);
+
+        user_apps = g_list_concat (user_apps, apps);
     }
 
     if (self->priv->screen_off_power_saving) {
@@ -97,17 +103,23 @@ on_screen_state_changed (Logind logind,
                 self->priv->cpuset_background_processes,
                 CPUSET_SYSTEM_BACKGROUND
             );
-            processes_set_services_cpuset (
+            processes_set_cgroup_cpuset (
                 self->priv->processes,
                 CGROUPS_SYSTEM_SERVICES_DIR,
                 system_services,
                 CPUSET_SYSTEM_BACKGROUND
             );
-            processes_set_services_cpuset (
+            processes_set_cgroup_cpuset (
                 self->priv->processes,
                 self->priv->cgroups_user_dir,
                 user_services,
                 CPUSET_FOREGROUND
+            );
+            processes_set_cgroup_cpuset (
+                self->priv->processes,
+                self->priv->cgroups_user_dir,
+                user_apps,
+                CPUSET_TOPAPP
             );
         } else {
             cpufreq_set_powersave (self->priv->cpufreq, TRUE, FALSE);
@@ -117,16 +129,22 @@ on_screen_state_changed (Logind logind,
                 self->priv->cpuset_background_processes,
                 CPUSET_BACKGROUND
             );
-            processes_set_services_cpuset (
+            processes_set_cgroup_cpuset (
                 self->priv->processes,
                 CGROUPS_SYSTEM_SERVICES_DIR,
                 system_services,
                 CPUSET_BACKGROUND
             );
-            processes_set_services_cpuset (
+            processes_set_cgroup_cpuset (
                 self->priv->processes,
                 self->priv->cgroups_user_dir,
                 user_services,
+                CPUSET_BACKGROUND
+            );
+            processes_set_cgroup_cpuset (
+                self->priv->processes,
+                self->priv->cgroups_user_dir,
+                user_apps,
                 CPUSET_SYSTEM_BACKGROUND
             );
         }
@@ -135,6 +153,7 @@ on_screen_state_changed (Logind logind,
     g_list_free_full (system_services, g_free);
     g_list_free_full (user_slices, g_free);
     g_list_free_full (user_services, g_free);
+    g_list_free_full (user_apps, g_free);
 }
 
 static void
