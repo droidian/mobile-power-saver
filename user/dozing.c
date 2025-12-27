@@ -109,6 +109,7 @@ queue_next_freeze (Dozing *self)
         self->priv->type += 1;
 }
 
+#ifdef SUSPEND_SERVICES_ENABLED
 static void
 set_services_state (Dozing   *self,
                     gboolean  freeze)
@@ -134,6 +135,7 @@ set_services_state (Dozing   *self,
 
     g_list_free_full (blacklist, g_free);
 }
+#endif
 
 static void
 powersave_modem (Dozing   *self,
@@ -156,6 +158,7 @@ powersave_modem (Dozing   *self,
         klass->apply_powersave (self->priv->modem);
 }
 
+#ifdef SUSPEND_SERVICES_ENABLED
 static void
 freeze_services (Dozing *self)
 {
@@ -187,6 +190,7 @@ unfreeze_services (Dozing *self)
         set_services_state (self, FALSE);
     }
 }
+#endif
 
 static gboolean
 freeze_apps (Dozing *self)
@@ -229,7 +233,9 @@ freeze_apps (Dozing *self)
         powersave_modem (self, TRUE);
     }
 
+#ifdef SUSPEND_SERVICES_ENABLED
     freeze_services (self);
+#endif
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
     self->priv->timeout_id = g_timeout_add_seconds (
@@ -247,7 +253,10 @@ unfreeze_apps (Dozing *self)
     const char *app;
 
     powersave_modem (self, FALSE);
+
+#ifdef SUSPEND_SERVICES_ENABLED
     unfreeze_services (self);
+#endif
 
     network_manager_modem_start_monitoring (
         self->priv->network_manager_modem
@@ -471,7 +480,10 @@ dozing_stop (Dozing  *self)
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
 
     powersave_modem (self, FALSE);
+
+#ifdef SUSPEND_SERVICES_ENABLED
     unfreeze_services (self);
+#endif
 
     network_manager_modem_stop_monitoring (
         self->priv->network_manager_modem

@@ -23,7 +23,9 @@
 #endif
 
 #include "../common/define.h"
+#ifdef SUSPEND_SERVICES_ENABLED
 #include "../common/services.h"
+#endif
 #include "../common/utils.h"
 
 struct _ManagerPrivate {
@@ -33,13 +35,18 @@ struct _ManagerPrivate {
 #ifdef PROC_ENABLED
     Processes *processes;
 #endif
+#ifdef SUSPEND_SERVICES_ENABLED
     Services *services;
+#endif
 #ifdef WIFI_ENABLED
     WiFi *wifi;
 #endif
 
     gboolean screen_off_power_saving;
+
+#ifdef SUSPEND_SERVICES_ENABLED
     gboolean suspend_services;
+#endif
 
 #ifdef PROC_ENABLED
     GList *suspend_processes;
@@ -47,11 +54,13 @@ struct _ManagerPrivate {
 #ifdef CPUSET_ENABLED
     GList *cpuset_background_processes;
 #endif
+
+#ifdef SUSPEND_SERVICES_ENABLED
     GList *suspend_system_services_blacklist;
     GList *suspend_bluetooth_services;
+#endif
 
     char *cgroups_user_dir;
-
     gboolean radio_power_saving;
 };
 
@@ -77,17 +86,21 @@ on_screen_state_changed (Logind logind,
                          gpointer user_data)
 {
     Manager *self = MANAGER (user_data);
+#ifdef SUSPEND_SERVICES_ENABLED
     GList *system_services = get_cgroup_services (CGROUPS_SYSTEM_SERVICES_DIR);
-    GList *user_slices = get_cgroup_slices (self->priv->cgroups_user_dir);
     GList *user_services = NULL;
+#endif
+    GList *user_slices = get_cgroup_slices (self->priv->cgroups_user_dir);
     GList *user_apps = NULL;
     const char *slice;
 
+#ifdef SUSPEND_SERVICES_ENABLED
     GFOREACH (user_slices, slice) {
         GList *services = get_cgroup_services (slice);
 
         user_services = g_list_concat (user_services, services);
     }
+#endif
     GFOREACH (user_slices, slice) {
         GList *apps = get_cgroup_apps (slice);
 
@@ -163,10 +176,11 @@ on_screen_state_changed (Logind logind,
 #endif
         }
     }
-
+#ifdef SUSPEND_SERVICES_ENABLED
     g_list_free_full (system_services, g_free);
-    g_list_free_full (user_slices, g_free);
     g_list_free_full (user_services, g_free);
+#endif
+    g_list_free_full (user_slices, g_free);
     g_list_free_full (user_apps, g_free);
 }
 
@@ -229,6 +243,7 @@ on_bus_setting_changed (Bus      *bus,
 
         processes_cpuset_set_topapp (self->priv->processes, list);
 #endif
+#ifdef SUSPEND_SERVICES_ENABLED
     } else if (g_strcmp0 (setting, "suspend-system-services-blacklist") == 0) {
         g_list_free_full (
             self->priv->suspend_system_services_blacklist, g_free
@@ -236,6 +251,7 @@ on_bus_setting_changed (Bus      *bus,
         self->priv->suspend_system_services_blacklist = get_list_from_variant (
             inner_value
         );
+#endif
     } else if (g_strcmp0 (setting, "devfreq-blacklist") == 0) {
         GList *list = get_list_from_variant (inner_value);
         const char *device;
@@ -253,6 +269,7 @@ on_bus_setting_changed (Bus      *bus,
         cpufreq_set_powersave (self->priv->cpufreq, enabled, TRUE);
     } else if (g_strcmp0 (setting, "radio-power-saving") == 0) {
         self->priv->radio_power_saving = g_variant_get_boolean (inner_value);
+#ifdef SUSPEND_SERVICES_ENABLED
     } else if (g_strcmp0 (setting, "dozing") == 0) {
         gboolean dozing = g_variant_get_boolean (inner_value);
 
@@ -294,6 +311,9 @@ on_bus_setting_changed (Bus      *bus,
                 self->priv->suspend_processes
             );
         }
+#endif
+#endif
+#ifdef PROC_ENABLED
     } else if (g_strcmp0 (setting, "suspend-processes") == 0) {
         g_list_free_full (
             self->priv->suspend_processes, g_free
@@ -302,6 +322,7 @@ on_bus_setting_changed (Bus      *bus,
             inner_value
         );
 #endif
+#ifdef SUSPEND_SERVICES_ENABLED
     } else if (g_strcmp0 (setting, "suspend-system-bluetooth-services") == 0) {
         g_list_free_full (
             self->priv->suspend_bluetooth_services, g_free
@@ -325,6 +346,7 @@ on_bus_setting_changed (Bus      *bus,
         }
     } else if (g_strcmp0 (setting, "suspend-services") == 0) {
         self->priv->suspend_services = g_variant_get_boolean (inner_value);
+#endif
     }
 }
 
@@ -338,7 +360,7 @@ manager_dispose (GObject *manager)
         TRUE,
         manager
     );
-
+#ifdef SUSPEND_SERVICES_ENABLED
     services_unfreeze_all (
         self->priv->services,
         self->priv->suspend_system_services_blacklist
@@ -347,6 +369,7 @@ manager_dispose (GObject *manager)
         self->priv->services,
         self->priv->suspend_bluetooth_services
     );
+#endif
 
     wifi_set_powersave (self->priv->wifi, FALSE);
 
@@ -356,7 +379,9 @@ manager_dispose (GObject *manager)
 #ifdef PROC_ENABLED
     g_clear_object (&self->priv->processes);
 #endif
+#ifdef SUSPEND_SERVICES_ENABLED
     g_clear_object (&self->priv->services);
+#endif
 #ifdef WIFI_ENABLED
     g_clear_object (&self->priv->wifi);
 #endif
@@ -379,13 +404,14 @@ manager_finalize (GObject *manager)
         self->priv->cpuset_background_processes, g_free
     );
 #endif
+#ifdef SUSPEND_SERVICES_ENABLED
     g_list_free_full (
         self->priv->suspend_system_services_blacklist, g_free
     );
     g_list_free_full (
         self->priv->suspend_bluetooth_services, g_free
     );
-
+#endif
     if (self->priv->cgroups_user_dir != NULL) {
         g_free (self->priv->cgroups_user_dir);
     }
@@ -414,25 +440,33 @@ manager_init (Manager *self)
 #ifdef PROC_ENABLED
     self->priv->processes = PROCESSES (processes_new ());
 #endif
+#ifdef SUSPEND_SERVICES_ENABLED
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
+#endif
 #ifdef WIFI_ENABLED
     self->priv->wifi = WIFI (wifi_new ());
 #endif
 
     self->priv->screen_off_power_saving = FALSE;
+
+#ifdef SUSPEND_SERVICES_ENABLED
     self->priv->suspend_services = FALSE;
+#endif
 
     self->priv->radio_power_saving = FALSE;
 #ifdef PROC_ENABLED
     self->priv->suspend_processes = NULL;
 #endif
     self->priv->cgroups_user_dir = NULL;
+#ifdef SUSPEND_SERVICES_ENABLED
     self->priv->suspend_system_services_blacklist = NULL;
+#endif
 #ifdef CPUSET_ENABLED
     self->priv->cpuset_background_processes = NULL;
 #endif
+#ifdef SUSPEND_SERVICES_ENABLED
     self->priv->suspend_bluetooth_services = NULL;
-
+#endif
     g_signal_connect (
         logind_get_default (),
         "screen-state-changed",
