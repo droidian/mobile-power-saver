@@ -12,8 +12,10 @@
 #define ADISHATZ_DBUS_NAME "org.adishatz.Mps"
 #define ADISHATZ_DBUS_PATH "/org/adishatz/Mps"
 
+#ifdef UPOWER_ENABLED
 #define UPOWERPP_DBUS_NAME "org.freedesktop.UPower.PowerProfiles"
 #define UPOWERPP_DBUS_PATH "/org/freedesktop/UPower/PowerProfiles"
+#endif
 
 /* signals */
 enum
@@ -26,13 +28,14 @@ static guint signals[LAST_SIGNAL];
 
 struct _BusPrivate {
     GDBusConnection *adishatz_connection;
-    GDBusConnection *upowerpp_connection;
-
     GDBusNodeInfo *adishatz_introspection_data;
-    GDBusNodeInfo *upowerpp_introspection_data;
-
     guint adishatz_owner_id;
+
+#ifdef UPOWER_ENABLED
     guint upowerpp_owner_id;
+    GDBusNodeInfo *upowerpp_introspection_data;
+    GDBusConnection *upowerpp_connection;
+#endif
 
     PowerProfile power_profile;
 };
@@ -40,6 +43,7 @@ struct _BusPrivate {
 G_DEFINE_TYPE_WITH_CODE (Bus, bus, G_TYPE_OBJECT,
     G_ADD_PRIVATE (Bus))
 
+#ifdef UPOWER_ENABLED
 static const char*
 get_power_profile_as_string (PowerProfile power_profile) {
     switch (power_profile) {
@@ -90,6 +94,7 @@ get_profiles_variant (void)
 
   return g_variant_builder_end (&builder);
 }
+#endif
 
 static void
 handle_method_call (GDBusConnection       *connection,
@@ -103,6 +108,7 @@ handle_method_call (GDBusConnection       *connection,
 {
     Bus *self = user_data;
 
+#ifdef UPOWER_ENABLED
     if (g_strcmp0 (method_name, "HoldProfile") == 0) {
         /*
          * We do not want application to change power profile, on mobile
@@ -120,6 +126,7 @@ handle_method_call (GDBusConnection       *connection,
         g_dbus_method_invocation_return_value (invocation, NULL);
         return;
     }
+#endif
 
     if (g_strcmp0 (method_name, "Set") == 0) {
         const char *setting;
@@ -162,6 +169,7 @@ handle_get_property (GDBusConnection *connection,
                      GError         **error,
                      gpointer         user_data)
 {
+#ifdef UPOWER_ENABLED
     Bus *self = user_data;
 
     if (g_strcmp0 (property_name, "ActiveProfile") == 0)
@@ -178,7 +186,7 @@ handle_get_property (GDBusConnection *connection,
 
     if (g_strcmp0 (property_name, "Version") == 0)
         return g_variant_new_string (PACKAGE_VERSION);
-
+#endif
     return NULL;
 }
 
@@ -192,6 +200,7 @@ handle_set_property (GDBusConnection  *connection,
                      GError          **error,
                      gpointer          user_data)
 {
+#ifdef UPOWER_ENABLED
     Bus *self = user_data;
 
     if (g_strcmp0 (property_name, "ActiveProfile") == 0) {
@@ -200,14 +209,12 @@ handle_set_property (GDBusConnection  *connection,
         self->priv->power_profile = get_power_profile_from_string (
             power_profile
         );
-
-
         return TRUE;
-    } else {
-        g_set_error (error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
-                     "No such property: %s", property_name);
-        return FALSE;
     }
+#endif
+    g_set_error (error, G_DBUS_ERROR, G_DBUS_ERROR_FAILED,
+                     "No such property: %s", property_name);
+    return FALSE;
 }
 
 static const GDBusInterfaceVTable adishatz_interface_vtable = {
@@ -216,11 +223,13 @@ static const GDBusInterfaceVTable adishatz_interface_vtable = {
     handle_set_property
 };
 
+#ifdef UPOWER_ENABLED
 static const GDBusInterfaceVTable upowerpp_interface_vtable = {
     handle_method_call,
     handle_get_property,
     handle_set_property
 };
+#endif
 
 static void
 on_bus_acquired (GDBusConnection *connection,
@@ -238,12 +247,14 @@ on_bus_acquired (GDBusConnection *connection,
         dbus_path = ADISHATZ_DBUS_PATH;
         introspection_data = self->priv->adishatz_introspection_data;
         vtable = &adishatz_interface_vtable;
-    } else {
+    }
+#ifdef UPOWER_ENABLED
+    else {
         dbus_path = UPOWERPP_DBUS_PATH;
         introspection_data = self->priv->upowerpp_introspection_data;
         vtable = &upowerpp_interface_vtable;
     }
-
+#endif
     registration_id = g_dbus_connection_register_object (
         connection,
         dbus_path,
@@ -256,9 +267,10 @@ on_bus_acquired (GDBusConnection *connection,
 
     if (is_adishatz)
         self->priv->adishatz_connection = g_object_ref (connection);
+#ifdef UPOWER_ENABLED
     else
         self->priv->upowerpp_connection = g_object_ref (connection);
-
+#endif
     g_assert (registration_id > 0);
 }
 
@@ -326,19 +338,20 @@ bus_dispose (GObject *bus)
     if (self->priv->adishatz_owner_id != 0) {
         g_bus_unown_name (self->priv->adishatz_owner_id);
     }
-
-    if (self->priv->upowerpp_owner_id != 0) {
-        g_bus_unown_name (self->priv->upowerpp_owner_id);
-    }
-
     g_clear_pointer (
       &self->priv->adishatz_introspection_data, g_dbus_node_info_unref
     );
+    g_clear_object (&self->priv->adishatz_connection);
+
+#ifdef UPOWER_ENABLED
+    if (self->priv->upowerpp_owner_id != 0) {
+        g_bus_unown_name (self->priv->upowerpp_owner_id);
+    }
     g_clear_pointer (
       &self->priv->upowerpp_introspection_data, g_dbus_node_info_unref
     );
-    g_clear_object (&self->priv->adishatz_connection);
     g_clear_object (&self->priv->upowerpp_connection);
+#endif
 
     G_OBJECT_CLASS (bus_parent_class)->dispose (bus);
 }
@@ -381,17 +394,18 @@ bus_init (Bus *self)
         &self->priv->adishatz_owner_id,
         self
     );
+    self->priv->adishatz_connection = NULL;
 
+#ifdef UPOWER_ENABLED
     self->priv->upowerpp_introspection_data = bus_init_path (
         UPOWERPP_DBUS_NAME,
         "/org/adishatz/Mps/org.freedesktop.UPower.PowerProfiles.xml",
         &self->priv->upowerpp_owner_id,
         self
     );
-
     self->priv->power_profile = POWER_PROFILE_BALANCED;
-    self->priv->adishatz_connection = NULL;
     self->priv->upowerpp_connection = NULL;
+#endif
 }
 
 /**

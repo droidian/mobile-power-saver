@@ -1,4 +1,5 @@
 # features
 option('wifi', type: 'boolean', value: true, description: 'Enable or disable Wi-Fi powersave support')
-option('cpuset', type: 'boolean', value: true, description: 'Enable or disable Android like cpuset')
-option('mm', type: 'boolean', value: false, description: 'Enable ModemManager support')
+option('cpuset', type: 'boolean', value: false, description: 'Enable or disable Android like cpuset')
+option('mm', type: 'boolean', value: true, description: 'Enable ModemManager support')
+option('upower', type: 'boolean', value: false, description: 'Enable UPower support')
