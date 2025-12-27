@@ -11,7 +11,9 @@
 #include "cpufreq.h"
 #include "config.h"
 #include "devfreq.h"
+#ifdef PROC_ENABLED
 #include "processes.h"
+#endif
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
@@ -28,7 +30,9 @@ struct _ManagerPrivate {
     Cpufreq *cpufreq;
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
+#ifdef PROC_ENABLED
     Processes *processes;
+#endif
     Services *services;
 #ifdef WIFI_ENABLED
     WiFi *wifi;
@@ -37,8 +41,12 @@ struct _ManagerPrivate {
     gboolean screen_off_power_saving;
     gboolean suspend_services;
 
+#ifdef PROC_ENABLED
     GList *suspend_processes;
+#endif
+#ifdef CPUSET_ENABLED
     GList *cpuset_background_processes;
+#endif
     GList *suspend_system_services_blacklist;
     GList *suspend_bluetooth_services;
 
@@ -98,6 +106,7 @@ on_screen_state_changed (Logind logind,
 #endif
         if (screen_on) {
             cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
+#ifdef CPUSET_ENABLED
             processes_set_cpuset (
                 self->priv->processes,
                 self->priv->cpuset_background_processes,
@@ -121,9 +130,13 @@ on_screen_state_changed (Logind logind,
                 user_apps,
                 CPUSET_TOPAPP
             );
+#endif
         } else {
             cpufreq_set_powersave (self->priv->cpufreq, TRUE, FALSE);
+#ifdef PROC_ENABLED
             processes_update (self->priv->processes);
+#endif
+#ifdef CPUSET_ENABLED
             processes_set_cpuset (
                 self->priv->processes,
                 self->priv->cpuset_background_processes,
@@ -147,6 +160,7 @@ on_screen_state_changed (Logind logind,
                 user_apps,
                 CPUSET_SYSTEM_BACKGROUND
             );
+#endif
         }
     }
 
@@ -198,6 +212,7 @@ on_bus_setting_changed (Bus      *bus,
             cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
             devfreq_set_powersave (self->priv->devfreq, FALSE);
         }
+#ifdef CPUSET_ENABLED
     } else if (g_strcmp0 (setting, "cpuset-background-processes") == 0) {
         g_list_free_full (
             self->priv->cpuset_background_processes, g_free
@@ -205,6 +220,15 @@ on_bus_setting_changed (Bus      *bus,
         self->priv->cpuset_background_processes = get_list_from_variant (
             inner_value
         );
+    } else if (g_strcmp0 (setting, "cpuset-blacklist") == 0) {
+        GList *list = get_list_from_variant (inner_value);
+
+        processes_cpuset_set_blacklist (self->priv->processes, list);
+    } else if (g_strcmp0 (setting, "cpuset-topapp") == 0) {
+        GList *list = get_list_from_variant (inner_value);
+
+        processes_cpuset_set_topapp (self->priv->processes, list);
+#endif
     } else if (g_strcmp0 (setting, "suspend-system-services-blacklist") == 0) {
         g_list_free_full (
             self->priv->suspend_system_services_blacklist, g_free
@@ -221,14 +245,6 @@ on_bus_setting_changed (Bus      *bus,
         }
 
         g_list_free_full (list, g_free);
-    } else if (g_strcmp0 (setting, "cpuset-blacklist") == 0) {
-        GList *list = get_list_from_variant (inner_value);
-
-        processes_cpuset_set_blacklist (self->priv->processes, list);
-    } else if (g_strcmp0 (setting, "cpuset-topapp") == 0) {
-        GList *list = get_list_from_variant (inner_value);
-
-        processes_cpuset_set_topapp (self->priv->processes, list);
     } else if (g_strcmp0 (setting, "cgroups-user-dir") == 0) {
         set_cgroups_user_dir (self, inner_value);
     } else if (g_strcmp0 (setting, "little-cluster-powersave") == 0) {
@@ -266,7 +282,7 @@ on_bus_setting_changed (Bus      *bus,
 
             g_list_free_full (blacklist, g_free);
         }
-
+#ifdef PROC_ENABLED
         if (dozing) {
             processes_suspend (
                 self->priv->processes,
@@ -285,6 +301,7 @@ on_bus_setting_changed (Bus      *bus,
         self->priv->suspend_processes = get_list_from_variant (
             inner_value
         );
+#endif
     } else if (g_strcmp0 (setting, "suspend-system-bluetooth-services") == 0) {
         g_list_free_full (
             self->priv->suspend_bluetooth_services, g_free
@@ -336,7 +353,9 @@ manager_dispose (GObject *manager)
     g_clear_object (&self->priv->cpufreq);
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
+#ifdef PROC_ENABLED
     g_clear_object (&self->priv->processes);
+#endif
     g_clear_object (&self->priv->services);
 #ifdef WIFI_ENABLED
     g_clear_object (&self->priv->wifi);
@@ -350,12 +369,16 @@ manager_finalize (GObject *manager)
 {
     Manager *self = MANAGER (manager);
 
+#ifdef PROC_ENABLED
     g_list_free_full (
         self->priv->suspend_processes, g_free
     );
+#endif
+#ifdef CPUSET_ENABLED
     g_list_free_full (
         self->priv->cpuset_background_processes, g_free
     );
+#endif
     g_list_free_full (
         self->priv->suspend_system_services_blacklist, g_free
     );
@@ -388,7 +411,9 @@ manager_init (Manager *self)
     self->priv->cpufreq = CPUFREQ (cpufreq_new ());
     self->priv->devfreq = DEVFREQ (devfreq_new ());
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
+#ifdef PROC_ENABLED
     self->priv->processes = PROCESSES (processes_new ());
+#endif
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
 #ifdef WIFI_ENABLED
     self->priv->wifi = WIFI (wifi_new ());
@@ -398,10 +423,14 @@ manager_init (Manager *self)
     self->priv->suspend_services = FALSE;
 
     self->priv->radio_power_saving = FALSE;
+#ifdef PROC_ENABLED
     self->priv->suspend_processes = NULL;
+#endif
     self->priv->cgroups_user_dir = NULL;
     self->priv->suspend_system_services_blacklist = NULL;
+#ifdef CPUSET_ENABLED
     self->priv->cpuset_background_processes = NULL;
+#endif
     self->priv->suspend_bluetooth_services = NULL;
 
     g_signal_connect (

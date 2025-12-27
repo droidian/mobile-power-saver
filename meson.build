@@ -25,6 +25,7 @@ wifi_enabled = get_option('wifi')
 cpuset_enabled = get_option('cpuset')
 mm_enabled = get_option('mm')
 upower_enabled = get_option('upower')
+proc_enabled = get_option('proc')
 
 config_h = configuration_data()
 config_h.set('APP_ID', '"org.adishatz.Mps"')
@@ -35,6 +36,14 @@ config_h.set('BIN_DIR', bin_dir)
 config_h.set('SBIN_DIR', sbin_dir)
 config_h.set_quoted('GETTEXT_PACKAGE', 'mps')
 config_h.set_quoted('LOCALEDIR', localedir)
+
+if cpuset_enabled
+config_h.set('CPUTSET_ENABLED', 1)
+endif
+
+if proc_enabled
+config_h.set('PROC_ENABLED', 1)
+endif
 
 if wifi_enabled
 config_h.set('WIFI_ENABLED', 1)

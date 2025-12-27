@@ -3,3 +3,4 @@ option('wifi', type: 'boolean', value: true, description: 'Enable or disable Wi-
 option('cpuset', type: 'boolean', value: false, description: 'Enable or disable Android like cpuset')
 option('mm', type: 'boolean', value: true, description: 'Enable ModemManager support')
 option('upower', type: 'boolean', value: false, description: 'Enable UPower support')
+option('proc', type: 'boolean', value: false, description: 'Also freeze processes')
