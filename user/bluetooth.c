@@ -417,7 +417,8 @@ bluetooth_set_powersave (Bluetooth *self,
                    can_powersave (self) &&
                    g_list_length (self->priv->connected) == 0;
 
-    g_message ("Set Bluetooth powersave: %b", do_powersave);
+    // Crash on PMOS, WTF ?
+    //g_message ("Set Bluetooth powersave: %b", do_powersave);
     if (do_powersave) {
         set_powersave (self, TRUE);
         set_services_powersave (self, TRUE);
