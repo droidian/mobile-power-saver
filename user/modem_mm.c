@@ -77,13 +77,13 @@ modem_mm_set_powersave (Modem    *self,
             guint allowed, preferred;
             g_autoptr (GError) error = NULL;
 
-            allowed = modes[0].allowed;
-            preferred = modes[0].preferred;
+            allowed = modes[n_modes - 1].allowed;
+            preferred = modes[n_modes - 1].preferred;
 
             if (powersave) {
-                gint i = n_modes - 1;
+                gint i = 0;
                 guint previous_flags = 0;
-                while (i != 0) {
+                while (i <= n_modes - 1) {
                     guint flags = modes[i].allowed & ~previous_flags;
                     if ((flags & this->priv->blacklist) == 0) {
                         allowed = modes[i].allowed;
@@ -91,6 +91,16 @@ modem_mm_set_powersave (Modem    *self,
                         break;
                     }
                     previous_flags = modes[i].allowed;
+                    i += 1;
+                }
+            } else {
+                gint i = n_modes - 1;
+                allowed = modes[i].allowed;
+                 while (i >= 0) {
+                    if (modes[i].allowed != allowed)
+                        break;
+                    allowed = modes[i].allowed;
+                    preferred = modes[i].preferred;
                     i -= 1;
                 }
             }
