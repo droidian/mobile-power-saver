@@ -54,10 +54,6 @@ on_mps_proxy_signal (GDBusProxy  *proxy,
     } else if (g_strcmp0 (signal_name, "StopDozing") == 0) {
         Dozing *dozing = dozing_get_default ();
 
-        bus_set_value (self,
-                       "little-cluster-powersave",
-                       g_variant_new ("b", FALSE));
-
         dozing_stop (dozing);
         dozing_start (dozing);
     }
@@ -104,10 +100,6 @@ bus_class_init (BusClass *klass)
 static void
 bus_init (Bus *self)
 {
-    g_autofree char *cgroups_user_services_dir = g_strdup_printf(
-        CGROUPS_USER_DIR, getuid(), getuid()
-    );
-
     self->priv = bus_get_instance_private (self);
 
     self->priv->mps_proxy = g_dbus_proxy_new_for_bus_sync (
@@ -126,12 +118,6 @@ bus_init (Bus *self)
         "g-signal",
         G_CALLBACK (on_mps_proxy_signal),
         self
-    );
-
-    bus_set_value (
-        self,
-        "cgroups-user-dir",
-        g_variant_new ("s", cgroups_user_services_dir)
     );
 }
 

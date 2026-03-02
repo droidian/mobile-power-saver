@@ -1,0 +1,5 @@
+[org.adishatz.Mps]
+suspend-system-bluetooth-services=['bluetooth.service']
+suspend-user-bluetooth-services=['mpris-proxy.service', 'obex.service']
+bluetooth-power-saving-blacklist=['io.gitlab.azymohliad.WatchMate']
+suspend-apps-blacklist=['sm.puri.Chatty', 'io.gitlab.azymohliad.WatchMate']

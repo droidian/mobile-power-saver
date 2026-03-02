@@ -2,4 +2,4 @@
 option('wifi', type: 'boolean', value: true, description: 'Enable or disable Wi-Fi powersave support')
 option('mm', type: 'boolean', value: true, description: 'Enable ModemManager support')
 option('upower', type: 'boolean', value: false, description: 'Enable UPower support')
-option('suspend-services', type: 'boolean', value: false, description: 'Also suspend services')
+option('os', type: 'string', value: '', description: 'Select target OS')

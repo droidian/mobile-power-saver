@@ -65,38 +65,6 @@ GList *get_applications (void)
     return apps;
 }
 
-GList *get_cgroup_services (const char *path)
-{
-    g_autoptr (GDir) sys_dir = NULL;
-
-    const char *cgroup_dir;
-    GList *services = NULL;
-
-    sys_dir = g_dir_open (path, 0, NULL);
-    if (sys_dir == NULL) {
-        g_warning ("Can't find cgroup: %s", path);
-        return NULL;
-    }
-
-    while ((cgroup_dir = g_dir_read_name (sys_dir)) != NULL) {
-        g_autofree char *cgroup = NULL;
-
-        if (g_str_has_suffix (cgroup_dir, ".service")) {
-            cgroup = g_build_filename (
-                path, cgroup_dir, "cgroup.procs", NULL
-            );
-
-            if (!g_file_test (cgroup, G_FILE_TEST_EXISTS)) {
-                g_warning ("cgroup not found: %s", cgroup);
-                continue;
-            }
-
-            services = g_list_prepend (services, g_strdup (cgroup_dir));
-        }
-    }
-    return services;
-}
-
 GList *get_cgroup_apps (const char *path)
 {
     g_autoptr (GDir) sys_dir = NULL;
@@ -158,28 +126,6 @@ get_cgroup_slices (const char *path)
 }
 
 GList*
-get_cgroup_pids (const char *path)
-{
-    GList *pids = NULL;
-    pid_t _pid;
-
-    FILE *file = fopen(path, "r");
-
-    g_return_val_if_fail (file != NULL, NULL);
-
-    while(fscanf(file, "%d", &_pid) != EOF) {
-        pid_t *pid = g_malloc (sizeof (pid_t));
-
-        *pid = _pid;
-        pids = g_list_append (pids, pid);
-    }
-
-    fclose (file);
-
-    return pids;
-}
-
-GList*
 get_list_from_variant (GVariant *value)
 {
     GList *list = NULL;
@@ -192,17 +138,4 @@ get_list_from_variant (GVariant *value)
     }
 
     return list;
-}
-
-gboolean
-in_list (GList      *list,
-         const char *value)
-{
-    const char *item;
-
-    GFOREACH (list, item) {
-        if (g_strcmp0 (item, value) == 0)
-            return TRUE;
-    }
-    return FALSE;
 }

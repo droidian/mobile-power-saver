@@ -6,9 +6,7 @@ Mobile Power Saver (MPS) uses GLib schemas and overrides to manage power-saving 
 
 The MPS schema (`org.adishatz.Mps`) defines various settings to control power-saving features, including:
 - Bluetooth power saving.
-- Suspension of services, apps, and processes.
-- Management of CPU sets.
-- Device-specific behaviors for services, processes, and devices.
+- Suspension of services and apps.
 
 Each key in the schema can be overridden using a GLib override file (`*.override`).
 
@@ -26,7 +24,7 @@ An override file is a simple text file specifying new values for the schema keys
 For example, an override to disable specific services from being suspended:
 ```ini
 [org.adishatz.Mps]
-suspend-user-services-blacklist=['pulseaudio.service', 'dbus.service']
+suspend-user-services=['pulseaudio.service']
 ```
 
 ---
@@ -55,24 +53,15 @@ bluetooth-power-saving-blacklist=['io.gitlab.azymohliad.WatchMate']
 suspend-apps-blacklist=['org.gnome.Calls', 'sm.puri.Chatty', 'org.gnome.clocks', 'org.kop316.antispam']
 ```
 
-#### **Phosh Environment Example (e.g., Droidian)**
+#### **Phosh Environment Example**
 This configuration enables service suspension but exempts critical user and system services:
 ```ini
 [org.adishatz.Mps]
-suspend-services=true
-suspend-user-services-blacklist=['dbus.service', 'sm.puri.Phosh.service', 'pulseaudio.service']
-suspend-system-services-blacklist=['dbus.service', 'systemd-resolved.service', 'NetworkManager.service']
+suspend-user-services['pulseaudio.service']
+suspend-system-services=['sshd.service']
 suspend-system-bluetooth-services=['bluebinder.service', 'bluetooth.service']
 suspend-user-bluetooth-services=['mpris-proxy.service']
 cpuset-topapp=['sm.puri.Phosh.service']
-```
-
-#### **Device-Specific Example (Miatoll Devices)**
-For Miatoll-like devices, you might have the following:
-```ini
-[org.adishatz.Mps]
-cpuset-background-processes=['qcrild']
-suspend-processes=['msm_irqbalance', 'hwservicemanager', 'storaged', 'netmgrd', 'shsusrd', 'android.hardware.health', 'cas@1', 'drm@1', 'drmserver', 'keystore', 'omx@1', 'mediaswcodec', 'wfdhdcphalservice', 'miniafservice', 'minimediaservice', 'installd', 'statsd', 'idmap2d', 'drmserver', 'camera_service', 'charge_logger', 'adpl', 'tloc_daemon', 'lowi-server', 'slim_daemon', 'xtra-daemon', 'ssgqmigd', 'ssgtzd', 'mlid', 'port-bridge']
 ```
 
 ---

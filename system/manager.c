@@ -20,34 +20,23 @@
 #endif
 
 #include "../common/define.h"
-#ifdef SUSPEND_SERVICES_ENABLED
 #include "../common/services.h"
-#endif
 #include "../common/utils.h"
 
 struct _ManagerPrivate {
     Cpufreq *cpufreq;
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
-#ifdef SUSPEND_SERVICES_ENABLED
     Services *services;
-#endif
 #ifdef WIFI_ENABLED
     WiFi *wifi;
 #endif
 
     gboolean screen_off_power_saving;
 
-#ifdef SUSPEND_SERVICES_ENABLED
-    gboolean suspend_services;
-#endif
-
-#ifdef SUSPEND_SERVICES_ENABLED
-    GList *suspend_system_services_blacklist;
+    GList *suspend_system_services;
     GList *suspend_bluetooth_services;
-#endif
 
-    char *cgroups_user_dir;
     gboolean radio_power_saving;
 };
 
@@ -73,9 +62,6 @@ on_screen_state_changed (Logind logind,
                          gpointer user_data)
 {
     Manager *self = MANAGER (user_data);
-#ifdef SUSPEND_SERVICES_ENABLED
-    GList *system_services = get_cgroup_services (CGROUPS_SYSTEM_SERVICES_DIR);
-#endif
 
     if (self->priv->screen_off_power_saving) {
         bus_screen_state_changed (bus_get_default (), screen_on);
@@ -88,14 +74,11 @@ on_screen_state_changed (Logind logind,
             wifi_set_powersave (self->priv->wifi, !screen_on);
 #endif
         if (screen_on) {
-            cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
+            cpufreq_set_powersave (self->priv->cpufreq, FALSE);
         } else {
-            cpufreq_set_powersave (self->priv->cpufreq, TRUE, FALSE);
+            cpufreq_set_powersave (self->priv->cpufreq, TRUE);
         }
     }
-#ifdef SUSPEND_SERVICES_ENABLED
-    g_list_free_full (system_services, g_free);
-#endif
 }
 
 static void
@@ -106,17 +89,6 @@ set_power_profile (Manager      *self,
 
     cpufreq_set_governor (self->priv->cpufreq, governor);
     devfreq_set_governor (self->priv->devfreq, governor);
-}
-
-static void
-set_cgroups_user_dir (Manager  *self,
-                      GVariant *value)
-{
-    if (self->priv->cgroups_user_dir != NULL) {
-        g_free (self->priv->cgroups_user_dir);
-    }
-
-    g_variant_get (value, "s", &self->priv->cgroups_user_dir);
 }
 
 static void
@@ -137,18 +109,16 @@ on_bus_setting_changed (Bus      *bus,
         self->priv->screen_off_power_saving = g_variant_get_boolean (inner_value);
 
         if (!self->priv->screen_off_power_saving) {
-            cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
+            cpufreq_set_powersave (self->priv->cpufreq, FALSE);
             devfreq_set_powersave (self->priv->devfreq, FALSE);
         }
-#ifdef SUSPEND_SERVICES_ENABLED
-    } else if (g_strcmp0 (setting, "suspend-system-services-blacklist") == 0) {
+    } else if (g_strcmp0 (setting, "suspend-system-services") == 0) {
         g_list_free_full (
-            self->priv->suspend_system_services_blacklist, g_free
+            self->priv->suspend_system_services, g_free
         );
-        self->priv->suspend_system_services_blacklist = get_list_from_variant (
+        self->priv->suspend_system_services = get_list_from_variant (
             inner_value
         );
-#endif
     } else if (g_strcmp0 (setting, "devfreq-blacklist") == 0) {
         GList *list = get_list_from_variant (inner_value);
         const char *device;
@@ -158,46 +128,22 @@ on_bus_setting_changed (Bus      *bus,
         }
 
         g_list_free_full (list, g_free);
-    } else if (g_strcmp0 (setting, "cgroups-user-dir") == 0) {
-        set_cgroups_user_dir (self, inner_value);
-    } else if (g_strcmp0 (setting, "little-cluster-powersave") == 0) {
-        gboolean enabled = g_variant_get_boolean (inner_value);
-
-        cpufreq_set_powersave (self->priv->cpufreq, enabled, TRUE);
     } else if (g_strcmp0 (setting, "radio-power-saving") == 0) {
         self->priv->radio_power_saving = g_variant_get_boolean (inner_value);
-#ifdef SUSPEND_SERVICES_ENABLED
     } else if (g_strcmp0 (setting, "dozing") == 0) {
         gboolean dozing = g_variant_get_boolean (inner_value);
 
-        if (self->priv->suspend_services) {
-            GList *blacklist = g_list_copy_deep (
-                self->priv->suspend_system_services_blacklist,
-                (GCopyFunc) g_strdup,
-                NULL
+        if (dozing) {
+            services_freeze (
+                self->priv->services,
+                self->priv->suspend_system_services
             );
-            const char *service;
-
-            GFOREACH (self->priv->suspend_bluetooth_services, service) {
-                blacklist = g_list_prepend (blacklist, g_strdup (service));
-            }
-
-            if (dozing) {
-                services_freeze_all (
-                    self->priv->services,
-                    blacklist
-                );
-            } else {
-                services_unfreeze_all (
-                    self->priv->services,
-                    blacklist
-                );
-            }
-
-            g_list_free_full (blacklist, g_free);
+        } else {
+            services_unfreeze (
+                self->priv->services,
+                self->priv->suspend_system_services
+            );
         }
-#endif
-#ifdef SUSPEND_SERVICES_ENABLED
     } else if (g_strcmp0 (setting, "suspend-system-bluetooth-services") == 0) {
         g_list_free_full (
             self->priv->suspend_bluetooth_services, g_free
@@ -219,9 +165,6 @@ on_bus_setting_changed (Bus      *bus,
                 self->priv->suspend_bluetooth_services
             );
         }
-    } else if (g_strcmp0 (setting, "suspend-services") == 0) {
-        self->priv->suspend_services = g_variant_get_boolean (inner_value);
-#endif
     }
 }
 
@@ -235,25 +178,22 @@ manager_dispose (GObject *manager)
         TRUE,
         manager
     );
-#ifdef SUSPEND_SERVICES_ENABLED
-    services_unfreeze_all (
+
+    services_unfreeze (
         self->priv->services,
-        self->priv->suspend_system_services_blacklist
+        self->priv->suspend_system_services
     );
     services_unfreeze (
         self->priv->services,
         self->priv->suspend_bluetooth_services
     );
-#endif
 
     wifi_set_powersave (self->priv->wifi, FALSE);
 
     g_clear_object (&self->priv->cpufreq);
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
-#ifdef SUSPEND_SERVICES_ENABLED
     g_clear_object (&self->priv->services);
-#endif
 #ifdef WIFI_ENABLED
     g_clear_object (&self->priv->wifi);
 #endif
@@ -266,17 +206,12 @@ manager_finalize (GObject *manager)
 {
     Manager *self = MANAGER (manager);
 
-#ifdef SUSPEND_SERVICES_ENABLED
     g_list_free_full (
-        self->priv->suspend_system_services_blacklist, g_free
+        self->priv->suspend_system_services, g_free
     );
     g_list_free_full (
         self->priv->suspend_bluetooth_services, g_free
     );
-#endif
-    if (self->priv->cgroups_user_dir != NULL) {
-        g_free (self->priv->cgroups_user_dir);
-    }
 
     G_OBJECT_CLASS (manager_parent_class)->finalize (manager);
 }
@@ -299,27 +234,19 @@ manager_init (Manager *self)
     self->priv->cpufreq = CPUFREQ (cpufreq_new ());
     self->priv->devfreq = DEVFREQ (devfreq_new ());
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
-#ifdef SUSPEND_SERVICES_ENABLED
+
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
-#endif
+
 #ifdef WIFI_ENABLED
     self->priv->wifi = WIFI (wifi_new ());
 #endif
 
     self->priv->screen_off_power_saving = FALSE;
-
-#ifdef SUSPEND_SERVICES_ENABLED
-    self->priv->suspend_services = FALSE;
-#endif
-
     self->priv->radio_power_saving = FALSE;
-    self->priv->cgroups_user_dir = NULL;
-#ifdef SUSPEND_SERVICES_ENABLED
-    self->priv->suspend_system_services_blacklist = NULL;
-#endif
-#ifdef SUSPEND_SERVICES_ENABLED
+
+    self->priv->suspend_system_services = NULL;
     self->priv->suspend_bluetooth_services = NULL;
-#endif
+
     g_signal_connect (
         logind_get_default (),
         "screen-state-changed",

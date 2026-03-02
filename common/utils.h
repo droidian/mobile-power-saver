@@ -14,9 +14,6 @@
 
 void write_to_file (const char *filename, const char *value);
 GList *get_applications (void);
-GList *get_cgroup_services (const char *path);
 GList *get_cgroup_apps (const char *path);
 GList *get_cgroup_slices (const char *path);
-GList *get_cgroup_pids (const char *path);
 GList *get_list_from_variant (GVariant *value);
-gboolean in_list (GList *list, const char *value);

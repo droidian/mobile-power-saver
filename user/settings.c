@@ -213,7 +213,20 @@ settings_can_bluetooth_powersave (Settings   *self,
     }
     return TRUE;
 }
-
+/**
+ * settings_get_freezing_delay:
+ *
+ * Get freezing delay
+ *
+ * @self: a #Settings
+ *
+ * Returns: freezing delay in seconds
+ */
+gint
+settings_get_freezing_delay (Settings   *self)
+{
+    return g_settings_get_int (self->priv->settings, "freezing-delay");
+}
 /**
  * settings_can_freeze_app:
  *
@@ -242,38 +255,20 @@ settings_can_freeze_app (Settings   *self,
     return TRUE;
 }
 
-
 /**
- * settings_suspend_services:
+ * settings_get_suspend_services
  *
- * Check if services should be suspended
- *
- * @self: a #Settings
- *
- * Returns: TRUE if services should be suspended
- */
-gboolean
-settings_suspend_services (Settings *self)
-{
-    return g_settings_get_boolean (
-        self->priv->settings, "suspend-services"
-    );
-}
-
-/**
- * settings_get_suspend_services_blacklist
- *
- * Get services those can't be suspended
+ * Get services those should be suspended
  *
  * @self: a #Settings
  *
  * Return value: (transfer full): services list.
  */
 GList *
-settings_get_suspend_services_blacklist (Settings *self)
+settings_get_suspend_services (Settings *self)
 {
     g_autoptr (GVariant) value = g_settings_get_value (
-        self->priv->settings, "suspend-user-services-blacklist"
+        self->priv->settings, "suspend-user-services"
     );
     g_autoptr (GVariantIter) iter;
     const char *service;

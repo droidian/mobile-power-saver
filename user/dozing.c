@@ -23,7 +23,6 @@
 #include "../common/services.h"
 #include "../common/utils.h"
 
-#define DOZING_PRE_SLEEP          30
 #define DOZING_LIGHT_SLEEP        300
 #define DOZING_LIGHT_MAINTENANCE  30
 #define DOZING_MEDIUM_SLEEP       600
@@ -55,6 +54,8 @@ struct _DozingPrivate {
     NetworkManager *network_manager;
     NetworkManagerModem *network_manager_modem;
     Services *services;
+
+    GList *suspend_services;
 
     guint type;
     guint timeout_id;
@@ -109,34 +110,6 @@ queue_next_freeze (Dozing *self)
         self->priv->type += 1;
 }
 
-#ifdef SUSPEND_SERVICES_ENABLED
-static void
-set_services_state (Dozing   *self,
-                    gboolean  freeze)
-{
-    GList *blacklist = settings_get_suspend_services_blacklist (
-        settings_get_default ()
-    );
-    GList *bluetooth = settings_get_suspend_bluetooth_services (
-        settings_get_default ()
-    );
-    const char *service;
-
-    GFOREACH (bluetooth, service) {
-        blacklist = g_list_prepend (blacklist, g_strdup (service));
-    }
-    g_list_free (bluetooth);
-
-    if (freeze) {
-        services_freeze_all (self->priv->services, blacklist);
-    } else {
-        services_unfreeze_all (self->priv->services, blacklist);
-    }
-
-    g_list_free_full (blacklist, g_free);
-}
-#endif
-
 static void
 powersave_modem (Dozing   *self,
                  gboolean  enabled)
@@ -158,7 +131,6 @@ powersave_modem (Dozing   *self,
         klass->apply_powersave (self->priv->modem);
 }
 
-#ifdef SUSPEND_SERVICES_ENABLED
 static void
 freeze_services (Dozing *self)
 {
@@ -170,9 +142,7 @@ freeze_services (Dozing *self)
                    "dozing",
                    g_variant_new ("b", TRUE));
 
-    if (settings_suspend_services (settings_get_default ())) {
-        set_services_state (self, TRUE);
-    }
+    services_freeze (self->priv->services, self->priv->suspend_services);
 }
 
 static void
@@ -186,19 +156,14 @@ unfreeze_services (Dozing *self)
                    "dozing",
                    g_variant_new ("b", FALSE));
 
-    if (settings_suspend_services (settings_get_default ())) {
-        set_services_state (self, FALSE);
-    }
+    services_unfreeze (self->priv->services, self->priv->suspend_services);
 }
-#endif
 
 static gboolean
 freeze_apps (Dozing *self)
 {
-    Bus *bus = bus_get_default ();
     const char *app;
     gboolean data_used;
-    gboolean apps_active = FALSE;
 
     network_manager_modem_stop_monitoring (
         self->priv->network_manager_modem
@@ -211,20 +176,11 @@ freeze_apps (Dozing *self)
         g_message("Freezing apps");
         GFOREACH (self->priv->apps, app) {
             if (!mpris_can_freeze (self->priv->mpris, app)) {
-                apps_active = TRUE;
                 continue;
             }
             if (settings_can_freeze_app (settings_get_default (), app))
                 write_to_file (app, "1");
         }
-    }
-
-    if (apps_active) {
-        g_message ("Active apps: Keep little cluster active");
-    } else {
-        bus_set_value (bus,
-                       "little-cluster-powersave",
-                       g_variant_new ("b", TRUE));
     }
 
     if (data_used) {
@@ -233,9 +189,7 @@ freeze_apps (Dozing *self)
         powersave_modem (self, TRUE);
     }
 
-#ifdef SUSPEND_SERVICES_ENABLED
     freeze_services (self);
-#endif
 
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
     self->priv->timeout_id = g_timeout_add_seconds (
@@ -254,9 +208,7 @@ unfreeze_apps (Dozing *self)
 
     powersave_modem (self, FALSE);
 
-#ifdef SUSPEND_SERVICES_ENABLED
     unfreeze_services (self);
-#endif
 
     network_manager_modem_start_monitoring (
         self->priv->network_manager_modem
@@ -344,6 +296,7 @@ dozing_finalize (GObject *dozing)
     Dozing *self = DOZING (dozing);
 
     g_list_free_full (self->priv->apps, g_free);
+    g_list_free_full (self->priv->suspend_services, g_free);
     g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
     g_clear_handle_id (&self->priv->modem_timeout_id, g_source_remove);
 
@@ -376,6 +329,7 @@ dozing_init (Dozing *self)
 #endif
     self->priv->mpris = MPRIS (mpris_new ());
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SESSION));
+    self->priv->suspend_services = settings_get_suspend_services (settings_get_default ());
 
     self->priv->apps = NULL;
     self->priv->type = DOZING_LIGHT_1;
@@ -457,7 +411,7 @@ dozing_start (Dozing  *self)
 
     self->priv->type = DOZING_LIGHT_1;
     self->priv->timeout_id = g_timeout_add_seconds (
-        DOZING_PRE_SLEEP,
+        settings_get_freezing_delay(settings_get_default ()),
         (GSourceFunc) freeze_apps,
         self
     );
@@ -481,9 +435,7 @@ dozing_stop (Dozing  *self)
 
     powersave_modem (self, FALSE);
 
-#ifdef SUSPEND_SERVICES_ENABLED
     unfreeze_services (self);
-#endif
 
     network_manager_modem_stop_monitoring (
         self->priv->network_manager_modem

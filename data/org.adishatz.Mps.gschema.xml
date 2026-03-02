@@ -20,10 +20,10 @@
       <description>If applications in list are running, do not enable power saving.</description>
     </key>
 
-    <key name="suspend-services" type="b">
-      <default>false</default>
-      <summary>Suspend services when screen is off</summary>
-      <description>[MAINTAINER] Set blacklist later for this to work.</description>
+    <key name="freezing-delay" type="i">
+      <default>30</default>
+      <summary>Freeze apps after some delay</summary>
+      <description>Wait before feezing applications.</description>
     </key>
 
     <key name="suspend-apps-blacklist" type="as">
@@ -34,14 +34,14 @@
 
     <key name="suspend-user-services" type="as">
       <default>[]</default>
-      <summary>Do not suspend these services when screen is off</summary>
-      <description>When screen is turned off, these services will be ignored.</description>
+      <summary>Suspend these services when screen is off</summary>
+      <description>When screen is turned off, these services will be suspended.</description>
     </key>
 
     <key name="suspend-system-services" type="as">
       <default>[]</default>
-      <summary>Do not suspend these services when screen is off</summary>
-      <description>When screen is turned off, these services will be ignored.</description>
+      <summary>Suspend these services when screen is off</summary>
+      <description>When screen is turned off, these services will be suspended.</description>
     </key>
 
     <key name="suspend-system-bluetooth-services" type="as">

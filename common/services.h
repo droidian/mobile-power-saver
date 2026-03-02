@@ -45,13 +45,9 @@ GType           services_get_type            (void) G_GNUC_CONST;
 
 GObject*        services_new                 (GBusType bus_type);
 void            services_freeze              (Services *self,
-                                              GList   *services);
+                                              GList    *services);
 void            services_unfreeze            (Services *self,
-                                              GList   *services);
-void            services_freeze_all          (Services *self,
-                                              GList   *blacklist);
-void            services_unfreeze_all        (Services *self,
-                                              GList   *blacklist);
+                                              GList    *services);
 G_END_DECLS
 
 #endif

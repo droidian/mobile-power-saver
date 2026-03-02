@@ -24,7 +24,7 @@ sbin_dir = join_paths(get_option('prefix'), get_option('sbindir'))
 wifi_enabled = get_option('wifi')
 mm_enabled = get_option('mm')
 upower_enabled = get_option('upower')
-suspend_services_enabled = get_option('suspend-services')
+os = get_option('os')
 
 config_h = configuration_data()
 config_h.set('APP_ID', '"org.adishatz.Mps"')
@@ -36,8 +36,8 @@ config_h.set('SBIN_DIR', sbin_dir)
 config_h.set_quoted('GETTEXT_PACKAGE', 'mps')
 config_h.set_quoted('LOCALEDIR', localedir)
 
-if suspend_services_enabled
-config_h.set('SUSPEND_SERVICES_ENABLED', 1)
+if os == ''
+  error('You need to select a target OS: pmos, mobian or droidian')
 endif
 
 if wifi_enabled

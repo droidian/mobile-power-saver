@@ -40,11 +40,21 @@ gnome.compile_resources(
 )
 
 schema_src = 'org.adishatz.Mps.gschema.xml'
-compiled = gnome.compile_schemas(build_by_default: true,
-                                 depend_files: files(schema_src))
+gnome.compile_schemas(build_by_default: true,
+                      depend_files: files(schema_src))
 
 install_data(schema_src,
   install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
+)
+
+install_data(
+  'overrides/' + os + '.override',
+  install_dir: join_paths(
+  get_option('datadir'),
+  'glib-2.0',
+  'schemas'
+  ),
+  rename: '10_mobile-power-saver-' + os + '.gschema.override'
 )
 
 compile_schemas = find_program('glib-compile-schemas', required: false)

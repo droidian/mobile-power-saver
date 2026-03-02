@@ -69,21 +69,3 @@ cpufreq_device_new (void)
 
     return cpufreq_device;
 }
-
-/**
- * cpufreq_is_little:
- *
- * check #CpufreqDevice type
- *
- * @param #CpufreqDevice
- *
- * Returns: True if #CpufreqDevice is little cluster
- *
- **/
-gboolean
-cpufreq_is_little (CpufreqDevice *self)
-{
-    const char *devname = freq_device_get_name (FREQ_DEVICE (self));
-
-    return g_strcmp0 (devname, "policy0") == 0;
-}
