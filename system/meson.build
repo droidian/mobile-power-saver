@@ -4,7 +4,6 @@ mps_sources = [
   'cpufreq_device.c',
   'devfreq.c',
   'devfreq_device.c',
-  'processes.c',
   'freq_device.c',
   'kernel_settings.c',
   'logind.c',

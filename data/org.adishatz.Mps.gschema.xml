@@ -20,12 +20,6 @@
       <description>If applications in list are running, do not enable power saving.</description>
     </key>
 
-    <key name="cpuset-background-processes" type="as">
-      <default>[]</default>
-      <summary>Move these processes to background cpuset when screen is off</summary>
-      <description>When screen is turned off, processes in list are moved to background cpuset.</description>
-    </key>
-
     <key name="suspend-services" type="b">
       <default>false</default>
       <summary>Suspend services when screen is off</summary>
@@ -38,19 +32,13 @@
       <description>When screen is turned off, these apps will be ignored.</description>
     </key>
 
-    <key name="suspend-processes" type="as">
+    <key name="suspend-user-services" type="as">
       <default>[]</default>
-      <summary>Suspend these processes when screen is off</summary>
-      <description>When screen is turned off, processes in list are suspended.</description>
-    </key>
-
-    <key name="suspend-user-services-blacklist" type="as">
-      <default>['mobile-power-saver.service']</default>
       <summary>Do not suspend these services when screen is off</summary>
       <description>When screen is turned off, these services will be ignored.</description>
     </key>
 
-    <key name="suspend-system-services-blacklist" type="as">
+    <key name="suspend-system-services" type="as">
       <default>[]</default>
       <summary>Do not suspend these services when screen is off</summary>
       <description>When screen is turned off, these services will be ignored.</description>
@@ -78,18 +66,6 @@
       <default>[]</default>
       <summary>[MAINTAINER ONLY] Do not set these devfreq devices to powersave</summary>
       <description>Some devfreq devices may hang if so. Use a GLib schema override for your device.</description>
-    </key>
-
-    <key name="cpuset-blacklist" type="as">
-      <default>['mobile-power-saver.service']</default>
-      <summary>Do not move these cgroups to any cpuset</summary>
-      <description>These cgroups will not be moved to any cpuset.</description>
-    </key>
-
-    <key name="cpuset-topapp" type="as">
-      <default>[]</default>
-      <summary>Move these cgroups to top-app cpuset</summary>
-      <description>These cgroups will be moved to top-app cpuset.</description>
     </key>
 
   </schema>

@@ -7,14 +7,6 @@ configure_file(
   install_dir: systemd_user_dir
 )
 
-# Android cpuset
-if cpuset_enabled
-install_data(
-  'android-cpuset.service',
-  install_dir: systemd_system_dir
-)
-endif
-
 # DBus service
 configure_file(
   input: 'org.adishatz.Mps.service.in',

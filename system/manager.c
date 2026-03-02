@@ -11,9 +11,6 @@
 #include "cpufreq.h"
 #include "config.h"
 #include "devfreq.h"
-#ifdef PROC_ENABLED
-#include "processes.h"
-#endif
 #include "kernel_settings.h"
 #include "logind.h"
 #include "manager.h"
@@ -32,9 +29,6 @@ struct _ManagerPrivate {
     Cpufreq *cpufreq;
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
-#ifdef PROC_ENABLED
-    Processes *processes;
-#endif
 #ifdef SUSPEND_SERVICES_ENABLED
     Services *services;
 #endif
@@ -46,13 +40,6 @@ struct _ManagerPrivate {
 
 #ifdef SUSPEND_SERVICES_ENABLED
     gboolean suspend_services;
-#endif
-
-#ifdef PROC_ENABLED
-    GList *suspend_processes;
-#endif
-#ifdef CPUSET_ENABLED
-    GList *cpuset_background_processes;
 #endif
 
 #ifdef SUSPEND_SERVICES_ENABLED
@@ -88,24 +75,7 @@ on_screen_state_changed (Logind logind,
     Manager *self = MANAGER (user_data);
 #ifdef SUSPEND_SERVICES_ENABLED
     GList *system_services = get_cgroup_services (CGROUPS_SYSTEM_SERVICES_DIR);
-    GList *user_services = NULL;
 #endif
-    GList *user_slices = get_cgroup_slices (self->priv->cgroups_user_dir);
-    GList *user_apps = NULL;
-    const char *slice;
-
-#ifdef SUSPEND_SERVICES_ENABLED
-    GFOREACH (user_slices, slice) {
-        GList *services = get_cgroup_services (slice);
-
-        user_services = g_list_concat (user_services, services);
-    }
-#endif
-    GFOREACH (user_slices, slice) {
-        GList *apps = get_cgroup_apps (slice);
-
-        user_apps = g_list_concat (user_apps, apps);
-    }
 
     if (self->priv->screen_off_power_saving) {
         bus_screen_state_changed (bus_get_default (), screen_on);
@@ -119,69 +89,13 @@ on_screen_state_changed (Logind logind,
 #endif
         if (screen_on) {
             cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
-#ifdef CPUSET_ENABLED
-            processes_set_cpuset (
-                self->priv->processes,
-                self->priv->cpuset_background_processes,
-                CPUSET_SYSTEM_BACKGROUND
-            );
-            processes_set_cgroup_cpuset (
-                self->priv->processes,
-                CGROUPS_SYSTEM_SERVICES_DIR,
-                system_services,
-                CPUSET_SYSTEM_BACKGROUND
-            );
-            processes_set_cgroup_cpuset (
-                self->priv->processes,
-                self->priv->cgroups_user_dir,
-                user_services,
-                CPUSET_FOREGROUND
-            );
-            processes_set_cgroup_cpuset (
-                self->priv->processes,
-                self->priv->cgroups_user_dir,
-                user_apps,
-                CPUSET_TOPAPP
-            );
-#endif
         } else {
             cpufreq_set_powersave (self->priv->cpufreq, TRUE, FALSE);
-#ifdef PROC_ENABLED
-            processes_update (self->priv->processes);
-#endif
-#ifdef CPUSET_ENABLED
-            processes_set_cpuset (
-                self->priv->processes,
-                self->priv->cpuset_background_processes,
-                CPUSET_BACKGROUND
-            );
-            processes_set_cgroup_cpuset (
-                self->priv->processes,
-                CGROUPS_SYSTEM_SERVICES_DIR,
-                system_services,
-                CPUSET_BACKGROUND
-            );
-            processes_set_cgroup_cpuset (
-                self->priv->processes,
-                self->priv->cgroups_user_dir,
-                user_services,
-                CPUSET_BACKGROUND
-            );
-            processes_set_cgroup_cpuset (
-                self->priv->processes,
-                self->priv->cgroups_user_dir,
-                user_apps,
-                CPUSET_SYSTEM_BACKGROUND
-            );
-#endif
         }
     }
 #ifdef SUSPEND_SERVICES_ENABLED
     g_list_free_full (system_services, g_free);
-    g_list_free_full (user_services, g_free);
 #endif
-    g_list_free_full (user_slices, g_free);
-    g_list_free_full (user_apps, g_free);
 }
 
 static void
@@ -226,23 +140,6 @@ on_bus_setting_changed (Bus      *bus,
             cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
             devfreq_set_powersave (self->priv->devfreq, FALSE);
         }
-#ifdef CPUSET_ENABLED
-    } else if (g_strcmp0 (setting, "cpuset-background-processes") == 0) {
-        g_list_free_full (
-            self->priv->cpuset_background_processes, g_free
-        );
-        self->priv->cpuset_background_processes = get_list_from_variant (
-            inner_value
-        );
-    } else if (g_strcmp0 (setting, "cpuset-blacklist") == 0) {
-        GList *list = get_list_from_variant (inner_value);
-
-        processes_cpuset_set_blacklist (self->priv->processes, list);
-    } else if (g_strcmp0 (setting, "cpuset-topapp") == 0) {
-        GList *list = get_list_from_variant (inner_value);
-
-        processes_cpuset_set_topapp (self->priv->processes, list);
-#endif
 #ifdef SUSPEND_SERVICES_ENABLED
     } else if (g_strcmp0 (setting, "suspend-system-services-blacklist") == 0) {
         g_list_free_full (
@@ -299,28 +196,6 @@ on_bus_setting_changed (Bus      *bus,
 
             g_list_free_full (blacklist, g_free);
         }
-#ifdef PROC_ENABLED
-        if (dozing) {
-            processes_suspend (
-                self->priv->processes,
-                self->priv->suspend_processes
-            );
-        } else {
-            processes_resume (
-                self->priv->processes,
-                self->priv->suspend_processes
-            );
-        }
-#endif
-#endif
-#ifdef PROC_ENABLED
-    } else if (g_strcmp0 (setting, "suspend-processes") == 0) {
-        g_list_free_full (
-            self->priv->suspend_processes, g_free
-        );
-        self->priv->suspend_processes = get_list_from_variant (
-            inner_value
-        );
 #endif
 #ifdef SUSPEND_SERVICES_ENABLED
     } else if (g_strcmp0 (setting, "suspend-system-bluetooth-services") == 0) {
@@ -376,9 +251,6 @@ manager_dispose (GObject *manager)
     g_clear_object (&self->priv->cpufreq);
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
-#ifdef PROC_ENABLED
-    g_clear_object (&self->priv->processes);
-#endif
 #ifdef SUSPEND_SERVICES_ENABLED
     g_clear_object (&self->priv->services);
 #endif
@@ -394,16 +266,6 @@ manager_finalize (GObject *manager)
 {
     Manager *self = MANAGER (manager);
 
-#ifdef PROC_ENABLED
-    g_list_free_full (
-        self->priv->suspend_processes, g_free
-    );
-#endif
-#ifdef CPUSET_ENABLED
-    g_list_free_full (
-        self->priv->cpuset_background_processes, g_free
-    );
-#endif
 #ifdef SUSPEND_SERVICES_ENABLED
     g_list_free_full (
         self->priv->suspend_system_services_blacklist, g_free
@@ -437,9 +299,6 @@ manager_init (Manager *self)
     self->priv->cpufreq = CPUFREQ (cpufreq_new ());
     self->priv->devfreq = DEVFREQ (devfreq_new ());
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
-#ifdef PROC_ENABLED
-    self->priv->processes = PROCESSES (processes_new ());
-#endif
 #ifdef SUSPEND_SERVICES_ENABLED
     self->priv->services = SERVICES (services_new (G_BUS_TYPE_SYSTEM));
 #endif
@@ -454,15 +313,9 @@ manager_init (Manager *self)
 #endif
 
     self->priv->radio_power_saving = FALSE;
-#ifdef PROC_ENABLED
-    self->priv->suspend_processes = NULL;
-#endif
     self->priv->cgroups_user_dir = NULL;
 #ifdef SUSPEND_SERVICES_ENABLED
     self->priv->suspend_system_services_blacklist = NULL;
-#endif
-#ifdef CPUSET_ENABLED
-    self->priv->cpuset_background_processes = NULL;
 #endif
 #ifdef SUSPEND_SERVICES_ENABLED
     self->priv->suspend_bluetooth_services = NULL;

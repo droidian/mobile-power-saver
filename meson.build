@@ -22,10 +22,8 @@ sbin_dir = join_paths(get_option('prefix'), get_option('sbindir'))
 
 
 wifi_enabled = get_option('wifi')
-cpuset_enabled = get_option('cpuset')
 mm_enabled = get_option('mm')
 upower_enabled = get_option('upower')
-proc_enabled = get_option('proc')
 suspend_services_enabled = get_option('suspend-services')
 
 config_h = configuration_data()
@@ -40,14 +38,6 @@ config_h.set_quoted('LOCALEDIR', localedir)
 
 if suspend_services_enabled
 config_h.set('SUSPEND_SERVICES_ENABLED', 1)
-endif
-
-if cpuset_enabled
-config_h.set('CPUTSET_ENABLED', 1)
-endif
-
-if proc_enabled
-config_h.set('PROC_ENABLED', 1)
 endif
 
 if wifi_enabled
@@ -136,6 +126,3 @@ add_project_arguments(project_c_args, language: 'c')
 subdir('system')
 subdir('user')
 subdir('data')
-if cpuset_enabled
-subdir('sh')
-endif
