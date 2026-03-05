@@ -48,8 +48,6 @@ void            devfreq_blacklist           (Devfreq    *self,
                                              const char *device_name);
 void            devfreq_set_powersave       (Devfreq     *self,
                                              gboolean     powersave);
-void            devfreq_set_governor        (Devfreq    *self,
-                                             const char *governor);
 G_END_DECLS
 
 #endif

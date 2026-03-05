@@ -10,10 +10,13 @@
 struct _FreqDevicePrivate {
     char *sysfs_dir;
     char *device_name;
-    char *governor_node;
 
-    char *default_governor;
-    char *current_governor;
+    const char* cur_node;
+    const char *min_node;
+    const char *max_node;
+
+    char *min_freq;
+    char *max_freq;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -24,19 +27,20 @@ G_DEFINE_TYPE_WITH_CODE (
 )
 
 static void
-set_governor (FreqDevice *freq_device,
-              const char *governor)
+set_freq (FreqDevice *freq_device,
+          const char *node,
+          const char *freq)
 {
     g_autofree char *filename = g_build_filename (
         freq_device->priv->sysfs_dir,
         freq_device->priv->device_name,
-        freq_device->priv->governor_node,
+        freq_device->priv->cur_node,
         NULL
     );
 
-    g_message ("%s -> %s", filename, governor);
+    g_message ("%s -> %s", filename, freq);
 
-    write_to_file (filename, governor);
+    write_to_file (filename, freq);
 }
 
 static void
@@ -50,10 +54,9 @@ freq_device_finalize (GObject *freq_device)
 {
     FreqDevice *self = FREQ_DEVICE (freq_device);
 
-    g_free (self->priv->default_governor);
-    g_free (self->priv->current_governor);
+    g_free (self->priv->min_freq);
+    g_free (self->priv->max_freq);
     g_free (self->priv->device_name);
-    g_free (self->priv->governor_node);
     g_free (self->priv->sysfs_dir);
 
     G_OBJECT_CLASS (freq_device_parent_class)->finalize (freq_device);
@@ -76,9 +79,8 @@ freq_device_init (FreqDevice *self)
 
     self->priv->device_name = NULL;
     self->priv->sysfs_dir = NULL;
-    self->priv->governor_node = NULL;
-    self->priv->default_governor = NULL;
-    self->priv->current_governor = NULL;
+    self->priv->min_freq = NULL;
+    self->priv->max_freq = NULL;
 }
 
 /**
@@ -106,7 +108,8 @@ freq_device_new (void)
  *
  * @self: #FreqDevice
  * @sys_dir: path to freq device policy dir
- * @governor_node: sysfs governor node
+ * @min_node: min node name
+ * @max_node: max node name
  *
  * Returns: (transfer full): a new #FreqDevice
  *
@@ -114,13 +117,17 @@ freq_device_new (void)
 void
 freq_device_set_sysfs_settings (FreqDevice *self,
                                 const char *directory,
-                                const char *governor_node)
+                                const char *cur_node,
+                                const char *min_node,
+                                const char *max_node)
 {
     if (self->priv->sysfs_dir != NULL)
         g_free (self->priv->sysfs_dir);
 
     self->priv->sysfs_dir = g_strdup (directory);
-    self->priv->governor_node = g_strdup (governor_node);
+    self->priv->cur_node = cur_node;
+    self->priv->min_node = min_node;
+    self->priv->max_node = max_node;
 }
 
 /**
@@ -136,10 +143,12 @@ void
 freq_device_set_name (FreqDevice *self,
                       const char *device_name)
 {
-    g_autofree char *contents = NULL;
-
-    g_autofree char *filename = g_build_filename (
-        self->priv->sysfs_dir, device_name, self->priv->governor_node, NULL
+    g_autofree char *max, *min = NULL;
+    g_autofree char *max_file = g_build_filename (
+        self->priv->sysfs_dir, device_name, self->priv->max_node, NULL
+    );
+    g_autofree char *min_file = g_build_filename (
+        self->priv->sysfs_dir, device_name, self->priv->min_node, NULL
     );
 
     g_return_if_fail (self->priv->device_name == NULL);
@@ -147,17 +156,27 @@ freq_device_set_name (FreqDevice *self,
 
     self->priv->device_name = g_strdup (device_name);
 
-    if (g_file_get_contents (filename, &contents, NULL, NULL)) {
-        contents = g_strchomp (contents);
+    if (g_file_get_contents (max_file, &max, NULL, NULL)) {
+        max = g_strchomp (max);
 
-        if (self->priv->default_governor != NULL)
-            g_free (self->priv->default_governor);
+        if (self->priv->max_freq != NULL)
+            g_free (self->priv->max_freq);
 
-        self->priv->default_governor = g_steal_pointer (&contents);
-        g_message("default governor: %s -> %s",
-                  filename,
-                  self->priv->default_governor);
+        self->priv->max_freq = g_steal_pointer (&max);
     }
+
+    if (g_file_get_contents (min_file, &min, NULL, NULL)) {
+        min = g_strchomp (min);
+
+        if (self->priv->min_freq != NULL)
+            g_free (self->priv->min_freq);
+
+        self->priv->min_freq = g_steal_pointer (&min);
+    }
+
+    g_message("max: %s -> %s", max_file, self->priv->max_freq);
+    g_message("min: %s -> %s", min_file, self->priv->min_freq);
+
 }
 
 /**
@@ -188,32 +207,17 @@ void
 freq_device_set_powersave (FreqDevice *self,
                            gboolean    powersave)
 {
-    if (powersave)
-        set_governor (self, "powersave");
-    else if (self->priv->current_governor != NULL)
-        set_governor (self, self->priv->current_governor);
-    else if (self->priv->default_governor != NULL)
-        set_governor (self, self->priv->default_governor);
-}
-
-/**
- * freq_device_set_governor:
- *
- * Set freq device governor
- *
- * @param #FreqDevice
- * @param governor: new governor to set
- */
-void
-freq_device_set_governor (FreqDevice *self,
-                          const char *governor)
-{
-    if (self->priv->current_governor != NULL)
-        g_free (self->priv->current_governor);
-
-    if (governor == NULL)
-        self->priv->current_governor = g_strdup (self->priv->default_governor);
-    else
-        self->priv->current_governor = g_strdup (governor);
-    set_governor (self, self->priv->current_governor);
+    if (powersave) {
+        set_freq (
+            self,
+            self->priv->cur_node,
+            self->priv->min_freq
+        );
+    } else {
+        set_freq (
+            self,
+            self->priv->cur_node,
+            self->priv->max_freq
+        );
+    }
 }

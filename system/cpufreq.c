@@ -124,20 +124,3 @@ cpufreq_set_powersave (Cpufreq  *cpufreq,
     GFOREACH (cpufreq->priv->cpufreq_devices, cpufreq_device)
         freq_device_set_powersave (FREQ_DEVICE (cpufreq_device), powersave);
 }
-
-/**
- * cpufreq_set_governor:
- *
- * Set cpufreq devices governor
- *
- * @param #Cpufreq
- * @param governor: new governor to set
- */
-void
-cpufreq_set_governor (Cpufreq    *cpufreq,
-                      const char *governor) {
-    CpufreqDevice *cpufreq_device;
-
-    GFOREACH (cpufreq->priv->cpufreq_devices, cpufreq_device)
-        freq_device_set_governor (FREQ_DEVICE (cpufreq_device), governor);
-}
