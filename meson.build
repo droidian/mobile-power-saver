@@ -23,7 +23,6 @@ sbin_dir = join_paths(get_option('prefix'), get_option('sbindir'))
 
 wifi_enabled = get_option('wifi')
 mm_enabled = get_option('mm')
-upower_enabled = get_option('upower')
 os = get_option('os')
 
 config_h = configuration_data()
@@ -46,10 +45,6 @@ endif
 
 if mm_enabled
 config_h.set('MM_ENABLED', 1)
-endif
-
-if upower_enabled
-config_h.set('UPOWER_ENABLED', 1)
 endif
 
 configure_file(output: 'config.h', configuration: config_h)

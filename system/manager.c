@@ -47,15 +47,6 @@ G_DEFINE_TYPE_WITH_CODE (
     G_ADD_PRIVATE (Manager)
 )
 
-static const char *
-get_governor_from_power_profile (PowerProfile power_profile) {
-    if (power_profile == POWER_PROFILE_POWER_SAVER)
-        return "powersave";
-    if (power_profile == POWER_PROFILE_PERFORMANCE)
-        return "performance";
-    return NULL;
-}
-
 static void
 on_screen_state_changed (Logind logind,
                          gboolean screen_on,
@@ -82,16 +73,6 @@ on_screen_state_changed (Logind logind,
 }
 
 static void
-set_power_profile (Manager      *self,
-                   PowerProfile  power_profile)
-{
-    const char *governor = get_governor_from_power_profile (power_profile);
-
-    cpufreq_set_governor (self->priv->cpufreq, governor);
-    devfreq_set_governor (self->priv->devfreq, governor);
-}
-
-static void
 on_bus_setting_changed (Bus      *bus,
                         GVariant *value,
                         gpointer  user_data)
@@ -102,10 +83,7 @@ on_bus_setting_changed (Bus      *bus,
 
     g_variant_get (value, "(&sv)", &setting, &inner_value);
 
-    if (g_strcmp0 (setting, "power-saving-mode") == 0) {
-        gint power_profile = g_variant_get_int32 (inner_value);
-        set_power_profile (self, power_profile);
-    } else if (g_strcmp0 (setting, "screen-off-power-saving") == 0) {
+    if (g_strcmp0 (setting, "screen-off-power-saving") == 0) {
         self->priv->screen_off_power_saving = g_variant_get_boolean (inner_value);
 
         if (!self->priv->screen_off_power_saving) {

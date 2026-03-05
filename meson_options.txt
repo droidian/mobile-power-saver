@@ -1,5 +1,4 @@
 # features
 option('wifi', type: 'boolean', value: true, description: 'Enable or disable Wi-Fi powersave support')
 option('mm', type: 'boolean', value: true, description: 'Enable ModemManager support')
-option('upower', type: 'boolean', value: false, description: 'Enable UPower support')
 option('os', type: 'string', value: '', description: 'Select target OS')

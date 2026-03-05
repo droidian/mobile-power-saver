@@ -22,14 +22,6 @@ install_data(
   install_dir: dbus_conf_dir
 )
 
-# Upower DBus configuration
-if upower_enabled
-install_data(
-  'org.freedesktop.UPower.PowerProfiles.conf',
-  install_dir: dbus_conf_dir
-)
-endif
-
 gnome.compile_resources(
   meson.project_name(),
   meson.project_name() + '.gresource.xml',
