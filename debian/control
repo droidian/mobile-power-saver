@@ -18,28 +18,10 @@ Homepage: https://gitlab.gnome.org/gnumdk/mobile-power-saver
 
 Package: mobile-power-saver
 Architecture: any
+Conflicts: mobile-power-saver-droidian-miatoll,mobile-power-saver-droidian-phosh,mobile-power-saver-gnome
+Replaces: mobile-power-saver-droidian-miatoll,mobile-power-saver-droidian-phosh,mobile-power-saver-gnome
 Depends:
  dbus,
  ${shlibs:Depends},
  ${misc:Depends},
 Description: Mobile Power Saver enable hard power saving when screen is off.
-
-Package: mobile-power-saver-gnome
-Architecture: any
-Depends: mobile-power-saver
-Description: Mobile Power Saver configuration for GNOME
-
-Package: mobile-power-saver-mobian-phosh
-Architecture: any
-Depends: mobile-power-saver
-Description: Mobile Power Saver configuration for Mobian/Phosh
-
-Package: mobile-power-saver-droidian-phosh
-Architecture: any
-Depends: mobile-power-saver
-Description: Mobile Power Saver configuration for Droidian/Phosh
-
-Package: mobile-power-saver-droidian-miatoll
-Architecture: any
-Depends: mobile-power-saver
-Description: Mobile Power Saver configuration for Droidian/Miatoll
