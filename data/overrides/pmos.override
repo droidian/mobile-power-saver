@@ -3,5 +3,4 @@ freezing-delay=0
 suspend-system-bluetooth-services=['bluetooth.service']
 suspend-user-bluetooth-services=['mpris-proxy.service', 'obex.service']
 bluetooth-power-saving-blacklist=['io.gitlab.azymohliad.WatchMate']
-suspend-apps-blacklist=['sm.puri.Chatty', 'io.gitlab.azymohliad.WatchMate']
-suspend-system-services=['systemd-oomd.service']
+suspend-apps-blacklist=['sm.puri.Chatty', 'io.gitlab.azymohliad.WatchMate', 'app-gnome-mpris\x2dproxy']
