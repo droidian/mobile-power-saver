@@ -11,7 +11,6 @@ struct _FreqDevicePrivate {
     char *sysfs_dir;
     char *device_name;
 
-    const char* cur_node;
     const char *min_node;
     const char *max_node;
 
@@ -34,7 +33,7 @@ set_freq (FreqDevice *freq_device,
     g_autofree char *filename = g_build_filename (
         freq_device->priv->sysfs_dir,
         freq_device->priv->device_name,
-        freq_device->priv->cur_node,
+        freq_device->priv->max_node,
         NULL
     );
 
@@ -117,7 +116,6 @@ freq_device_new (void)
 void
 freq_device_set_sysfs_settings (FreqDevice *self,
                                 const char *directory,
-                                const char *cur_node,
                                 const char *min_node,
                                 const char *max_node)
 {
@@ -125,7 +123,6 @@ freq_device_set_sysfs_settings (FreqDevice *self,
         g_free (self->priv->sysfs_dir);
 
     self->priv->sysfs_dir = g_strdup (directory);
-    self->priv->cur_node = cur_node;
     self->priv->min_node = min_node;
     self->priv->max_node = max_node;
 }
@@ -210,13 +207,13 @@ freq_device_set_powersave (FreqDevice *self,
     if (powersave) {
         set_freq (
             self,
-            self->priv->cur_node,
+            self->priv->max_node,
             self->priv->min_freq
         );
     } else {
         set_freq (
             self,
-            self->priv->cur_node,
+            self->priv->max_node,
             self->priv->max_freq
         );
     }

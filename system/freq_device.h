@@ -46,7 +46,6 @@ GType           freq_device_get_type            (void) G_GNUC_CONST;
 GObject*        freq_device_new                 (void);
 void            freq_device_set_sysfs_settings  (FreqDevice *self,
                                                  const char *directory,
-                                                 const char *cur_node,
                                                  const char *min_node,
                                                  const char *max_node);
 void            freq_device_set_name            (FreqDevice *self,

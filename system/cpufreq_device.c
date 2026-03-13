@@ -50,7 +50,6 @@ cpufreq_device_init (CpufreqDevice *self)
     freq_device_set_sysfs_settings (
         FREQ_DEVICE (self),
         CPUFREQ_POLICIES_DIR,
-        "scaling_cur_freq",
         "scaling_min_freq",
         "scaling_max_freq"
     );

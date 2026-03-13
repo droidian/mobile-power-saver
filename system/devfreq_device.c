@@ -48,7 +48,7 @@ devfreq_device_init (DevfreqDevice *self)
     self->priv = devfreq_device_get_instance_private (self);
 
     freq_device_set_sysfs_settings (
-        FREQ_DEVICE (self), DEVFREQ_DIR, "cur_freq", "min_freq", "max_freq"
+        FREQ_DEVICE (self), DEVFREQ_DIR, "min_freq", "max_freq"
     );
 }
 
