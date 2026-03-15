@@ -19,8 +19,9 @@
 #include "../common/utils.h"
 
 #define WPA_DBUS_NAME       "fi.w1.wpa_supplicant1"
-#define WPA_DBUS_PATH       "/fi/w1/wpa_supplicant1/Interfaces/0"
-#define WPA_DBUS_INTERFACE  "fi.w1.wpa_supplicant1.Interface"
+#define WPA_DBUS_PATH       "/fi/w1/wpa_supplicant1"
+#define WPA_DBUS_INTERFACE  "fi.w1.wpa_supplicant1"
+#define WPA_DBUS_IFACE_INTERFACE  "fi.w1.wpa_supplicant1.Interface"
 
 #define WPA_DEFAULT_SCAN_INTERVAL 5
 #define WPA_POWERSAVE_SCAN_INTERVAL 300
@@ -125,6 +126,41 @@ init_wifi_interfaces(WiFi *self)
     nl_cb_put (cb);
 }
 
+static char*
+get_dbus_path (GDBusProxy *proxy) {
+    g_autoptr (GError) error = NULL;
+    g_autoptr(GVariant) value = NULL;
+    g_autoptr(GVariant) inner_value = NULL;
+    g_autoptr (GVariantIter) iter = NULL;
+    const gchar *path;
+
+    value = g_dbus_proxy_call_sync(
+        proxy,
+        "Get",
+        g_variant_new (
+            "(ss)",
+            WPA_DBUS_INTERFACE,
+            "Interfaces"
+        ),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &error);
+
+    if (error != NULL) {
+        g_error ("Can't list wpa interfaces: %s", error->message);
+        return NULL;
+    }
+
+    g_variant_get (value, "(v)", &inner_value);
+    g_variant_get (inner_value, "ao", &iter);
+    /* Only hanle first connection */
+    while (g_variant_iter_loop(iter, "&o", &path, NULL)) {
+        return g_strdup (path);
+    }
+    return NULL;
+}
+
 static void
 wifi_dispose (GObject *wifi)
 {
@@ -162,7 +198,7 @@ wifi_init (WiFi *self)
 
     self->priv = wifi_get_instance_private (self);
 
-    self->priv->wpa_proxy = g_dbus_proxy_new_for_bus_sync (
+    self->priv->wpa_proxy = g_dbus_proxy_new_for_bus_sync(
         G_BUS_TYPE_SYSTEM,
         0,
         NULL,
@@ -173,8 +209,9 @@ wifi_init (WiFi *self)
         &error
     );
 
-    if (error != NULL)
+    if (error != NULL) {
         g_error ("Can't contact wpa_supplicant: %s", error->message);
+    }
 
     self->priv->ifindex = -1;
 
@@ -224,32 +261,51 @@ void
 wifi_set_powersave (WiFi     *self,
                     gboolean  powersave)
 {
+    g_autofree char *path = get_dbus_path (self->priv->wpa_proxy);
+    g_autoptr (GDBusProxy) iface_proxy = NULL;
     g_autoptr (GError) error = NULL;
     struct nl_msg *msg  = NULL;
     guint interval;
 
-    if (powersave)
-        interval = WPA_POWERSAVE_SCAN_INTERVAL;
-    else
-        interval = WPA_DEFAULT_SCAN_INTERVAL;
+    if (path != NULL) {
+        if (powersave)
+            interval = WPA_POWERSAVE_SCAN_INTERVAL;
+        else
+            interval = WPA_DEFAULT_SCAN_INTERVAL;
 
-    g_dbus_proxy_call_sync (
-        self->priv->wpa_proxy,
-        "Set",
-        g_variant_new (
-            "(ssv)",
-            WPA_DBUS_INTERFACE,
-            "ScanInterval",
-            g_variant_new ("i", interval)
-        ),
-        G_DBUS_CALL_FLAGS_NONE,
-        -1,
-        NULL,
-        &error
-    );
+        iface_proxy = g_dbus_proxy_new_for_bus_sync(
+            G_BUS_TYPE_SYSTEM,
+            0,
+            NULL,
+            WPA_DBUS_NAME,
+            path,
+            DBUS_PROPERTIES_INTERFACE,
+            NULL,
+            &error
+        );
 
-    if (error != NULL) {
-        g_warning ("Can't set wpa scan interval: %s", error->message);
+        if (error != NULL) {
+            g_warning ("Can't set wpa scan interval: %s", error->message);
+        } else {
+            g_dbus_proxy_call_sync (
+                iface_proxy,
+                "Set",
+                g_variant_new (
+                    "(ssv)",
+                    WPA_DBUS_IFACE_INTERFACE,
+                    "ScanInterval",
+                    g_variant_new ("i", interval)
+                ),
+                G_DBUS_CALL_FLAGS_NONE,
+                -1,
+                NULL,
+                &error
+            );
+
+            if (error != NULL) {
+                g_warning ("Can't set wpa scan interval: %s", error->message);
+            }
+        }
     }
 
     g_return_if_fail (self->priv->socket != NULL);
