@@ -18,8 +18,6 @@ struct _ModemMMPrivate {
     MMManager *manager;
 
     GList *modems;
-
-    guint blacklist;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -87,31 +85,25 @@ modem_mm_set_powersave (Modem    *self,
         if (mm_modem_get_supported_modes (modem, &modes, &n_modes)) {
             guint allowed, preferred;
             g_autoptr (GError) error = NULL;
+            gint i = n_modes - 1;
 
             allowed = modes[n_modes - 1].allowed;
             preferred = modes[n_modes - 1].preferred;
 
+            /* On powersave, switch to first mode after 4G */
             if (powersave) {
-                gint i = 0;
-                guint previous_flags = 0;
-                while (i <= n_modes - 1) {
-                    guint flags = modes[i].allowed & ~previous_flags;
-                    if ((flags & this->priv->blacklist) == 0) {
-                        allowed = modes[i].allowed;
-                        preferred = modes[i].preferred;
-                        break;
-                    }
-                    previous_flags = modes[i].allowed;
-                    i += 1;
-                }
-            } else {
-                gint i = n_modes - 1;
-                allowed = modes[i].allowed;
-                 while (i >= 0) {
-                    if (modes[i].allowed != allowed)
-                        break;
+                 while (i >= 0 &&
+                        (allowed & MM_MODEM_MODE_4G) == MM_MODEM_MODE_4G) {
                     allowed = modes[i].allowed;
                     preferred = modes[i].preferred;
+                    i -= 1;
+                }
+            } else {
+                while (i >= 0) {
+                    if (modes[i].preferred > preferred) {
+                        allowed = modes[i].allowed;
+                        preferred = modes[i].preferred;
+                    }
                     i -= 1;
                 }
             }
@@ -190,8 +182,6 @@ modem_mm_init (ModemMM *self)
 
     self->priv = modem_mm_get_instance_private (self);
     self->priv->modems = NULL;
-    /* 2G is deprecated in many countries */
-    self->priv->blacklist = MM_MODEM_MODE_CS | MM_MODEM_MODE_2G;
 
     self->priv->connection = g_bus_get_sync (
         G_BUS_TYPE_SYSTEM, NULL, &error
