@@ -15,19 +15,19 @@
     </key>
 
     <key name="bluetooth-power-saving-blacklist" type="as">
-      <default>[]</default>
+      <default>['io.gitlab.azymohliad.WatchMate']</default>
       <summary>Do not enable Bluetooth power saving if these apps are running</summary>
       <description>If applications in list are running, do not enable power saving.</description>
     </key>
 
     <key name="freezing-delay" type="i">
-      <default>30</default>
+      <default>0</default>
       <summary>Freeze apps after some delay</summary>
       <description>Wait before feezing applications.</description>
     </key>
 
     <key name="suspend-apps-blacklist" type="as">
-      <default>[]</default>
+      <default>['sm.puri.Chatty', 'io.gitlab.azymohliad.WatchMate', 'app-gnome-mpris\x2dproxy']</default>
       <summary>Do not suspend these apps when screen is off</summary>
       <description>When screen is turned off, these apps will be ignored.</description>
     </key>
@@ -45,13 +45,13 @@
     </key>
 
     <key name="suspend-system-bluetooth-services" type="as">
-      <default>[]</default>
+      <default>['bluetooth.service']</default>
       <summary>Suspend these bluetooth system services</summary>
       <description>When screen is turned off and bluetooth is unused, these services will be suspended.</description>
     </key>
 
     <key name="suspend-user-bluetooth-services" type="as">
-      <default>[]</default>
+      <default>['mpris-proxy.service', 'obex.service']</default>
       <summary>Suspend these bluetooth user services</summary>
       <description>When screen is turned off and bluetooth is unused, these services will be suspended.</description>
     </key>

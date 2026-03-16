@@ -23,7 +23,6 @@ sbin_dir = join_paths(get_option('prefix'), get_option('sbindir'))
 
 wifi_enabled = get_option('wifi')
 mm_enabled = get_option('mm')
-os = get_option('os')
 
 config_h = configuration_data()
 config_h.set('APP_ID', '"org.adishatz.Mps"')
@@ -34,10 +33,6 @@ config_h.set('BIN_DIR', bin_dir)
 config_h.set('SBIN_DIR', sbin_dir)
 config_h.set_quoted('GETTEXT_PACKAGE', 'mps')
 config_h.set_quoted('LOCALEDIR', localedir)
-
-if os == ''
-  error('You need to select a target OS: pmos, mobian or droidian')
-endif
 
 if wifi_enabled
 config_h.set('WIFI_ENABLED', 1)
