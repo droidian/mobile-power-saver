@@ -10,6 +10,7 @@
 
 #include "network_manager.h"
 #include "modem_mm.h"
+#include "settings.h"
 #include "../common/utils.h"
 
 struct _ModemMMPrivate {
@@ -39,6 +40,16 @@ on_modem_added (MMManager *modem_manager,
     modem = mm_object_peek_modem(modem_object);
     if (modem) {
         self->priv->modems = g_list_append (self->priv->modems, modem);
+    }
+
+    /* Resetting MM_MODEM_POWER_STATE_LOW does not work on PMOS 25.12 */
+    if (settings_get_radio_powersaving (settings_get_default())) {
+        if (mm_modem_set_power_state_sync (
+                modem,
+                MM_MODEM_POWER_STATE_LOW,
+                NULL, NULL)) {
+                g_message ("Modem in low power mode");
+            }
     }
 }
 
