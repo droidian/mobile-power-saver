@@ -203,6 +203,9 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
                                gboolean        powersave)
 {
     if (powersave) {
+        write_to_file (
+            "/sys/kernel/mm/lru_gen/min_ttl_ms", "500"
+        );
         /* https://www.fatalerrors.org/a/schedtune-learning-notes.html */
         write_to_file (
             "/sys/fs/cgroup/schedtune/schedtune.boost", "0"
@@ -291,6 +294,9 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
             "/proc/sys/net/ipv4/tcp_fin_timeout", "5"
         );
     } else {
+        write_to_file (
+            "/sys/kernel/mm/lru_gen/min_ttl_ms", "0"
+        );
         /* https://lwn.net/Articles/706374/ */
         write_to_file (
             "/sys/fs/cgroup/schedtune/schedtune.boost", "10"
