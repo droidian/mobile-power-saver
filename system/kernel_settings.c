@@ -203,6 +203,29 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
                                gboolean        powersave)
 {
     if (powersave) {
+        /*
+         * These control how long NAPI defers processing before waking the CPU.
+         * By default both are 0, meaning every incoming packet immediately
+         * triggers a CPU wakeup.
+         */
+        write_to_file (
+            "/sys/class/net/rmnet_ipa0/napi_defer_hard_irqs", "100"
+        );
+        write_to_file (
+            "/sys/class/net/qmapmux0.0/napi_defer_hard_irqs", "100"
+        );
+        write_to_file (
+            "/sys/class/net/wlan0/napi_defer_hard_irqs", "100"
+        );
+        write_to_file (
+            "/sys/class/net/rmnet_ipa0/gro_flush_timeout", "50000000"
+        );
+        write_to_file (
+            "/sys/class/net/qmapmux0.0/gro_flush_timeout", "50000000"
+        );
+        write_to_file (
+            "/sys/class/net/wlan0/gro_flush_timeout", "50000000"
+        );
         write_to_file (
             "/sys/kernel/mm/lru_gen/min_ttl_ms", "500"
         );
@@ -294,6 +317,24 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
             "/proc/sys/net/ipv4/tcp_fin_timeout", "5"
         );
     } else {
+        write_to_file (
+            "/sys/class/net/rmnet_ipa0/napi_defer_hard_irqs", "0"
+        );
+        write_to_file (
+            "/sys/class/net/qmapmux0.0/napi_defer_hard_irqs", "0"
+        );
+        write_to_file (
+            "/sys/class/net/wlan0/napi_defer_hard_irqs", "0"
+        );
+        write_to_file (
+            "/sys/class/net/rmnet_ipa0/gro_flush_timeout", "0"
+        );
+        write_to_file (
+            "/sys/class/net/qmapmux0.0/gro_flush_timeout", "0"
+        );
+        write_to_file (
+            "/sys/class/net/wlan0/gro_flush_timeout", "0"
+        );
         write_to_file (
             "/sys/kernel/mm/lru_gen/min_ttl_ms", "0"
         );
