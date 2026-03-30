@@ -24,26 +24,20 @@
 #include "../common/utils.h"
 
 #define DOZING_LIGHT_SLEEP        300
-#define DOZING_LIGHT_MAINTENANCE  30
+#define DOZING_LIGHT_MAINTENANCE  20
 #define DOZING_MEDIUM_SLEEP       600
-#define DOZING_MEDIUM_MAINTENANCE 45
+#define DOZING_MEDIUM_MAINTENANCE 30
 #define DOZING_FULL_SLEEP         1200
-#define DOZING_FULL_MAINTENANCE   60
+#define DOZING_FULL_MAINTENANCE   40
 #define MODEM_APPLY_DELAY 500
 
 enum DozingType {
     DOZING_LIGHT_1,
     DOZING_LIGHT_2,
-    DOZING_LIGHT_3,
-    DOZING_LIGHT_4,
-    DOZING_LIGHT_5,
-    DOZING_LIGHT_6, /* ~= 30 minutes */
+    DOZING_LIGHT_3,/* ~= 15 minutes */
     DOZING_MEDIUM_1,
     DOZING_MEDIUM_2,
-    DOZING_MEDIUM_3,
-    DOZING_MEDIUM_4,
-    DOZING_MEDIUM_5,
-    DOZING_MEDIUM_6, /* ~= 1 hour */
+    DOZING_MEDIUM_3, /* ~= 45 minutes */
     DOZING_FULL
 };
 
