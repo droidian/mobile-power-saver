@@ -203,6 +203,10 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
                                gboolean        powersave)
 {
     if (powersave) {
+        /* Throttle RT threads */
+        write_to_file (
+            "/proc/sys/kernel/sched_rt_runtime_us", "50000"
+        );
         /*
          * These control how long NAPI defers processing before waking the CPU.
          * By default both are 0, meaning every incoming packet immediately
@@ -317,6 +321,9 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
             "/proc/sys/net/ipv4/tcp_fin_timeout", "5"
         );
     } else {
+        write_to_file (
+            "/proc/sys/kernel/sched_rt_runtime_us", "950000"
+        );
         write_to_file (
             "/sys/class/net/rmnet_ipa0/napi_defer_hard_irqs", "0"
         );
