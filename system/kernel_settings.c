@@ -265,6 +265,13 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
         write_to_file (
             "/proc/sys/vm/dirty_expire_centisecs", "60000"
         );
+        /* Avoids re-reading from UFS (less I/O wakeup) */
+        write_to_file (
+            "/proc/sys/vm/vfs_cache_pressure", "50"
+        );
+        write_to_file (
+            "/proc/sys/vm/compaction_proactiveness", "0"
+        );
 
         /* Enable laptop mode */
         write_to_file (
@@ -376,6 +383,12 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
         );
         write_to_file (
             "/proc/sys/vm/dirty_expire_centisecs", "3000"
+        );
+        write_to_file (
+            "/proc/sys/vm/vfs_cache_pressure", "100"
+        );
+        write_to_file (
+            "/proc/sys/vm/compaction_proactiveness", "20"
         );
 
         /* Disable laptop mode */
