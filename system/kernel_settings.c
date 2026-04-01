@@ -45,7 +45,15 @@ kernel_settings_class_init (KernelSettingsClass *klass)
 static void
 kernel_settings_init (KernelSettings *self)
 {
+    g_autofree char *little_cpu_mask = get_little_cpu_mask ();
     self->priv = kernel_settings_get_instance_private (self);
+
+    /* Force unbound workqueues on little cluster */
+    if (little_cpu_mask != NULL) {
+        write_to_file (
+            "/sys/devices/virtual/workqueue/cpumask", little_cpu_mask
+        );
+    }
 
     /* Splits the memory bus usage between different components to optimize power consumption */
     write_to_file (

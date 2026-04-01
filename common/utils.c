@@ -139,3 +139,50 @@ get_list_from_variant (GVariant *value)
 
     return list;
 }
+
+char*
+get_little_cpu_mask (void)
+{
+    g_auto(GStrv) cpus = NULL;
+    g_autofree char *contents = NULL;
+    g_autoptr(GError) error = NULL;
+    guint32 mask = 0;
+
+    if (!g_file_get_contents (
+            "/sys/devices/system/cpu/cpufreq/policy0/related_cpus",
+            &contents, NULL, &error)) {
+        g_warning ("Failed to read policy0 related_cpus: %s", error->message);
+        return NULL;
+    }
+
+    cpus = g_strsplit (g_strstrip (contents), " ", -1);
+    for (gint i = 0; cpus[i]; i++)
+        mask |= 1u << g_ascii_strtoull (cpus[i], NULL, 10);
+
+    return g_strdup_printf ("%x", mask);
+}
+
+char*
+get_all_cpu_mask (void)
+{
+    g_auto(GStrv) parts = NULL;
+    g_autofree char *contents = NULL;
+    g_autoptr(GError) error = NULL;
+    guint32 last, mask;
+
+    if (!g_file_get_contents ("/sys/devices/system/cpu/possible",
+                              &contents, NULL, &error)) {
+        g_warning ("Failed to read cpu possible: %s", error->message);
+        return NULL;
+    }
+
+    parts = g_strsplit (g_strstrip (contents), "-", 2);
+    if (!parts[0] || !parts[1]) {
+        return NULL;
+    }
+
+    last = (guint32) g_ascii_strtoull (parts[1], NULL, 10);
+    mask = (1u << (last + 1)) - 1;
+
+    return g_strdup_printf ("%x", mask);
+}
