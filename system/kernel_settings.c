@@ -170,6 +170,38 @@ kernel_settings_init (KernelSettings *self)
     write_to_file (
         "/proc/sys/net/ipv4/ip_nonlocal_bind", "0"
     );
+
+    /* Tweak Netfilter */
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_tcp_timeout_established", "600"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_tcp_timeout_time_wait", "30"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_tcp_timeout_close_wait", "30"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_tcp_timeout_fin_wait", "30"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_tcp_timeout_last_ack", "15"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_udp_timeout", "30"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_udp_timeout_stream", "60"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_icmp_timeout", "10"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_icmpv6_timeout", "10"
+    );
+    write_to_file (
+        "/proc/sys/net/netfilter/nf_conntrack_generic_timeout", "120"
+    );
 }
 
 /**
