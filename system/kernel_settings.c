@@ -207,6 +207,14 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
         write_to_file (
             "/proc/sys/kernel/sched_rt_runtime_us", "50000"
         );
+        /* Limits packets processed per NAPI poll cycle.
+         * Yields CPU sooner, allows deeper idle between bursts.
+         * /proc/net/softnet_stat third columns should be zero
+         * while dozing
+         */
+        write_to_file (
+            "/proc/sys/net/core/netdev_budget", "100"
+        );
         /*
          * These control how long NAPI defers processing before waking the CPU.
          * By default both are 0, meaning every incoming packet immediately
@@ -330,6 +338,9 @@ kernel_settings_set_powersave (KernelSettings *kernel_settings,
     } else {
         write_to_file (
             "/proc/sys/kernel/sched_rt_runtime_us", "950000"
+        );
+        write_to_file (
+            "/proc/sys/net/core/netdev_budget", "300"
         );
         write_to_file (
             "/sys/class/net/rmnet_ipa0/napi_defer_hard_irqs", "0"
