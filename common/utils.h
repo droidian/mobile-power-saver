@@ -12,10 +12,11 @@
         __glist_sub && (item = __glist_sub->data, TRUE); \
         __glist_sub = __glist_sub->next)
 
-void write_to_file (const char *filename, const char *value);
+gboolean write_to_file (const char *filename, const char *value);
 GList *get_applications (void);
 GList *get_cgroup_apps (const char *path);
 GList *get_cgroup_slices (const char *path);
 GList *get_list_from_variant (GVariant *value);
+GList *get_irqs(void);
 gchar *get_little_cpu_mask (void);
 gchar *get_all_cpu_mask (void);

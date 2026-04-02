@@ -10,25 +10,37 @@
 #include "kernel_settings.h"
 #include "../common/utils.h"
 
-/* struct _KernelSettingsPrivate { */
-/* }; */
+struct _KernelSettingsPrivate {
+    GList *irqs;
+    gchar *little_cpu_mask;
+    gchar *all_cpu_mask;
+};
 
 G_DEFINE_TYPE_WITH_CODE (
     KernelSettings,
     kernel_settings,
     G_TYPE_OBJECT,
-    /* G_ADD_PRIVATE (KernelSettings) */
+    G_ADD_PRIVATE (KernelSettings)
 )
 
 static void
 kernel_settings_dispose (GObject *kernel_settings)
 {
+    KernelSettings *self = KERNEL_SETTINGS (kernel_settings);
+
+    kernel_settings_set_powersave (self, FALSE);
+
     G_OBJECT_CLASS (kernel_settings_parent_class)->dispose (kernel_settings);
 }
 
 static void
 kernel_settings_finalize (GObject *kernel_settings)
 {
+    KernelSettings *self = KERNEL_SETTINGS (kernel_settings);
+
+    g_list_free_full (self->priv->irqs, g_free);
+    g_free (self->priv->little_cpu_mask);
+
     G_OBJECT_CLASS (kernel_settings_parent_class)->finalize (kernel_settings);
 }
 
@@ -45,13 +57,18 @@ kernel_settings_class_init (KernelSettingsClass *klass)
 static void
 kernel_settings_init (KernelSettings *self)
 {
-    g_autofree char *little_cpu_mask = get_little_cpu_mask ();
     self->priv = kernel_settings_get_instance_private (self);
 
+
+    self->priv->irqs = get_irqs ();
+    self->priv->little_cpu_mask = get_little_cpu_mask ();
+    self->priv->all_cpu_mask = get_all_cpu_mask ();
+
     /* Force unbound workqueues on little cluster */
-    if (little_cpu_mask != NULL) {
+    if (self->priv->little_cpu_mask != NULL) {
         write_to_file (
-            "/sys/devices/virtual/workqueue/cpumask", little_cpu_mask
+            "/sys/devices/virtual/workqueue/cpumask",
+            self->priv->little_cpu_mask
         );
     }
 
@@ -239,9 +256,19 @@ kernel_settings_new (void)
  * @param powersave: True to enable powersave
  */
 void
-kernel_settings_set_powersave (KernelSettings *kernel_settings,
+kernel_settings_set_powersave (KernelSettings *self,
                                gboolean        powersave)
 {
+    const char *irq;
+
+    GFOREACH (self->priv->irqs, irq) {
+        if (powersave) {
+            write_to_file (irq, self->priv->little_cpu_mask);
+        } else {
+            write_to_file (irq,  self->priv->all_cpu_mask);
+        }
+    }
+
     if (powersave) {
         /* Throttle RT threads */
         write_to_file (

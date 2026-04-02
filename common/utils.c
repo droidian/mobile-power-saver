@@ -10,25 +10,32 @@
 #include "define.h"
 #include "utils.h"
 
-void write_to_file (const char *filename,
-                    const char *value)
+gboolean write_to_file (const char *filename,
+                        const char *value)
 {
     FILE *file;
 
+    g_debug ("%s: %s", filename, value);
+
     if (!g_file_test (filename, G_FILE_TEST_EXISTS)) {
         g_debug ("File doesn't exist: %s", filename);
-        return;
+        return FALSE;
     }
 
     file = fopen(filename, "w");
 
     if (file == NULL) {
         g_debug ("Can't write to file: %s", filename);
-        return;
+        return FALSE;
     }
 
     fprintf (file, "%s", value);
-    fclose (file);
+
+    if (fclose (file) < 0) {
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -126,6 +133,46 @@ get_cgroup_slices (const char *path)
 }
 
 GList*
+get_irqs (void)
+{
+    g_autoptr (GDir) proc_dir = NULL;
+    g_autofree char *all_cpu_mask = get_all_cpu_mask ();
+
+    const char *irq_dir;
+    GList *irqs = NULL;
+
+    proc_dir = g_dir_open ("/proc/irq", 0, NULL);
+    if (proc_dir == NULL) {
+        g_warning ("Can't find /proc/irq");
+        return NULL;
+    }
+
+    while ((irq_dir = g_dir_read_name (proc_dir)) != NULL) {
+        g_autofree char *affinity = NULL;
+        g_autofree char *contents = NULL;
+        g_autoptr(GError) error = NULL;
+
+        affinity = g_build_filename (
+            "/proc/irq", irq_dir, "smp_affinity", NULL
+        );
+
+        /* Check affinity is writable */
+        if (g_file_get_contents (affinity, &contents, NULL, &error)) {
+            if (g_strcmp0 (all_cpu_mask, g_strchomp (contents)) != 0) {
+                g_warning ("Affinity already set: %s", affinity);
+                continue;
+            }
+            if (!write_to_file (affinity, contents)) {
+                g_warning ("Can't write affinity: %s", affinity);
+                continue;
+            }
+            irqs = g_list_append (irqs, g_strdup (affinity));
+        }
+    }
+    return irqs;
+}
+
+GList*
 get_list_from_variant (GVariant *value)
 {
     GList *list = NULL;
@@ -162,12 +209,12 @@ get_little_cpu_mask (void)
     return g_strdup_printf ("%x", mask);
 }
 
-char*
+gchar *
 get_all_cpu_mask (void)
 {
-    g_auto(GStrv) parts = NULL;
     g_autofree char *contents = NULL;
     g_autoptr(GError) error = NULL;
+    g_auto(GStrv) parts = NULL;
     guint32 last, mask;
 
     if (!g_file_get_contents ("/sys/devices/system/cpu/possible",
@@ -177,9 +224,8 @@ get_all_cpu_mask (void)
     }
 
     parts = g_strsplit (g_strstrip (contents), "-", 2);
-    if (!parts[0] || !parts[1]) {
+    if (!parts[0] || !parts[1])
         return NULL;
-    }
 
     last = (guint32) g_ascii_strtoull (parts[1], NULL, 10);
     mask = (1u << (last + 1)) - 1;
