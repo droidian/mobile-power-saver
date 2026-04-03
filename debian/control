@@ -7,8 +7,6 @@ Build-Depends:
  debhelper-compat (= 13),
  meson,
  libglib2.0-dev,
- libgbinder-dev,
- libgbinder-radio-dev,
  libnl-3-dev,
  libnl-genl-3-dev,
 Standards-Version: 4.6.2
@@ -18,10 +16,15 @@ Homepage: https://gitlab.gnome.org/gnumdk/mobile-power-saver
 
 Package: mobile-power-saver
 Architecture: any
-Conflicts: mobile-power-saver-droidian-miatoll,mobile-power-saver-droidian-phosh,mobile-power-saver-gnome
-Replaces: mobile-power-saver-droidian-miatoll,mobile-power-saver-droidian-phosh,mobile-power-saver-gnome
+Conflicts: mobile-power-saver-droidian-miatoll,mobile-power-saver-gnome
+Replaces: mobile-power-saver-droidian-miatoll,mobile-power-saver-gnome
 Depends:
  dbus,
  ${shlibs:Depends},
  ${misc:Depends},
 Description: Mobile Power Saver enable hard power saving when screen is off.
+
+Package: mobile-power-saver-droidian-phosh
+Architecture: any
+Depends: mobile-power-saver
+Description: Mobile Power Saver configuration for Droidian/Phosh
