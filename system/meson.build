@@ -2,6 +2,7 @@ mps_sources = [
   'bus.c',
   'cpufreq.c',
   'cpufreq_device.c',
+  'cpuset.c',
   'devfreq.c',
   'devfreq_device.c',
   'freq_device.c',

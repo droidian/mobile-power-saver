@@ -61,8 +61,8 @@ kernel_settings_init (KernelSettings *self)
 
 
     self->priv->irqs = get_irqs ();
-    self->priv->little_cpu_mask = get_little_cpu_mask ();
-    self->priv->all_cpu_mask = get_all_cpu_mask ();
+    self->priv->little_cpu_mask = g_strdup_printf ("%x", get_little_cpu_mask ());
+    self->priv->all_cpu_mask = g_strdup_printf ("%x", get_all_cpu_mask ());
 
     /* Force unbound workqueues on little cluster */
     if (self->priv->little_cpu_mask != NULL) {

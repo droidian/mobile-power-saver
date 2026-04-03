@@ -136,7 +136,7 @@ GList*
 get_irqs (void)
 {
     g_autoptr (GDir) proc_dir = NULL;
-    g_autofree char *all_cpu_mask = get_all_cpu_mask ();
+    g_autofree char *all_cpu_mask = g_strdup_printf ("%x", get_all_cpu_mask ());
 
     const char *irq_dir;
     GList *irqs = NULL;
@@ -159,11 +159,11 @@ get_irqs (void)
         /* Check affinity is writable */
         if (g_file_get_contents (affinity, &contents, NULL, &error)) {
             if (g_strcmp0 (all_cpu_mask, g_strchomp (contents)) != 0) {
-                g_warning ("Affinity already set: %s", affinity);
+                g_debug ("Affinity already set: %s", affinity);
                 continue;
             }
             if (!write_to_file (affinity, contents)) {
-                g_warning ("Can't write affinity: %s", affinity);
+                g_debug ("Can't write affinity: %s", affinity);
                 continue;
             }
             irqs = g_list_append (irqs, g_strdup (affinity));
@@ -187,7 +187,8 @@ get_list_from_variant (GVariant *value)
     return list;
 }
 
-char*
+
+guint8
 get_little_cpu_mask (void)
 {
     g_auto(GStrv) cpus = NULL;
@@ -199,17 +200,17 @@ get_little_cpu_mask (void)
             "/sys/devices/system/cpu/cpufreq/policy0/related_cpus",
             &contents, NULL, &error)) {
         g_warning ("Failed to read policy0 related_cpus: %s", error->message);
-        return NULL;
+        return 0;
     }
 
     cpus = g_strsplit (g_strstrip (contents), " ", -1);
     for (gint i = 0; cpus[i]; i++)
         mask |= 1u << g_ascii_strtoull (cpus[i], NULL, 10);
 
-    return g_strdup_printf ("%x", mask);
+    return mask;
 }
 
-gchar *
+guint8
 get_all_cpu_mask (void)
 {
     g_autofree char *contents = NULL;
@@ -220,15 +221,23 @@ get_all_cpu_mask (void)
     if (!g_file_get_contents ("/sys/devices/system/cpu/possible",
                               &contents, NULL, &error)) {
         g_warning ("Failed to read cpu possible: %s", error->message);
-        return NULL;
+        return 0;
     }
 
     parts = g_strsplit (g_strstrip (contents), "-", 2);
     if (!parts[0] || !parts[1])
-        return NULL;
+        return 0;
 
     last = (guint32) g_ascii_strtoull (parts[1], NULL, 10);
     mask = (1u << (last + 1)) - 1;
 
-    return g_strdup_printf ("%x", mask);
+    return mask;
+}
+
+GVariant *
+bytes_from_mask (guint8 mask)
+{
+    return g_variant_new_fixed_array (
+        G_VARIANT_TYPE_BYTE, &mask, 1, sizeof (guint8)
+    );
 }

@@ -18,5 +18,6 @@ GList *get_cgroup_apps (const char *path);
 GList *get_cgroup_slices (const char *path);
 GList *get_list_from_variant (GVariant *value);
 GList *get_irqs(void);
-gchar *get_little_cpu_mask (void);
-gchar *get_all_cpu_mask (void);
+guint8 get_little_cpu_mask (void);
+guint8 get_all_cpu_mask (void);
+GVariant *bytes_from_mask (guint8);

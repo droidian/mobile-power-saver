@@ -9,6 +9,7 @@
 
 #include "bus.h"
 #include "cpufreq.h"
+#include "cpuset.h"
 #include "config.h"
 #include "devfreq.h"
 #include "kernel_settings.h"
@@ -25,6 +26,7 @@
 
 struct _ManagerPrivate {
     Cpufreq *cpufreq;
+    Cpuset  *cpuset;
     Devfreq *devfreq;
     KernelSettings *kernel_settings;
     Services *services;
@@ -64,11 +66,8 @@ on_screen_state_changed (Logind logind,
         if (self->priv->radio_power_saving)
             wifi_set_powersave (self->priv->wifi, !screen_on);
 #endif
-        if (screen_on) {
-            cpufreq_set_powersave (self->priv->cpufreq, FALSE);
-        } else {
-            cpufreq_set_powersave (self->priv->cpufreq, TRUE);
-        }
+        cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
+        cpuset_set_powersave (self->priv->cpuset, !screen_on);
     }
 }
 
@@ -166,9 +165,15 @@ manager_dispose (GObject *manager)
         self->priv->suspend_bluetooth_services
     );
 
+    cpuset_set_powersave (
+        self->priv->cpuset,
+        FALSE
+    );
+
     wifi_set_powersave (self->priv->wifi, FALSE);
 
     g_clear_object (&self->priv->cpufreq);
+    g_clear_object (&self->priv->cpuset);
     g_clear_object (&self->priv->devfreq);
     g_clear_object (&self->priv->kernel_settings);
     g_clear_object (&self->priv->services);
@@ -210,6 +215,7 @@ manager_init (Manager *self)
     self->priv = manager_get_instance_private (self);
 
     self->priv->cpufreq = CPUFREQ (cpufreq_new ());
+    self->priv->cpuset = CPUSET (cpuset_new ());
     self->priv->devfreq = DEVFREQ (devfreq_new ());
     self->priv->kernel_settings = KERNEL_SETTINGS (kernel_settings_new ());
 
