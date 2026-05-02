@@ -1,3 +1,4 @@
 [org.adishatz.Mps]
 suspend-services=true
 suspend-system-bluetooth-services=['bluebinder.service', 'bluetooth.service']
+freezing-delay=30
