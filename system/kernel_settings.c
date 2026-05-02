@@ -227,6 +227,12 @@ kernel_settings_init (KernelSettings *self)
     write_to_file (
         "/proc/sys/net/netfilter/nf_conntrack_generic_timeout", "120"
     );
+    write_to_file (
+        "/sys/class/net/wlan0/device/power/wakeup", "disabled"
+    );
+    write_to_file (
+        "/sys/class/net/rmnet_ipa0/device/power/wakeup", "disabled"
+    );
 }
 
 /**
