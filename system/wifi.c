@@ -24,7 +24,7 @@
 #define WPA_DBUS_IFACE_INTERFACE  "fi.w1.wpa_supplicant1.Interface"
 
 #define WPA_DEFAULT_SCAN_INTERVAL 5
-#define WPA_POWERSAVE_SCAN_INTERVAL 300
+#define WPA_POWERSAVE_SCAN_INTERVAL 120
 
 
 struct _WiFiPrivate {
