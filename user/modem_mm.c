@@ -13,11 +13,16 @@
 #include "settings.h"
 #include "../common/utils.h"
 
+#define CONNECT_TIMEOUT 60 * 1000 * 1000
+
 struct _ModemMMPrivate {
     GDBusConnection *connection;
     MMManager *manager;
 
     GList *modems;
+    MMModemState state;
+
+    gint64 connected_timestamp;
 };
 
 G_DEFINE_TYPE_WITH_CODE (
@@ -26,50 +31,6 @@ G_DEFINE_TYPE_WITH_CODE (
     TYPE_MODEM,
     G_ADD_PRIVATE (ModemMM)
 )
-
-static void
-on_modem_added (MMManager *modem_manager,
-                MMObject  *modem_object,
-                gpointer   user_data)
-{
-    ModemMM *self = MODEM_MM (user_data);
-    MMModem *modem;
-
-    modem = mm_object_peek_modem(modem_object);
-    if (modem) {
-        self->priv->modems = g_list_append (self->priv->modems, modem);
-    }
-
-    /* Resetting MM_MODEM_POWER_STATE_LOW does not work on PMOS 25.12 */
-    if (settings_get_radio_powersaving (settings_get_default())) {
-        if (mm_modem_set_power_state_sync (
-                modem,
-                MM_MODEM_POWER_STATE_LOW,
-                NULL, NULL)) {
-                g_message ("Modem in low power mode");
-            }
-    }
-}
-
-static void
-on_modem_removed (MMManager *modem_manager,
-                  MMObject  *modem_object,
-                  gpointer   user_data)
-{
-    ModemMM *self = MODEM_MM (user_data);
-    MMModem *modem;
-    const char *path;
-
-    path = mm_object_get_path(modem_object);
-
-    GFOREACH (self->priv->modems, modem) {
-        if (g_strcmp0 (mm_modem_get_path (modem), path) == 0) {
-            self->priv->modems = g_list_remove (self->priv->modems, modem);
-            g_clear_object (&modem);
-            break;
-        }
-    }
-}
 
 static void
 modem_mm_set_powersave (Modem    *self,
@@ -125,9 +86,13 @@ modem_mm_set_powersave (Modem    *self,
 static void
 modem_mm_apply_powersave (Modem *self)
 {
+    ModemMM *this = MODEM_MM (self);
+
     gboolean powersave = (
         modem_get_powersave (MODEM (self)) & MODEM_POWERSAVE_ENABLED
     ) == MODEM_POWERSAVE_ENABLED;
+
+    this->priv->connected_timestamp = g_get_real_time ();
 
     modem_mm_set_powersave (self, powersave);
 }
@@ -136,6 +101,83 @@ static void
 modem_mm_reset_powersave (Modem *self)
 {
     modem_mm_set_powersave (self, FALSE);
+}
+
+static void
+on_state_changed (MMModem *modem,
+                  MMModemState old_state,
+                  MMModemState new_state,
+                  MMModemStateChangeReason reason,
+                  gpointer user_data)
+{
+    ModemMM *self = MODEM_MM (user_data);
+    gint64 timestamp = g_get_real_time ();
+
+    if (new_state == MM_MODEM_STATE_CONNECTED) {
+        self->priv->connected_timestamp = timestamp;
+    }
+
+    if (timestamp - self->priv->connected_timestamp > CONNECT_TIMEOUT) {
+        g_warning ("Modem connection broken, disabling powersaving");
+        self->priv->connected_timestamp = timestamp;
+        modem_mm_reset_powersave (MODEM (self));
+    }
+}
+
+static void
+on_modem_added (MMManager *modem_manager,
+                MMObject  *modem_object,
+                gpointer   user_data)
+{
+    ModemMM *self = MODEM_MM (user_data);
+    MMModem *modem;
+
+    modem = mm_object_peek_modem(modem_object);
+    if (modem) {
+        self->priv->modems = g_list_append (self->priv->modems, modem);
+    }
+
+    g_signal_connect (
+        modem,
+        "state-changed",
+        G_CALLBACK (on_state_changed),
+        self
+    );
+
+    /* Resetting MM_MODEM_POWER_STATE_LOW does not work on PMOS 25.12 */
+    if (settings_get_radio_powersaving (settings_get_default())) {
+        if (mm_modem_set_power_state_sync (
+                modem,
+                MM_MODEM_POWER_STATE_LOW,
+                NULL, NULL)) {
+                g_message ("Modem in low power mode");
+            }
+    }
+}
+
+static void
+on_modem_removed (MMManager *modem_manager,
+                  MMObject  *modem_object,
+                  gpointer   user_data)
+{
+    ModemMM *self = MODEM_MM (user_data);
+    MMModem *modem;
+    const char *path;
+
+    path = mm_object_get_path(modem_object);
+
+    GFOREACH (self->priv->modems, modem) {
+        if (g_strcmp0 (mm_modem_get_path (modem), path) == 0) {
+            self->priv->modems = g_list_remove (self->priv->modems, modem);
+            g_signal_handlers_disconnect_by_func (
+                modem,
+                G_CALLBACK (on_state_changed),
+                NULL
+            );
+            g_clear_object (&modem);
+            break;
+        }
+    }
 }
 
 static void
@@ -182,6 +224,7 @@ modem_mm_init (ModemMM *self)
 
     self->priv = modem_mm_get_instance_private (self);
     self->priv->modems = NULL;
+    self->priv->connected_timestamp = g_get_real_time ();
 
     self->priv->connection = g_bus_get_sync (
         G_BUS_TYPE_SYSTEM, NULL, &error

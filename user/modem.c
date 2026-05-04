@@ -110,7 +110,7 @@ modem_set_powersave (Modem          *self,
         self->priv->modem_powersave & MODEM_POWERSAVE_ENABLED
     ) == MODEM_POWERSAVE_ENABLED;
 
-    g_debug ("modem_set_powersave: %b: %d", powersave, modem_powersave);
+    g_debug ("modem_set_powersave: %d: %d", powersave, modem_powersave);
 
     if (powersave) {
         modem_powersave_tmp |= modem_powersave;

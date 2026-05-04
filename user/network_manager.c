@@ -224,7 +224,7 @@ set_connection_type (NetworkManager *self,
 
     self->priv->wifi_active = wifi_active;
 
-    g_debug ("WiFi active: %b", wifi_active);
+    g_debug ("WiFi active: %d", wifi_active);
 
     g_signal_emit(
         self,
@@ -275,7 +275,7 @@ on_network_manager_proxy_properties (GDBusProxy  *proxy,
             g_variant_get (value, "&o", &object_path);
 
             self->priv->access_point = g_strcmp0 (object_path, "/") != 0;
-            g_debug ("Access point: %b", self->priv->access_point);
+            g_debug ("Access point: %d", self->priv->access_point);
         }
         g_variant_unref (value);
     }
