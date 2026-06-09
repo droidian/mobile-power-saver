@@ -132,7 +132,7 @@ on_modem_added (MMManager *modem_manager,
     ModemMM *self = MODEM_MM (user_data);
     MMModem *modem;
 
-    modem = mm_object_peek_modem(modem_object);
+    modem = mm_object_get_modem(modem_object);
     if (modem) {
         self->priv->modems = g_list_append (self->priv->modems, modem);
     }
@@ -285,3 +285,4 @@ modem_mm_new (void)
 
     return modem_mm;
 }
+
