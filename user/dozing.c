@@ -23,6 +23,7 @@
 #include "../common/services.h"
 #include "../common/utils.h"
 
+#define DOZING_PRE_SLEEP          10
 #define DOZING_LIGHT_SLEEP        300
 #define DOZING_LIGHT_MAINTENANCE  20
 #define DOZING_MEDIUM_SLEEP       600
@@ -405,7 +406,7 @@ dozing_start (Dozing  *self)
 
     self->priv->type = DOZING_LIGHT_1;
     self->priv->timeout_id = g_timeout_add_seconds (
-        settings_get_freezing_delay(settings_get_default ()),
+        DOZING_PRE_SLEEP,
         (GSourceFunc) freeze_apps,
         self
     );

@@ -20,12 +20,6 @@
       <description>If applications in list are running, do not enable power saving.</description>
     </key>
 
-    <key name="freezing-delay" type="i">
-      <default>0</default>
-      <summary>Freeze apps after some delay</summary>
-      <description>Wait before feezing applications.</description>
-    </key>
-
     <key name="suspend-apps-blacklist" type="as">
       <default>['sm.puri.Chatty', 'org.kop316.antispam', 'io.gitlab.azymohliad.WatchMate', 'app-gnome-mpris']</default>
       <summary>Do not suspend these apps when screen is off</summary>

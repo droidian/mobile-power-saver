@@ -51,7 +51,6 @@ gboolean        settings_can_bluetooth_powersave        (Settings   *self,
                                                          const char *app_scope);
 gboolean        settings_can_freeze_app                 (Settings   *self,
                                                          const char *app_scope);
-gint            settings_get_freezing_delay             (Settings   *self);
 GList          *settings_get_suspend_services           (Settings   *self);
 GList          *settings_get_suspend_bluetooth_services (Settings   *self);
 

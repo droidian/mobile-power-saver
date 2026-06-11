@@ -213,20 +213,7 @@ settings_can_bluetooth_powersave (Settings   *self,
     }
     return TRUE;
 }
-/**
- * settings_get_freezing_delay:
- *
- * Get freezing delay
- *
- * @self: a #Settings
- *
- * Returns: freezing delay in seconds
- */
-gint
-settings_get_freezing_delay (Settings   *self)
-{
-    return g_settings_get_int (self->priv->settings, "freezing-delay");
-}
+
 /**
  * settings_can_freeze_app:
  *
