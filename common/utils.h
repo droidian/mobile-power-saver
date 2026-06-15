@@ -14,7 +14,6 @@
 
 gboolean write_to_file (const char *filename, const char *value);
 GList *get_applications (void);
-GList *get_cgroup_apps (const char *path);
 GList *get_cgroup_slices (const char *path);
 GList *get_list_from_variant (GVariant *value);
 GList *get_irqs(void);

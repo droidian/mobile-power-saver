@@ -231,12 +231,15 @@ settings_can_freeze_app (Settings   *self,
     g_autoptr (GVariant) value = g_settings_get_value (
         self->priv->settings, "suspend-apps-blacklist"
     );
+    g_autoptr(GString) s = g_string_new (app_scope);
     g_autoptr (GVariantIter) iter;
     const char *application;
 
+    g_string_replace (s, "\\x2d", "-", 0);
+
     g_variant_get (value, "as", &iter);
     while (g_variant_iter_loop (iter, "s", &application)) {
-        if (g_strrstr (app_scope, application) != NULL)
+        if (g_strrstr (s->str, application) != NULL)
             return FALSE;
     }
     return TRUE;

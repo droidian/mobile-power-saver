@@ -21,7 +21,7 @@
     </key>
 
     <key name="suspend-apps-blacklist" type="as">
-      <default>['sm.puri.Chatty', 'org.kop316.antispam', 'io.gitlab.azymohliad.WatchMate', 'app-gnome-mpris']</default>
+      <default>['sm.puri.Chatty', 'org.kop316.antispam', 'io.gitlab.azymohliad.WatchMate', 'session-manager', 'mpris-proxy', 'org.sigxcpu.Feedback', 'org.mobian_project.CallAudio', 'org.gnome.Shell.SensorDaemon', 'org.gnome.clocks']</default>
       <summary>Do not suspend these apps when screen is off</summary>
       <description>When screen is turned off, these apps will be ignored.</description>
     </key>
