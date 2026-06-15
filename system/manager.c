@@ -66,7 +66,7 @@ on_screen_state_changed (Logind logind,
         if (self->priv->radio_power_saving)
             wifi_set_powersave (self->priv->wifi, !screen_on);
 #endif
-        cpufreq_set_powersave (self->priv->cpufreq, !screen_on);
+        cpufreq_set_powersave (self->priv->cpufreq, !screen_on, screen_on);
         cpuset_set_powersave (self->priv->cpuset, !screen_on);
     }
 }
@@ -86,7 +86,7 @@ on_bus_setting_changed (Bus      *bus,
         self->priv->screen_off_power_saving = g_variant_get_boolean (inner_value);
 
         if (!self->priv->screen_off_power_saving) {
-            cpufreq_set_powersave (self->priv->cpufreq, FALSE);
+            cpufreq_set_powersave (self->priv->cpufreq, FALSE, TRUE);
             devfreq_set_powersave (self->priv->devfreq, FALSE);
         }
     } else if (g_strcmp0 (setting, "suspend-system-services") == 0) {
@@ -105,6 +105,10 @@ on_bus_setting_changed (Bus      *bus,
         }
 
         g_list_free_full (list, g_free);
+    } else if (g_strcmp0 (setting, "little-cluster-powersave") == 0) {
+        gboolean enabled = g_variant_get_boolean (inner_value);
+
+        cpufreq_set_powersave (self->priv->cpufreq, enabled, TRUE);
     } else if (g_strcmp0 (setting, "radio-power-saving") == 0) {
         self->priv->radio_power_saving = g_variant_get_boolean (inner_value);
     } else if (g_strcmp0 (setting, "dozing") == 0) {

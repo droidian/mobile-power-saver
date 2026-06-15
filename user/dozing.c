@@ -157,8 +157,10 @@ unfreeze_services (Dozing *self)
 static gboolean
 freeze_apps (Dozing *self)
 {
+    Bus *bus = bus_get_default ();
     const char *app;
     gboolean data_used;
+    gboolean apps_active = FALSE;
 
     network_manager_modem_stop_monitoring (
         self->priv->network_manager_modem
@@ -171,11 +173,20 @@ freeze_apps (Dozing *self)
         g_message("Freezing apps");
         GFOREACH (self->priv->apps, app) {
             if (!mpris_can_freeze (self->priv->mpris, app)) {
+                apps_active = TRUE;
                 continue;
             }
             if (settings_can_freeze_app (settings_get_default (), app))
                 write_to_file (app, "1");
         }
+    }
+
+    if (apps_active) {
+        g_message ("Active apps: Keep little cluster active");
+    } else {
+        bus_set_value (bus,
+                       "little-cluster-powersave",
+                       g_variant_new ("b", TRUE));
     }
 
     if (data_used) {
