@@ -27,7 +27,7 @@
     </key>
 
     <key name="suspend-user-services" type="as">
-      <default>[]</default>
+      <default>['gvfs-afc-volume-monitor.service']</default>
       <summary>Suspend these services when screen is off</summary>
       <description>When screen is turned off, these services will be suspended.</description>
     </key>
