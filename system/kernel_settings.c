@@ -408,6 +408,14 @@ kernel_settings_set_powersave (KernelSettings *self,
         write_to_file (
             "/proc/sys/net/ipv4/tcp_fin_timeout", "5"
         );
+
+        /* Kernel memory compaction threads */
+        write_to_file (
+            "/sys/kernel/mm/transparent_hugepage/khugepaged/defrag", "0"
+        );
+        write_to_file (
+            "/sys/kernel/mm/transparent_hugepage/enabled", "never"
+        );
     } else {
         write_to_file (
             "/proc/sys/kernel/sched_rt_runtime_us", "950000"
@@ -528,6 +536,14 @@ kernel_settings_set_powersave (KernelSettings *self,
         /* Restore TCP Time-Wait */
         write_to_file (
             "/proc/sys/net/ipv4/tcp_fin_timeout", "60"
+        );
+
+        /* Kernel memory compaction threads */
+        write_to_file (
+            "/sys/kernel/mm/transparent_hugepage/khugepaged/defrag", "1"
+        );
+        write_to_file (
+            "/sys/kernel/mm/transparent_hugepage/enabled", "madvise"
         );
     }
 }
