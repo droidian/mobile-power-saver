@@ -34,6 +34,14 @@ get_cgroups_paths (Services *self)
                 CGROUPS_USER_DIR, getuid(), getuid()
             )
         );
+        paths = g_list_append (
+            paths,
+            get_cgroup_slices (
+                g_strdup_printf(
+                    CGROUPS_USER_APPS_DIR, getuid(), getuid()
+                )
+            )
+        );
     } else {
         paths = g_list_append (
             paths,
