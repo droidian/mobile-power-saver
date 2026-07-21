@@ -9,10 +9,12 @@
 
 #include "bus.h"
 #include "logind.h"
+#include "../common/define.h"
 
 #define LOGIND_DBUS_NAME       "org.freedesktop.login1"
 #define LOGIND_DBUS_PATH       "/org/freedesktop/login1/seat/seat0"
 #define LOGIND_DBUS_INTERFACE  "org.freedesktop.login1.Seat"
+#define LOGIND_DBUS_SESSION_INTERFACE  "org.freedesktop.login1.Session"
 
 /* signals */
 enum
@@ -64,15 +66,56 @@ on_logind_proxy_properties (GDBusProxy  *proxy,
 static void
 connect_logind (Logind *self)
 {
+    g_autoptr (GDBusProxy) properties = NULL;
     g_autoptr (GError) error = NULL;
+    g_autoptr(GVariant) value = NULL;
+    g_autoptr(GVariant) inner_value = NULL;
+    const char *session_id;
+    const char *session_path;
+
+    properties = g_dbus_proxy_new_for_bus_sync (
+        G_BUS_TYPE_SYSTEM,
+        0,
+        NULL,
+        LOGIND_DBUS_NAME,
+        LOGIND_DBUS_PATH,
+        DBUS_PROPERTIES_INTERFACE,
+        NULL,
+        &error
+    );
+
+    if (error != NULL)
+        g_error ("Can't contact Logind: %s", error->message);
+
+    value = g_dbus_proxy_call_sync(
+        properties,
+        "Get",
+        g_variant_new (
+            "(ss)",
+            LOGIND_DBUS_INTERFACE,
+            "ActiveSession"
+        ),
+        G_DBUS_CALL_FLAGS_NONE,
+        -1,
+        NULL,
+        &error
+    );
+
+    if (error != NULL)
+        g_error ("Can't contact Logind: %s", error->message);
+
+    g_variant_get (value, "(v)", &inner_value);
+    g_variant_get(inner_value, "(&s&o)", &session_id, &session_path);
+
+    g_warning("Logind session path: %s", session_path);
 
     self->priv->logind_proxy = g_dbus_proxy_new_for_bus_sync (
         G_BUS_TYPE_SYSTEM,
         0,
         NULL,
         LOGIND_DBUS_NAME,
-        LOGIND_DBUS_PATH,
-        LOGIND_DBUS_INTERFACE,
+        session_path,
+        LOGIND_DBUS_SESSION_INTERFACE,
         NULL,
         &error
     );
