@@ -449,7 +449,6 @@ dozing_stop (Dozing  *self)
         self->priv->network_manager_modem
     );
 
-    g_message("Unfreezing apps");
     GFOREACH (self->priv->apps, app)
         write_to_file (app, "0");
 

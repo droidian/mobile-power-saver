@@ -56,6 +56,7 @@ on_screen_state_changed (Bus      *bus,
     Manager *self = MANAGER (user_data);
 
     if (self->priv->screen_off_power_saving) {
+        g_message("Screen state: %d", screen_on);
         if (screen_on) {
             dozing_stop (dozing_get_default ());
         } else {
