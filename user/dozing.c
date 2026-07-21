@@ -95,6 +95,8 @@ get_sleep (Dozing *self)
 static void
 queue_next_freeze (Dozing *self)
 {
+    g_clear_handle_id (&self->priv->timeout_id, g_source_remove);
+
     self->priv->timeout_id = g_timeout_add_seconds (
         get_maintenance (self),
         (GSourceFunc) freeze_apps,
