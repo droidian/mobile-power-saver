@@ -8,6 +8,15 @@
 #include "config.h"
 #include "settings.h"
 
+const char* SUSPEND_APPS_BLACKLIST[] = {
+  "session-manager",
+  "mpris-proxy",
+  "org.sigxcpu.Feedback",
+  "org.mobian_project.CallAudio",
+  "org.gnome.Shell.SensorDaemon",
+  NULL
+};
+
 /* signals */
 enum
 {
@@ -234,6 +243,7 @@ settings_can_freeze_app (Settings   *self,
     g_autoptr(GString) s = g_string_new (app_scope);
     g_autoptr (GVariantIter) iter;
     const char *application;
+    int i = 0;
 
     g_string_replace (s, "\\x2d", "-", 0);
 
@@ -241,6 +251,11 @@ settings_can_freeze_app (Settings   *self,
     while (g_variant_iter_loop (iter, "s", &application)) {
         if (g_strrstr (s->str, application) != NULL)
             return FALSE;
+    }
+    while(SUSPEND_APPS_BLACKLIST[i]) {
+        if (g_strrstr (s->str, SUSPEND_APPS_BLACKLIST[i]) != NULL)
+            return FALSE;
+        i++;
     }
     return TRUE;
 }
@@ -296,3 +311,4 @@ settings_get_suspend_bluetooth_services (Settings *self)
     }
     return services;
 }
+
